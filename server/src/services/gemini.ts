@@ -77,24 +77,40 @@ INSTRUCTIONS:
     required: ["products", "keyDifferences", "aiSummary"]
   };
 
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: responseSchema,
-      }
-    });
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.6-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: responseSchema,
+        }
+      });
 
-    const resultText = response.text;
-    if (!resultText) {
-      throw new Error('No text returned from Gemini API.');
+      const resultText = response.text;
+      if (!resultText) {
+        throw new Error('No text returned from Gemini API.');
+      }
+      
+      return JSON.parse(resultText);
+    } catch (error: any) {
+      lastError = error;
+      
+      // If it's a 503 Service Unavailable (High Demand), wait and retry
+      if (error?.status === 503 || error?.message?.includes('503') || error?.message?.includes('high demand')) {
+        console.warn(`Gemini 503 High Demand. Attempt ${attempt} of 3. Retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+        continue;
+      }
+      
+      // If it's any other error (like a bad schema), throw immediately
+      console.error('Gemini extraction error:', error);
+      throw error;
     }
-    
-    return JSON.parse(resultText);
-  } catch (error) {
-    console.error('Gemini extraction error:', error);
-    throw error;
   }
+  
+  console.error('Gemini extraction failed after 3 retries:', lastError);
+  throw lastError;
 }
