@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts",
-    "build": "node ./node_modules/typescript/bin/tsc.js"
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +26,6 @@
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.12",
-    "typescript": "^7.0.2"
+    "typescript": "^5.5.4"
   }
 }
