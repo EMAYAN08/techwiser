@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, ScrollView, StyleSheet, Pressable, Animated, Image } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, ScrollView, StyleSheet, Pressable, Image, ImageSourcePropType } from "react-native";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -7,7 +7,7 @@ import { useComparisonStore, Product } from "../store/useComparisonStore";
 import { useThemeColors } from "../constants/Colors";
 import { Card } from "../components/ui/Card";
 import { categoryIcons } from "../utils/categoryIcons";
-import { ImageSourcePropType } from "react-native";
+import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, withSpring, useSharedValue, FadeInRight } from "react-native-reanimated";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -52,62 +52,87 @@ function getCategoryIcon(category: string): ImageSourcePropType {
 function ProductHeaderBox({ product, index, colors }: { product: Product; index: number; colors: any }) {
   const isLeft = index === 0;
   return (
-    <View style={[styles.productHeaderBox, { backgroundColor: product.retailerColor || (isLeft ? colors.primary : colors.error) }]}>
+    <Animated.View 
+      entering={FadeInDown.delay(index * 100).springify().damping(18)}
+      style={[
+        styles.productHeaderBox, 
+        { 
+          backgroundColor: product.retailerColor || (isLeft ? colors.primary : colors.error),
+        }
+      ]}
+    >
       <View style={styles.productImagePlaceholder}>
         {product.imageUrl ? (
-          <Image source={{ uri: product.imageUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} resizeMode="cover" />
+          <Image source={{ uri: product.imageUrl }} style={{ width: 44, height: 44, borderRadius: 22 }} resizeMode="cover" />
         ) : (
-          <Image source={getCategoryIcon(product.name)} style={{ width: 24, height: 24, borderRadius: 12 }} />
+          <Image source={getCategoryIcon(product.name)} style={{ width: 32, height: 32, borderRadius: 16 }} />
         )}
       </View>
       <Text style={styles.productHeaderText} numberOfLines={2}>
         {normalizeTitle(product.name)}
       </Text>
-    </View>
+    </Animated.View>
   );
 }
 
-function CategoryBox({ category, isSelected, onSelect, colors }: { category: string; isSelected: boolean; onSelect: () => void; colors: any }) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+function CategoryBox({ category, isSelected, onSelect, colors, index }: { category: string; isSelected: boolean; onSelect: () => void; colors: any; index: number }) {
+  const scale = useSharedValue(1);
+
+  const rStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }],
+    };
+  });
 
   return (
     <AnimatedPressable
+      entering={FadeInRight.delay(index * 50).springify().damping(20)}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onSelect();
       }}
-      onPressIn={() => Animated.spring(scaleAnim, { toValue: 0.9, useNativeDriver: true }).start()}
-      onPressOut={() => Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start()}
+      onPressIn={() => { scale.value = withSpring(0.92, { damping: 15, stiffness: 300 }); }}
+      onPressOut={() => { scale.value = withSpring(1, { damping: 15, stiffness: 300 }); }}
       style={[
         styles.categoryBox,
-        { backgroundColor: isSelected ? colors.ai : colors.surface, transform: [{ scale: scaleAnim }] }
+        { backgroundColor: isSelected ? colors.text : colors.surface },
+        rStyle
       ]}
     >
-      <Image source={getCategoryIcon(category)} style={{ width: 24, height: 24, borderRadius: 6, opacity: isSelected ? 1 : 0.6 }} />
-      <Text style={[styles.categoryBoxText, { color: isSelected ? "#FFF" : colors.textSecondary }]} numberOfLines={1}>
+      <View style={[styles.categoryIconContainer, { backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : colors.surfaceHighlight }]}>
+        <Image source={getCategoryIcon(category)} style={{ width: 28, height: 28, borderRadius: 8, opacity: isSelected ? 1 : 0.8 }} />
+      </View>
+      <Text style={[styles.categoryBoxText, { color: isSelected ? colors.background : colors.textSecondary }]} numberOfLines={1}>
         {category}
       </Text>
     </AnimatedPressable>
   );
 }
 
-function SpecResultBoxes({ specRow, colors }: { specRow: any; colors: any }) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
-  }, [specRow.label]);
-
+function SpecResultBoxes({ specRow, colors, index }: { specRow: any; colors: any; index: number }) {
   return (
-    <Animated.View style={[styles.specResultContainer, { opacity: fadeAnim }]}>
+    <Animated.View 
+      entering={FadeInUp.delay(index * 100).springify().damping(20)} 
+      style={styles.specResultContainer}
+    >
       <Text style={[styles.specResultLabel, { color: colors.textSecondary }]}>{specRow.label}</Text>
       <View style={styles.specResultBoxesRow}>
         {specRow.values.map((val: string, idx: number) => {
           const isWinner = !specRow.isDraw && idx === specRow.winnerIndex;
           return (
-            <View key={idx} style={[styles.bigBox, { backgroundColor: isWinner ? colors.successMuted : colors.surfaceHighlight, borderColor: isWinner ? colors.success : colors.border }]}>
+            <View 
+              key={idx} 
+              style={[
+                styles.bigBox, 
+                { 
+                  backgroundColor: isWinner ? colors.successMuted : colors.surface, 
+                  borderColor: isWinner ? colors.success : 'transparent',
+                  borderWidth: isWinner ? 1 : 0,
+                }
+              ]}
+            >
               {isWinner && <View style={[styles.winnerIndicator, { backgroundColor: colors.success }]} />}
-              <Text style={[styles.bigBoxText, { color: isWinner ? colors.success : colors.text }]} adjustsFontSizeToFit numberOfLines={4}>
+              <Text style={[styles.bigBoxText, { color: isWinner ? colors.success : colors.text }]} adjustsFontSizeToFit numberOfLines={5}>
                 {val}
               </Text>
             </View>
@@ -164,69 +189,80 @@ export default function CompareScreen() {
   const renderContent = () => {
     if (selectedCategory === "Overview") {
       return (
-        <Animated.View style={styles.overviewContainer}>
-          <Card borderRadius={12} style={[styles.heroCard, { borderColor: colors.primary, borderWidth: 1, backgroundColor: colors.surface }]}>
+        <Animated.View 
+          entering={FadeInDown.springify().damping(20)}
+          style={styles.overviewContainer}
+        >
+          <Card borderRadius={20} style={[styles.heroCard, { backgroundColor: colors.surface, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 4 }]}>
             <View style={styles.heroHeader}>
-              <Feather name="zap" size={16} color={colors.primary} />
-              <Text style={[styles.heroLabel, { color: colors.primary }]}>AI VERDICT</Text>
+              <View style={[styles.aiBadge, { backgroundColor: 'rgba(35, 131, 226, 0.15)' }]}>
+                <Feather name="zap" size={14} color={colors.primary} />
+                <Text style={[styles.heroLabel, { color: colors.primary }]}>AI VERDICT</Text>
+              </View>
             </View>
             <Text style={[styles.heroText, { color: colors.text }]}>{aiSummary}</Text>
           </Card>
           
           {keyDifferences.length > 0 && (
-            <View style={{ marginTop: 16 }}>
+            <Animated.View entering={FadeInUp.delay(150).springify().damping(20)} style={{ marginTop: 24 }}>
               <Text style={[styles.overviewSectionTitle, { color: colors.textTertiary }]}>KEY DIFFERENCES</Text>
-              {keyDifferences.map((diff, i) => (
-                <View key={i} style={styles.diffRow}>
-                  <Text style={[styles.diffLabel, { color: colors.text }]}>{diff.label}</Text>
-                  <View style={styles.diffValuesRow}>
-                    <Text style={[styles.diffValueLeft, { color: products[0].retailerColor || colors.primary }]} numberOfLines={2}>{diff.values[0]}</Text>
-                    <Text style={[styles.diffValueRight, { color: products[1]?.retailerColor || colors.error }]} numberOfLines={2}>{diff.values[1]}</Text>
+              <View style={[styles.differencesCard, { backgroundColor: colors.surface }]}>
+                {keyDifferences.map((diff, i) => (
+                  <View key={i} style={[styles.diffRow, i === keyDifferences.length - 1 && { borderBottomWidth: 0 }]}>
+                    <Text style={[styles.diffLabel, { color: colors.textSecondary }]}>{diff.label}</Text>
+                    <View style={styles.diffValuesRow}>
+                      <Text style={[styles.diffValueLeft, { color: products[0].retailerColor || colors.primary }]} numberOfLines={2}>{diff.values[0]}</Text>
+                      <View style={[styles.vsBadge, { backgroundColor: colors.background }]}>
+                        <Text style={[styles.vsText, { color: colors.textTertiary }]}>VS</Text>
+                      </View>
+                      <Text style={[styles.diffValueRight, { color: products[1]?.retailerColor || colors.error }]} numberOfLines={2}>{diff.values[1]}</Text>
+                    </View>
                   </View>
-                </View>
-              ))}
-            </View>
+                ))}
+              </View>
+            </Animated.View>
           )}
         </Animated.View>
       );
     }
 
     const rows = categoriesMap.get(selectedCategory!) || [];
-    return rows.map((row, idx) => <SpecResultBoxes key={row.label + idx} specRow={row} colors={colors} />);
+    return rows.map((row, idx) => <SpecResultBoxes key={row.label + idx} specRow={row} colors={colors} index={idx} />);
   };
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View style={styles.header}>
         <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }} hitSlop={12} style={styles.backIcon}>
-          <Feather name="arrow-left" size={22} color={colors.textSecondary} />
+          <Feather name="arrow-left" size={24} color={colors.text} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Comparison</Text>
-        <View style={{ width: 34 }} />
+        <View style={{ width: 40 }} />
       </View>
 
       {/* FIXED HEADER PORTION */}
-      <View style={[styles.fixedHeaderContainer, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+      <View style={styles.fixedHeaderContainer}>
         {/* Top 2 Boxes */}
         <View style={styles.productRow}>
           <ProductHeaderBox product={products[0]} index={0} colors={colors} />
           {products[1] && <ProductHeaderBox product={products[1]} index={1} colors={colors} />}
         </View>
 
-        {/* Small Pink Boxes (Categories) */}
+        {/* Small Soft Boxes (Categories) */}
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryScrollContent}
           style={styles.categoryScroll}
         >
-          {categoryList.map(cat => (
+          {categoryList.map((cat, idx) => (
             <CategoryBox 
               key={cat} 
               category={cat} 
               isSelected={selectedCategory === cat} 
               onSelect={() => setSelectedCategory(cat)} 
               colors={colors} 
+              index={idx}
             />
           ))}
         </ScrollView>
@@ -242,46 +278,51 @@ export default function CompareScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 16, fontWeight: "600" },
-  backIcon: { padding: 6 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  headerTitle: { fontSize: 18, fontWeight: "700", letterSpacing: -0.5 },
+  backIcon: { padding: 8, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20 },
   
-  fixedHeaderContainer: { borderBottomWidth: 1, paddingBottom: 8, paddingTop: 12 },
-  productRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 16, gap: 12, marginBottom: 12 },
-  productHeaderBox: { flex: 1, borderRadius: 12, padding: 12, alignItems: "center", justifyContent: "center", minHeight: 80 },
-  productImagePlaceholder: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.2)", alignItems: "center", justifyContent: "center", marginBottom: 8 },
-  productHeaderText: { color: "#FFF", fontSize: 13, fontWeight: "700", textAlign: "center", letterSpacing: 0.5 },
+  fixedHeaderContainer: { paddingBottom: 16, paddingTop: 4 },
+  productRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 20, gap: 16, marginBottom: 20 },
+  productHeaderBox: { flex: 1, borderRadius: 20, padding: 16, alignItems: "center", justifyContent: "center", minHeight: 110, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 6 },
+  productImagePlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.25)", alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  productHeaderText: { color: "#FFF", fontSize: 14, fontWeight: "800", textAlign: "center", letterSpacing: -0.2 },
 
   categoryScroll: { flexGrow: 0 },
-  categoryScrollContent: { paddingHorizontal: 16, gap: 10 },
-  categoryBox: { width: 64, height: 64, borderRadius: 12, alignItems: "center", justifyContent: "center", padding: 6 },
-  categoryBoxText: { fontSize: 10, fontWeight: "600", marginTop: 6, textAlign: "center" },
+  categoryScrollContent: { paddingHorizontal: 20, gap: 12 },
+  categoryBox: { width: 76, height: 86, borderRadius: 20, alignItems: "center", justifyContent: "center", padding: 8 },
+  categoryIconContainer: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  categoryBoxText: { fontSize: 11, fontWeight: "700", textAlign: "center", letterSpacing: -0.2 },
 
-  scrollBody: { padding: 16, paddingBottom: 60 },
+  scrollBody: { padding: 20, paddingBottom: 80 },
 
   overviewContainer: { flex: 1 },
-  heroCard: { padding: 20, marginBottom: 8 },
-  heroHeader: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
-  heroLabel: { fontSize: 12, fontWeight: "800", letterSpacing: 1.2, marginLeft: 6 },
-  heroText: { fontSize: 15, lineHeight: 24, fontWeight: "500" },
+  heroCard: { padding: 24, marginBottom: 12 },
+  heroHeader: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
+  aiBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, gap: 6 },
+  heroLabel: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8 },
+  heroText: { fontSize: 16, lineHeight: 26, fontWeight: "500", letterSpacing: -0.2 },
   
-  overviewSectionTitle: { fontSize: 11, fontWeight: "600", letterSpacing: 1.2, marginBottom: 12 },
-  diffRow: { marginBottom: 16 },
-  diffLabel: { fontSize: 13, fontWeight: "600", marginBottom: 6 },
-  diffValuesRow: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
-  diffValueLeft: { flex: 1, fontSize: 14, fontWeight: "500" },
-  diffValueRight: { flex: 1, fontSize: 14, fontWeight: "500", textAlign: "right" },
+  overviewSectionTitle: { fontSize: 12, fontWeight: "700", letterSpacing: 1.2, marginBottom: 16, marginLeft: 4 },
+  differencesCard: { borderRadius: 20, padding: 20 },
+  diffRow: { marginBottom: 16, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255,255,255,0.08)' },
+  diffLabel: { fontSize: 12, fontWeight: "700", marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  diffValuesRow: { flexDirection: "row", justifyContent: "space-between", alignItems: 'center', gap: 12 },
+  diffValueLeft: { flex: 1, fontSize: 15, fontWeight: "600", lineHeight: 22 },
+  diffValueRight: { flex: 1, fontSize: 15, fontWeight: "600", textAlign: "right", lineHeight: 22 },
+  vsBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  vsText: { fontSize: 10, fontWeight: '800' },
 
-  specResultContainer: { marginBottom: 24 },
-  specResultLabel: { fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, textAlign: "center" },
-  specResultBoxesRow: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
+  specResultContainer: { marginBottom: 32 },
+  specResultLabel: { fontSize: 13, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16, marginLeft: 8 },
+  specResultBoxesRow: { flexDirection: "row", justifyContent: "space-between", gap: 16 },
   
-  bigBox: { flex: 1, borderRadius: 12, padding: 16, minHeight: 100, justifyContent: "center", borderWidth: 1, position: "relative", overflow: "hidden" },
-  winnerIndicator: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
-  bigBoxText: { fontSize: 16, fontWeight: "600", textAlign: "center", lineHeight: 24 },
+  bigBox: { flex: 1, borderRadius: 24, padding: 20, minHeight: 120, justifyContent: "center", position: "relative", overflow: "hidden" },
+  winnerIndicator: { position: "absolute", left: 0, top: 0, bottom: 0, width: 6 },
+  bigBoxText: { fontSize: 15, fontWeight: "600", textAlign: "center", lineHeight: 22, letterSpacing: -0.2 },
 
   emptyRoot: { flex: 1, alignItems: "center", justifyContent: "center" },
-  emptyText: { fontSize: 16, marginBottom: 20 },
-  backBtn: { padding: 12 },
-  backBtnText: { fontSize: 15, fontWeight: "600" },
+  emptyText: { fontSize: 16, marginBottom: 20, fontWeight: '500' },
+  backBtn: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 20, backgroundColor: 'rgba(35, 131, 226, 0.1)' },
+  backBtnText: { fontSize: 15, fontWeight: "700" },
 });
