@@ -63,7 +63,11 @@ function ProductHeaderBox({ product, index, colors }: { product: Product; index:
       ]}
     >
       <View style={styles.productImagePlaceholder}>
-        <MaterialCommunityIcons name={getCategoryIconName(product.name)} size={28} color={isLeft ? colors.primary : colors.textSecondary} />
+        {product.imageUrl ? (
+          <Image source={{ uri: product.imageUrl }} style={{ width: 56, height: 40, borderRadius: 8 }} resizeMode="contain" />
+        ) : (
+          <MaterialCommunityIcons name={getCategoryIconName(product.name)} size={28} color={isLeft ? colors.primary : colors.textSecondary} />
+        )}
       </View>
       <Text style={[styles.productHeaderText, { color: colors.text }]} numberOfLines={2}>
         {normalizeTitle(product.name)}
@@ -264,7 +268,7 @@ const styles = StyleSheet.create({
   fixedHeaderContainer: { paddingBottom: 16, paddingTop: 4, borderBottomWidth: 1 },
   productRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 20, gap: 12, marginBottom: 16 },
   productHeaderBox: { flex: 1, borderRadius: 16, padding: 16, alignItems: "center", justifyContent: "center", minHeight: 90 },
-  productImagePlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(150,150,150,0.1)", alignItems: "center", justifyContent: "center", marginBottom: 8 },
+  productImagePlaceholder: { width: 56, height: 40, borderRadius: 8, backgroundColor: "rgba(150,150,150,0.1)", alignItems: "center", justifyContent: "center", marginBottom: 8 },
   productHeaderText: { fontSize: 13, fontWeight: "700", textAlign: "center", letterSpacing: -0.2 },
 
   categoryScroll: { flexGrow: 0 },
