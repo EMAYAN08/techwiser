@@ -56,14 +56,16 @@ function ProductHeaderBox({ product, index, colors }: { product: Product; index:
       style={[
         styles.productHeaderBox, 
         { 
-          backgroundColor: product.retailerColor || (isLeft ? colors.primary : colors.error),
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.border,
         }
       ]}
     >
       <View style={styles.productImagePlaceholder}>
-        <MaterialCommunityIcons name={getCategoryIconName(product.name)} size={28} color="rgba(255,255,255,0.9)" />
+        <MaterialCommunityIcons name={getCategoryIconName(product.name)} size={28} color={isLeft ? colors.primary : colors.textSecondary} />
       </View>
-      <Text style={styles.productHeaderText} numberOfLines={2}>
+      <Text style={[styles.productHeaderText, { color: colors.text }]} numberOfLines={2}>
         {normalizeTitle(product.name)}
       </Text>
     </View>
@@ -82,11 +84,11 @@ function CategoryBox({ category, isSelected, onSelect, colors, index }: { catego
         { backgroundColor: isSelected ? colors.text : colors.surface }
       ]}
     >
-      <View style={[styles.categoryIconContainer, { backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : colors.surfaceHighlight }]}>
+      <View >
         <MaterialCommunityIcons name={getCategoryIconName(category)} size={24} color={isSelected ? colors.background : colors.text} style={{ opacity: isSelected ? 1 : 0.8 }} />
       </View>
       <Text style={[styles.categoryBoxText, { color: isSelected ? colors.background : colors.text }]}>
-        {category === "Overview" ? "OVERVIEW" : category.toUpperCase()}
+        {category}
       </Text>
     </Pressable>
   );
@@ -170,7 +172,7 @@ export default function CompareScreen() {
     if (selectedCategory === "Overview") {
       return (
         <View style={styles.overviewContainer}>
-          <Card borderRadius={20} style={[styles.heroCard, { backgroundColor: colors.surface, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 4 }]}>
+          <Card style={[styles.heroCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.heroHeader}>
               <View style={[styles.aiBadge, { backgroundColor: 'rgba(35, 131, 226, 0.15)' }]}>
                 <Feather name="zap" size={14} color={colors.primary} />
@@ -183,7 +185,7 @@ export default function CompareScreen() {
           {keyDifferences.length > 0 && (
             <View style={{ marginTop: 24 }}>
               <Text style={[styles.overviewSectionTitle, { color: colors.textTertiary }]}>KEY DIFFERENCES</Text>
-              <View style={[styles.differencesCard, { backgroundColor: colors.surface }]}>
+              <View style={[styles.differencesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 {keyDifferences.map((diff, i) => (
                   <View key={i} style={[styles.diffRow, i === keyDifferences.length - 1 && { borderBottomWidth: 0 }]}>
                     <Text style={[styles.diffLabel, { color: colors.textSecondary }]}>{diff.label}</Text>
@@ -218,7 +220,7 @@ export default function CompareScreen() {
       </View>
 
       {/* FIXED HEADER PORTION */}
-      <View style={styles.fixedHeaderContainer}>
+      <View style={[styles.fixedHeaderContainer, { borderBottomColor: colors.border }]}>
         {/* Top 2 Boxes */}
         <View style={styles.productRow}>
           <ProductHeaderBox product={products[0]} index={0} colors={colors} />
@@ -255,51 +257,50 @@ export default function CompareScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 60, paddingBottom: 12 },
   headerTitle: { fontSize: 18, fontWeight: "700", letterSpacing: -0.5 },
-  backIcon: { padding: 8, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20 },
+  backIcon: { padding: 8, backgroundColor: 'rgba(150,150,150,0.1)', borderRadius: 20 },
   
-  fixedHeaderContainer: { paddingBottom: 16, paddingTop: 4 },
-  productRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 20, gap: 16, marginBottom: 20 },
-  productHeaderBox: { flex: 1, borderRadius: 20, padding: 16, alignItems: "center", justifyContent: "center", minHeight: 110, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 6 },
-  productImagePlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.25)", alignItems: "center", justifyContent: "center", marginBottom: 12 },
-  productHeaderText: { color: "#FFF", fontSize: 14, fontWeight: "800", textAlign: "center", letterSpacing: -0.2 },
+  fixedHeaderContainer: { paddingBottom: 16, paddingTop: 4, borderBottomWidth: 1 },
+  productRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 20, gap: 12, marginBottom: 16 },
+  productHeaderBox: { flex: 1, borderRadius: 16, padding: 16, alignItems: "center", justifyContent: "center", minHeight: 90 },
+  productImagePlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(150,150,150,0.1)", alignItems: "center", justifyContent: "center", marginBottom: 8 },
+  productHeaderText: { fontSize: 13, fontWeight: "700", textAlign: "center", letterSpacing: -0.2 },
 
   categoryScroll: { flexGrow: 0 },
-  categoryScrollContent: { paddingHorizontal: 20, gap: 12 },
-  categoryBox: { width: 76, height: 86, borderRadius: 20, alignItems: "center", justifyContent: "center", padding: 8 },
-  categoryIconContainer: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  categoryBoxText: { fontSize: 11, fontWeight: "700", textAlign: "center", letterSpacing: -0.2 },
+  categoryScrollContent: { paddingHorizontal: 20, gap: 8 },
+  categoryBox: { flexDirection: "row", borderRadius: 100, alignItems: "center", justifyContent: "center", paddingHorizontal: 16, paddingVertical: 10 },
+  categoryBoxText: { fontSize: 13, fontWeight: "600", marginLeft: 6, letterSpacing: -0.2 },
 
   scrollBody: { padding: 20, paddingBottom: 80 },
 
   overviewContainer: { flex: 1 },
-  heroCard: { padding: 24, marginBottom: 12 },
-  heroHeader: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  aiBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, gap: 6 },
-  heroLabel: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8 },
-  heroText: { fontSize: 16, lineHeight: 26, fontWeight: "500", letterSpacing: -0.2 },
+  heroCard: { padding: 20, marginBottom: 12, borderWidth: 1, borderRadius: 16 },
+  heroHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  aiBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, gap: 4 },
+  heroLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
+  heroText: { fontSize: 15, lineHeight: 24, fontWeight: "400" },
   
-  overviewSectionTitle: { fontSize: 12, fontWeight: "700", letterSpacing: 1.2, marginBottom: 16, marginLeft: 4 },
-  differencesCard: { borderRadius: 20, padding: 20 },
-  diffRow: { marginBottom: 16, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  diffLabel: { fontSize: 12, fontWeight: "700", marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  overviewSectionTitle: { fontSize: 12, fontWeight: "600", letterSpacing: 1, marginBottom: 12, marginLeft: 2 },
+  differencesCard: { borderRadius: 16, padding: 16, borderWidth: 1 },
+  diffRow: { marginBottom: 12, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  diffLabel: { fontSize: 11, fontWeight: "600", marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   diffValuesRow: { flexDirection: "row", justifyContent: "space-between", alignItems: 'center', gap: 12 },
-  diffValueLeft: { flex: 1, fontSize: 15, fontWeight: "600", lineHeight: 22 },
-  diffValueRight: { flex: 1, fontSize: 15, fontWeight: "600", textAlign: "right", lineHeight: 22 },
-  vsBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  vsText: { fontSize: 10, fontWeight: '800' },
+  diffValueLeft: { flex: 1, fontSize: 14, fontWeight: "500", lineHeight: 20 },
+  diffValueRight: { flex: 1, fontSize: 14, fontWeight: "500", textAlign: "right", lineHeight: 20 },
+  vsBadge: { paddingHorizontal: 6, paddingVertical: 4, borderRadius: 12 },
+  vsText: { fontSize: 10, fontWeight: '700' },
 
-  specResultContainer: { marginBottom: 32 },
-  specResultLabel: { fontSize: 13, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16, marginLeft: 8 },
-  specResultBoxesRow: { flexDirection: "row", justifyContent: "space-between", gap: 16 },
+  specResultContainer: { marginBottom: 28 },
+  specResultLabel: { fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, marginLeft: 2 },
+  specResultBoxesRow: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
   
-  bigBox: { flex: 1, borderRadius: 24, padding: 20, minHeight: 120, justifyContent: "center", position: "relative", overflow: "hidden" },
-  winnerIndicator: { position: "absolute", left: 0, top: 0, bottom: 0, width: 6 },
-  bigBoxText: { fontSize: 15, fontWeight: "600", textAlign: "center", lineHeight: 22, letterSpacing: -0.2 },
+  bigBox: { flex: 1, borderRadius: 16, padding: 16, minHeight: 100, justifyContent: "center", position: "relative", overflow: "hidden" },
+  winnerIndicator: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
+  bigBoxText: { fontSize: 14, fontWeight: "500", textAlign: "center", lineHeight: 20 },
 
   emptyRoot: { flex: 1, alignItems: "center", justifyContent: "center" },
   emptyText: { fontSize: 16, marginBottom: 20, fontWeight: '500' },
   backBtn: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 20, backgroundColor: 'rgba(35, 131, 226, 0.1)' },
-  backBtnText: { fontSize: 15, fontWeight: "700" },
+  backBtnText: { fontSize: 15, fontWeight: "600" },
 });
