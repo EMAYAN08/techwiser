@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, StyleSheet, Pressable, Image, ImageSourcePropType } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useComparisonStore, Product } from "../store/useComparisonStore";
 import { useThemeColors } from "../constants/Colors";
 import { Card } from "../components/ui/Card";
-import { categoryIcons } from "../utils/categoryIcons";
 import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, withSpring, useSharedValue, FadeInRight } from "react-native-reanimated";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -21,32 +20,36 @@ function normalizeTitle(title: string) {
   return cleaned;
 }
 
-// Maps category strings to icons
-function getCategoryIcon(category: string): ImageSourcePropType {
+// Maps category strings to MaterialCommunityIcons names
+function getCategoryIconName(category: string): keyof typeof MaterialCommunityIcons.glyphMap {
   const c = category.toLowerCase();
   
   // Devices
-  if (c.includes("phone")) return categoryIcons.Phone;
-  if (c.includes("headphone")) return categoryIcons.Headphones;
-  if (c.includes("earphone") || c.includes("buds")) return categoryIcons.Earphones;
-  if (c.includes("tv") || c.includes("television")) return categoryIcons.TV;
-  if (c.includes("fridge") || c.includes("refrigerator")) return categoryIcons.Fridge;
-  if (c.includes("ac") || c.includes("air")) return categoryIcons.AC;
-  if (c.includes("laptop") || c.includes("macbook")) return categoryIcons.Laptops;
-  if (c.includes("desktop") || c.includes("pc")) return categoryIcons.Desktop;
-  if (c.includes("monitor")) return categoryIcons.Monitor;
-  if (c.includes("keyboard")) return categoryIcons.Keyboard;
+  if (c.includes("phone")) return "cellphone";
+  if (c.includes("tablet") || c.includes("ipad")) return "tablet";
+  if (c.includes("laptop") || c.includes("macbook")) return "laptop";
+  if (c.includes("watch") || c.includes("smartwatch")) return "watch-variant";
+  if (c.includes("headphone")) return "headphones";
+  if (c.includes("earphone") || c.includes("buds")) return "earbuds";
+  if (c.includes("tv") || c.includes("television")) return "television";
+  if (c.includes("fridge") || c.includes("refrigerator")) return "fridge";
+  if (c.includes("ac") || c.includes("air")) return "air-conditioner";
+  if (c.includes("desktop") || c.includes("pc")) return "desktop-tower-monitor";
+  if (c.includes("monitor")) return "monitor";
+  if (c.includes("keyboard")) return "keyboard";
 
   // Specs
-  if (c.includes("performance") || c.includes("processor") || c.includes("speed")) return categoryIcons.Performance;
-  if (c.includes("display") || c.includes("screen")) return categoryIcons.Display;
-  if (c.includes("battery") || c.includes("power")) return categoryIcons.Battery;
-  if (c.includes("camera") || c.includes("video")) return categoryIcons.Camera;
-  if (c.includes("design") || c.includes("build") || c.includes("size")) return categoryIcons.Build;
-  if (c.includes("memory") || c.includes("ram") || c.includes("storage")) return categoryIcons.Performance;
-  if (c.includes("network") || c.includes("connectivity") || c.includes("cellular")) return categoryIcons.Connectivity;
+  if (c.includes("performance") || c.includes("processor") || c.includes("speed")) return "cpu-64-bit";
+  if (c.includes("display") || c.includes("screen")) return "monitor-shimmer";
+  if (c.includes("battery") || c.includes("power")) return "battery-charging-100";
+  if (c.includes("camera") || c.includes("video")) return "camera-iris";
+  if (c.includes("design") || c.includes("build") || c.includes("size")) return "ruler-square";
+  if (c.includes("memory") || c.includes("ram") || c.includes("storage")) return "memory";
+  if (c.includes("audio") || c.includes("sound")) return "volume-high";
+  if (c.includes("network") || c.includes("connectivity") || c.includes("cellular")) return "wifi";
+  if (c.includes("overview")) return "view-dashboard";
   
-  return categoryIcons.Performance;
+  return "star-circle-outline";
 }
 
 function ProductHeaderBox({ product, index, colors }: { product: Product; index: number; colors: any }) {
@@ -62,11 +65,7 @@ function ProductHeaderBox({ product, index, colors }: { product: Product; index:
       ]}
     >
       <View style={styles.productImagePlaceholder}>
-        {product.imageUrl ? (
-          <Image source={{ uri: product.imageUrl }} style={{ width: 44, height: 44, borderRadius: 22 }} resizeMode="cover" />
-        ) : (
-          <Image source={getCategoryIcon(product.name)} style={{ width: 32, height: 32, borderRadius: 16 }} />
-        )}
+        <MaterialCommunityIcons name={getCategoryIconName(product.name)} size={28} color="#FFF" />
       </View>
       <Text style={styles.productHeaderText} numberOfLines={2}>
         {normalizeTitle(product.name)}
@@ -100,7 +99,7 @@ function CategoryBox({ category, isSelected, onSelect, colors, index }: { catego
       ]}
     >
       <View style={[styles.categoryIconContainer, { backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : colors.surfaceHighlight }]}>
-        <Image source={getCategoryIcon(category)} style={{ width: 28, height: 28, borderRadius: 8, opacity: isSelected ? 1 : 0.8 }} />
+        <MaterialCommunityIcons name={getCategoryIconName(category)} size={24} color={isSelected ? colors.background : colors.text} style={{ opacity: isSelected ? 1 : 0.8 }} />
       </View>
       <Text style={[styles.categoryBoxText, { color: isSelected ? colors.background : colors.textSecondary }]} numberOfLines={1}>
         {category}
