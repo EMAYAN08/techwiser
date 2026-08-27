@@ -7,6 +7,7 @@ import { Zap, ArrowLeft } from "lucide-react-native";
 import { useComparisonStore, Product } from "../store/useComparisonStore";
 import { useThemeColors } from "../constants/Colors";
 import { Card } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
 import { getCategoryIcon } from "../components/comparison/CategoryIcon";
 
 // Helper to shorten long product names
@@ -177,6 +178,13 @@ export default function CompareScreen() {
               </View>
             </View>
           )}
+          <View style={styles.detailedCta}>
+            <Button
+              title="View Detailed Comparison"
+              variant="primary"
+              onPress={() => router.push("/compare/detailed")}
+            />
+          </View>
         </View>
       );
     }
@@ -252,6 +260,7 @@ const styles = StyleSheet.create({
 
   overviewContainer: { flex: 1 },
   heroCard: { padding: 20, marginBottom: 12, borderWidth: 1, borderRadius: 16 },
+  detailedCta: { marginTop: 24 },
   heroHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   aiBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, gap: 4 },
   heroLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
