@@ -3,10 +3,11 @@ import { View, Text, ScrollView, StyleSheet, Pressable, Image } from "react-nati
 import { useRouter } from "expo-router";
 
 import * as Haptics from "expo-haptics";
-import { Smartphone, Tablet, Laptop, Watch, Headphones, Tv, Refrigerator, AirVent, Monitor, Keyboard, Cpu, Battery, Camera, Ruler, Microchip, Volume2, Wifi, LayoutDashboard, Star, Zap, ArrowLeft } from "lucide-react-native";
+import { Zap, ArrowLeft } from "lucide-react-native";
 import { useComparisonStore, Product } from "../store/useComparisonStore";
 import { useThemeColors } from "../constants/Colors";
 import { Card } from "../components/ui/Card";
+import { getCategoryIcon } from "../components/comparison/CategoryIcon";
 
 // Helper to shorten long product names
 function normalizeTitle(title: string) {
@@ -18,42 +19,14 @@ function normalizeTitle(title: string) {
   return cleaned;
 }
 
-// Maps category strings to MaterialCommunityIcons names
-function getCategoryIcon(category: string) {
-  const c = category.toLowerCase();
-  
-  if (c.includes("phone")) return Smartphone;
-  if (c.includes("tablet") || c.includes("ipad")) return Tablet;
-  if (c.includes("laptop") || c.includes("macbook")) return Laptop;
-  if (c.includes("watch") || c.includes("smartwatch")) return Watch;
-  if (c.includes("headphone") || c.includes("earphone") || c.includes("buds")) return Headphones;
-  if (c.includes("tv") || c.includes("television")) return Tv;
-  if (c.includes("fridge") || c.includes("refrigerator")) return Refrigerator;
-  if (c.includes("ac") || c.includes("air")) return AirVent;
-  if (c.includes("desktop") || c.includes("pc")) return Monitor;
-  if (c.includes("monitor")) return Monitor;
-  if (c.includes("keyboard")) return Keyboard;
-
-  if (c.includes("performance") || c.includes("processor") || c.includes("speed")) return Cpu;
-  if (c.includes("display") || c.includes("screen")) return Monitor;
-  if (c.includes("battery") || c.includes("power")) return Battery;
-  if (c.includes("camera") || c.includes("video")) return Camera;
-  if (c.includes("design") || c.includes("build") || c.includes("size") || c.includes("weight")) return Ruler;
-  if (c.includes("memory") || c.includes("ram") || c.includes("storage")) return Microchip;
-  if (c.includes("audio") || c.includes("sound")) return Volume2;
-  if (c.includes("network") || c.includes("connectivity") || c.includes("cellular")) return Wifi;
-  if (c.includes("overview")) return LayoutDashboard;
-  
-  return Star;
-}
-
 function ProductHeaderBox({ product, index, colors }: { product: Product; index: number; colors: any }) {
   const isLeft = index === 0;
+  const Icon = getCategoryIcon(product.name);
   return (
-    <View 
+    <View
       style={[
-        styles.productHeaderBox, 
-        { 
+        styles.productHeaderBox,
+        {
           backgroundColor: colors.surface,
           borderWidth: 1,
           borderColor: colors.border,
@@ -63,7 +36,9 @@ function ProductHeaderBox({ product, index, colors }: { product: Product; index:
       <View style={styles.productImagePlaceholder}>
         {product.imageUrl ? (
           <Image source={{ uri: product.imageUrl }} style={{ width: 56, height: 40, borderRadius: 8 }} resizeMode="contain" />
-        ) : ((() => { const Icon = getCategoryIcon(product.name); return <Icon size={28} color={isLeft ? colors.primary : colors.textSecondary} />; })())}
+        ) : (
+          <Icon size={28} color={isLeft ? colors.primary : colors.textSecondary} />
+        )}
       </View>
       <Text style={[styles.productHeaderText, { color: colors.text }]} numberOfLines={2}>
         {normalizeTitle(product.name)}
@@ -73,6 +48,7 @@ function ProductHeaderBox({ product, index, colors }: { product: Product; index:
 }
 
 function CategoryBox({ category, isSelected, onSelect, colors, index }: { category: string; isSelected: boolean; onSelect: () => void; colors: any; index: number }) {
+  const Icon = getCategoryIcon(category);
   return (
     <Pressable
       onPress={() => {
@@ -85,7 +61,7 @@ function CategoryBox({ category, isSelected, onSelect, colors, index }: { catego
       ]}
     >
       <View >
-        {(() => { const Icon = getCategoryIcon(category); return <Icon size={20} color={isSelected ? colors.background : colors.text} strokeWidth={2.5} style={{ opacity: isSelected ? 1 : 0.8 }} />; })()}
+        <Icon size={20} color={isSelected ? colors.background : colors.text} strokeWidth={2.5} style={{ opacity: isSelected ? 1 : 0.8 }} />
       </View>
       <Text style={[styles.categoryBoxText, { color: isSelected ? colors.background : colors.text }]}>
         {category}
