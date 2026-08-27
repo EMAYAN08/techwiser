@@ -6,6 +6,8 @@ import * as Haptics from "expo-haptics";
 import { useComparisonStore, Product } from "../store/useComparisonStore";
 import { useThemeColors } from "../constants/Colors";
 import { Card } from "../components/ui/Card";
+import { categoryIcons } from "../utils/categoryIcons";
+import { ImageSourcePropType } from "react-native";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -20,16 +22,31 @@ function normalizeTitle(title: string) {
 }
 
 // Maps category strings to icons
-function getCategoryIcon(category: string): any {
+function getCategoryIcon(category: string): ImageSourcePropType {
   const c = category.toLowerCase();
-  if (c.includes("performance") || c.includes("processor") || c.includes("speed")) return "cpu";
-  if (c.includes("display") || c.includes("screen")) return "monitor";
-  if (c.includes("battery") || c.includes("power")) return "battery";
-  if (c.includes("camera") || c.includes("video")) return "camera";
-  if (c.includes("design") || c.includes("build") || c.includes("size")) return "smartphone";
-  if (c.includes("memory") || c.includes("ram") || c.includes("storage")) return "hard-drive";
-  if (c.includes("network") || c.includes("connectivity") || c.includes("cellular")) return "wifi";
-  return "list";
+  
+  // Devices
+  if (c.includes("phone")) return categoryIcons.Phone;
+  if (c.includes("headphone")) return categoryIcons.Headphones;
+  if (c.includes("earphone") || c.includes("buds")) return categoryIcons.Earphones;
+  if (c.includes("tv") || c.includes("television")) return categoryIcons.TV;
+  if (c.includes("fridge") || c.includes("refrigerator")) return categoryIcons.Fridge;
+  if (c.includes("ac") || c.includes("air")) return categoryIcons.AC;
+  if (c.includes("laptop") || c.includes("macbook")) return categoryIcons.Laptops;
+  if (c.includes("desktop") || c.includes("pc")) return categoryIcons.Desktop;
+  if (c.includes("monitor")) return categoryIcons.Monitor;
+  if (c.includes("keyboard")) return categoryIcons.Keyboard;
+
+  // Specs
+  if (c.includes("performance") || c.includes("processor") || c.includes("speed")) return categoryIcons.Performance;
+  if (c.includes("display") || c.includes("screen")) return categoryIcons.Display;
+  if (c.includes("battery") || c.includes("power")) return categoryIcons.Battery;
+  if (c.includes("camera") || c.includes("video")) return categoryIcons.Camera;
+  if (c.includes("design") || c.includes("build") || c.includes("size")) return categoryIcons.Build;
+  if (c.includes("memory") || c.includes("ram") || c.includes("storage")) return categoryIcons.Performance;
+  if (c.includes("network") || c.includes("connectivity") || c.includes("cellular")) return categoryIcons.Connectivity;
+  
+  return categoryIcons.Performance;
 }
 
 function ProductHeaderBox({ product, index, colors }: { product: Product; index: number; colors: any }) {
@@ -40,7 +57,7 @@ function ProductHeaderBox({ product, index, colors }: { product: Product; index:
         {product.imageUrl ? (
           <Image source={{ uri: product.imageUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} resizeMode="cover" />
         ) : (
-          <Feather name={getCategoryIcon(product.name)} size={20} color="rgba(255,255,255,0.8)" />
+          <Image source={getCategoryIcon(product.name)} style={{ width: 24, height: 24, borderRadius: 12 }} />
         )}
       </View>
       <Text style={styles.productHeaderText} numberOfLines={2}>
@@ -66,7 +83,7 @@ function CategoryBox({ category, isSelected, onSelect, colors }: { category: str
         { backgroundColor: isSelected ? colors.ai : colors.surface, transform: [{ scale: scaleAnim }] }
       ]}
     >
-      <Feather name={getCategoryIcon(category)} size={20} color={isSelected ? "#FFF" : colors.textSecondary} />
+      <Image source={getCategoryIcon(category)} style={{ width: 24, height: 24, borderRadius: 6, opacity: isSelected ? 1 : 0.6 }} />
       <Text style={[styles.categoryBoxText, { color: isSelected ? "#FFF" : colors.textSecondary }]} numberOfLines={1}>
         {category}
       </Text>
