@@ -1,0 +1,1375 @@
+<title>SpecMatch — Compare Screen Design Spec v2</title>
+
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --surface: #141414;
+    --surface-2: #1A1A1A;
+    --border: #2A2A2A;
+    --border-soft: #1F1F1F;
+    --text: rgba(255, 255, 255, 0.92);
+    --text-2: rgba(255, 255, 255, 0.66);
+    --text-3: rgba(255, 255, 255, 0.42);
+    --primary: #2383E2;
+    --primary-soft: rgba(35, 131, 226, 0.10);
+    --success: #2EA043;
+    --success-soft: rgba(46, 160, 67, 0.10);
+    --ai: #A259FF;
+    --ai-soft: rgba(162, 89, 255, 0.10);
+    --error: #EB5757;
+    --warning: #D97706;
+    --code-bg: #0E0E0E;
+    --grid: rgba(255, 255, 255, 0.04);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0A0A0A;
+      --surface: #141414;
+      --surface-2: #1A1A1A;
+      --border: #2A2A2A;
+      --border-soft: #1F1F1F;
+      --text: rgba(255, 255, 255, 0.92);
+      --text-2: rgba(255, 255, 255, 0.66);
+      --text-3: rgba(255, 255, 255, 0.42);
+      --primary: #2383E2;
+      --primary-soft: rgba(35, 131, 226, 0.10);
+      --success: #2EA043;
+      --success-soft: rgba(46, 160, 67, 0.10);
+      --ai: #A259FF;
+      --ai-soft: rgba(162, 89, 255, 0.10);
+      --error: #EB5757;
+      --warning: #D97706;
+      --code-bg: #0E0E0E;
+      --grid: rgba(255, 255, 255, 0.04);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0A0A0A;
+    --surface: #141414;
+    --surface-2: #1A1A1A;
+    --border: #2A2A2A;
+    --border-soft: #1F1F1F;
+    --text: rgba(255, 255, 255, 0.92);
+    --text-2: rgba(255, 255, 255, 0.66);
+    --text-3: rgba(255, 255, 255, 0.42);
+    --primary: #2383E2;
+    --primary-soft: rgba(35, 131, 226, 0.10);
+    --success: #2EA043;
+    --success-soft: rgba(46, 160, 67, 0.10);
+    --ai: #A259FF;
+    --ai-soft: rgba(162, 89, 255, 0.10);
+    --error: #EB5757;
+    --warning: #D97706;
+    --code-bg: #0E0E0E;
+    --grid: rgba(255, 255, 255, 0.04);
+  }
+
+  :root[data-theme="light"] {
+    --bg: #FAFAF8;
+    --surface: #FFFFFF;
+    --surface-2: #F4F4F2;
+    --border: #E2E1DD;
+    --border-soft: #ECECEA;
+    --text: #1A1A18;
+    --text-2: rgba(26, 26, 24, 0.66);
+    --text-3: rgba(26, 26, 24, 0.42);
+    --primary: #1B6FCC;
+    --primary-soft: rgba(27, 111, 204, 0.08);
+    --success: #2A7D3B;
+    --success-soft: rgba(42, 125, 59, 0.08);
+    --ai: #7E3FC9;
+    --ai-soft: rgba(126, 63, 201, 0.08);
+    --error: #C8443A;
+    --warning: #B3621E;
+    --code-bg: #F2F2EF;
+    --grid: rgba(0, 0, 0, 0.04);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.55;
+  }
+
+  body { min-height: 100vh; }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 80px 32px 120px;
+  }
+
+  .theme-toggle {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 10;
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px;
+  }
+  .theme-toggle button {
+    background: transparent;
+    border: 0;
+    color: var(--text-2);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 120ms, color 120ms;
+  }
+  .theme-toggle button[aria-pressed="true"] {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+  .theme-toggle button:hover { color: var(--text); }
+
+  .hero { margin-bottom: 64px; }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 24px;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--primary);
+  }
+
+  h1.title {
+    font-size: clamp(36px, 5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    margin: 0 0 20px;
+    color: var(--text);
+    text-wrap: balance;
+  }
+  .title em { font-style: normal; color: var(--primary); }
+
+  .lede {
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--text-2);
+    max-width: 64ch;
+    margin: 0 0 32px;
+  }
+
+  .meta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+  .meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .meta-chip strong { color: var(--text); font-weight: 600; }
+  .meta-chip .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--success);
+  }
+
+  section { margin-top: 80px; scroll-margin-top: 40px; }
+  h2 {
+    font-size: 26px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--text);
+  }
+  h3 {
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 600;
+    margin: 32px 0 8px;
+    color: var(--text);
+  }
+  h4 {
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 600;
+    margin: 24px 0 8px;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .section-num {
+    display: inline-block;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-soft);
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+  }
+
+  p { margin: 0 0 12px; color: var(--text-2); }
+  strong { color: var(--text); font-weight: 600; }
+  em { color: var(--text); font-style: italic; }
+  a { color: var(--primary); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 120ms; }
+  a:hover { border-bottom-color: var(--primary); }
+
+  code {
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 0.88em;
+    padding: 2px 6px;
+    background: var(--code-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    color: var(--text);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 16px 0;
+  }
+  pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .tk-kw { color: var(--ai); }
+  .tk-ty { color: var(--primary); }
+  .tk-cm { color: var(--text-3); font-style: italic; }
+  .tk-nu { color: var(--success); }
+
+  .spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .spec-table th, .spec-table td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: top;
+  }
+  .spec-table thead th {
+    background: var(--surface-2);
+    color: var(--text-3);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .spec-table tbody tr:last-child td { border-bottom: 0; }
+  .spec-table td code { font-size: 12px; }
+
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--primary);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+  .callout.caution { border-left-color: var(--warning); }
+  .callout.success { border-left-color: var(--success); }
+  .callout.ai { border-left-color: var(--ai); }
+  .callout h4 { margin: 0 0 8px; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .label {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+  .callout.caution .label { color: var(--warning); }
+  .callout.success .label { color: var(--success); }
+  .callout.ai .label { color: var(--ai); }
+
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+  @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+  .compare .col {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .compare .col h4 {
+    margin: 0 0 12px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 14px;
+    color: var(--text-2);
+  }
+  .compare .col.v1 h4 { color: var(--text-3); }
+  .compare .col.v2 h4 { color: var(--primary); }
+  .compare ul { margin: 0; padding-left: 20px; color: var(--text-2); }
+  .compare li { margin-bottom: 6px; }
+
+  .mockup-wrap {
+    margin: 32px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .mockup-caption {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 12px;
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+  .phone {
+    width: 360px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    padding: 16px 14px 14px;
+    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.4);
+  }
+  .phone-notch {
+    width: 90px;
+    height: 22px;
+    background: #000;
+    border-radius: 0 0 14px 14px;
+    margin: 0 auto 14px;
+  }
+  .phone-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 11px;
+  }
+  .m-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 14px;
+    padding: 0 4px;
+  }
+  .m-sticky {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .m-product {
+    background: var(--surface-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 8px;
+  }
+  .m-product-name { font-weight: 700; font-size: 10px; color: var(--text); margin-top: 4px; }
+  .m-product-meta { font-size: 9px; color: var(--text-3); margin-top: 2px; letter-spacing: 0.04em; }
+  .m-product-img {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-3);
+    font-size: 16px;
+  }
+  .m-verdict {
+    background: var(--primary-soft);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--primary);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .m-verdict-label {
+    font-size: 9px;
+    color: var(--primary);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .m-verdict-text {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .m-pill-row { display: flex; gap: 4px; flex-wrap: wrap; }
+  .m-pill {
+    background: var(--ai-soft);
+    color: var(--ai);
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .m-chips { display: flex; gap: 6px; padding: 2px 0; overflow: hidden; }
+  .m-chip {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-2);
+    font-size: 9px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .m-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+  .m-cat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .m-cat-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .m-cat-title { font-size: 11px; font-weight: 700; color: var(--text); }
+  .m-rank {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--success);
+    font-weight: 700;
+    background: var(--success-soft);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .m-cat-insight { font-size: 10px; color: var(--text-2); margin-bottom: 8px; }
+  .m-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 9px; }
+  .m-bar-name { width: 36px; color: var(--text-2); }
+  .m-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border-soft);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .m-bar-fill {
+    height: 100%;
+    background: var(--text-3);
+    border-radius: 3px;
+  }
+  .m-bar.winner .m-bar-fill { background: var(--success); }
+  .m-bar.winner .m-bar-name { color: var(--text); font-weight: 700; }
+  .m-bar-val { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-2); width: 44px; text-align: right; }
+  .m-bar.winner .m-bar-val { color: var(--success); font-weight: 700; }
+  .m-expand {
+    margin-top: 8px;
+    font-size: 9px;
+    color: var(--text-3);
+    text-align: left;
+  }
+  .m-tradeoff {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .m-tradeoff-label {
+    font-size: 9px;
+    color: var(--text-3);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .m-tradeoff-row {
+    font-size: 10px;
+    color: var(--text-2);
+    margin-bottom: 4px;
+    display: flex;
+    gap: 6px;
+  }
+  .m-tradeoff-row .sev {
+    color: var(--text-3);
+    font-weight: 700;
+  }
+  .m-cta {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .m-cta-btn {
+    flex: 1;
+    background: var(--primary);
+    color: white;
+    text-align: center;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .m-cta-icons { display: flex; gap: 4px; }
+  .m-cta-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-2);
+    font-size: 12px;
+  }
+
+  .weight-bars {
+    margin: 16px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .weight-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 50px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .weight-row:last-child { margin-bottom: 0; }
+  .weight-row .name { color: var(--text-2); }
+  .weight-row .track {
+    height: 8px;
+    background: var(--border-soft);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .weight-row .fill {
+    height: 100%;
+    background: var(--text-3);
+    border-radius: 4px;
+  }
+  .weight-row.hot .fill { background: var(--primary); }
+  .weight-row .val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    text-align: right;
+  }
+
+  .branch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+  @media (max-width: 720px) { .branch { grid-template-columns: 1fr; } }
+  .branch .lane {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .branch .lane h4 {
+    margin: 0 0 8px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text);
+    font-size: 13px;
+  }
+  .branch .lane p { font-size: 12px; margin: 0 0 8px; }
+  .branch .lane .when { font-size: 11px; color: var(--text-3); font-style: italic; }
+  .branch .lane .when::before { content: 'When · '; font-style: normal; color: var(--text-2); }
+
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0;
+  }
+  .checklist li {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--success);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--text-2);
+    position: relative;
+    padding-left: 36px;
+  }
+  .checklist li::before {
+    content: '✓';
+    position: absolute;
+    left: 14px;
+    top: 12px;
+    color: var(--success);
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  nav.toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 32px 0 0;
+  }
+  nav.toc h4 {
+    margin: 0 0 12px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text-3);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  nav.toc ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 24px;
+  }
+  @media (max-width: 640px) { nav.toc ol { grid-template-columns: 1fr; } }
+  nav.toc a {
+    font-size: 12px;
+    color: var(--text-2);
+    border-bottom: 0;
+    display: flex;
+    gap: 8px;
+  }
+  nav.toc a .num {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-3);
+    font-size: 11px;
+    width: 22px;
+  }
+  nav.toc a:hover { color: var(--primary); }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 48px 0;
+    border: 0;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+  .label-tiny {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .sparkle {
+    display: inline-block;
+    color: var(--primary);
+    font-size: 11px;
+    margin-right: 4px;
+  }
+</style>
+
+<div class="theme-toggle" role="group" aria-label="Theme">
+  <button data-theme-target="system" aria-pressed="true">System</button>
+  <button data-theme-target="light" aria-pressed="false">Light</button>
+  <button data-theme-target="dark" aria-pressed="false">Dark</button>
+</div>
+
+<main class="page">
+  <header class="hero">
+    <div class="eyebrow">SpecMatch · Mobile Design Spec · v2</div>
+    <h1 class="title">The compare screen <em>that helps the advisor decide</em>, not just read.</h1>
+    <p class="lede">
+      A decision-first comparison flow for Canadian retail tech advisors. The current screen
+      is a spec table; this v2 turns the same data into a 5-second answer with a priority-driven
+      re-rank, color-independent winner signals, and honest trade-offs — and demotes the spec
+      table to expandable evidence.
+    </p>
+    <div class="meta-row">
+      <span class="meta-chip"><span class="dot"></span><strong>Active</strong></span>
+      <span class="meta-chip">v2 · 2026-08-27</span>
+      <span class="meta-chip">Expo SDK 52 · TypeScript strict</span>
+      <span class="meta-chip">Reference width 390pt</span>
+      <span class="meta-chip">Dark-mode first</span>
+    </div>
+
+    <nav class="toc" aria-label="Table of contents">
+      <h4>On this page</h4>
+      <ol>
+        <li><a href="#why"><span class="num">0</span>Why this version exists</a></li>
+        <li><a href="#tokens"><span class="num">1</span>Design tokens</a></li>
+        <li><a href="#anatomy"><span class="num">2</span>Screen anatomy</a></li>
+        <li><a href="#components"><span class="num">3</span>Component tree</a></li>
+        <li><a href="#contract"><span class="num">4</span>Data contract</a></li>
+        <li><a href="#interaction"><span class="num">5</span>Interaction model</a></li>
+        <li><a href="#states"><span class="num">6</span>States &amp; wireframes</a></li>
+        <li><a href="#a11y"><span class="num">7</span>Accessibility</a></li>
+        <li><a href="#impl"><span class="num">8</span>Implementation notes</a></li>
+        <li><a href="#acceptance"><span class="num">9</span>Acceptance criteria</a></li>
+      </ol>
+    </nav>
+  </header>
+
+  <section id="why">
+    <span class="section-num">§0</span>
+    <h2>Why this version exists</h2>
+    <p>
+      The current <code>app/compare.tsx</code> is structurally a <strong>spec table</strong> — the
+      advisor scrolls rows of values and finds the green box. That works for a power user. It
+      fails Jordan, our Phase-1 persona, who needs a 5-second answer in front of a customer on
+      the sales floor.
+    </p>
+    <p>
+      This v2 spec turns the same data into a <strong>decision flow</strong>. Specs become
+      <em>evidence</em> under AI-derived insights, not the interface itself. Nothing is removed
+      — the spec table stays, just demoted to the last section.
+    </p>
+
+    <div class="compare">
+      <div class="col v1">
+        <h4>v1 — current</h4>
+        <ul>
+          <li>Tabbed categories → table of boxes</li>
+          <li>Spec wins/loses highlighted per cell</li>
+          <li>No personalization</li>
+          <li>2 products only (in practice)</li>
+          <li>Honest gaps hidden</li>
+        </ul>
+      </div>
+      <div class="col v2">
+        <h4>v2 — this spec</h4>
+        <ul>
+          <li>AI verdict → priorities → category scores → trade-offs → expandable spec evidence</li>
+          <li>Specs are evidence; <strong>category winners</strong> are highlighted</li>
+          <li>Use-case chips re-rank client-side (no network call)</li>
+          <li>Branched layout: 2-up side-by-side vs 3-up horizontal pager</li>
+          <li>"Not enough verified info" is a first-class state</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <section id="tokens">
+    <span class="section-num">§1</span>
+    <h2>Design tokens</h2>
+    <p>
+      All tokens below already exist in <code>mobile/constants/Colors.ts</code> and
+      <code>mobile/constants/Typography.ts</code>. This section is the <strong>index</strong>
+      the implementation must follow; new tokens are added at the end, never redefined inline
+      in components.
+    </p>
+
+    <h3>1.1 Color</h3>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Token</th><th>Hex</th><th>Use</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>colors.background</code></td><td><code>#0A0A0A</code></td><td>Screen ground</td></tr>
+        <tr><td><code>colors.surface</code></td><td><code>#141414</code></td><td>Cards, sticky surfaces</td></tr>
+        <tr><td><code>colors.surfaceHighlight</code></td><td><code>#1F1F1F</code></td><td>Pressed states, secondary cards</td></tr>
+        <tr><td><code>colors.border</code></td><td><code>#2A2A2A</code></td><td>1px hairlines, card edges</td></tr>
+        <tr><td><code>colors.text</code></td><td><code>#FFFFFF</code></td><td>Primary text (92% in design)</td></tr>
+        <tr><td><code>colors.textSecondary</code></td><td><code>rgba(255,255,255,0.6)</code></td><td>Captions, support copy</td></tr>
+        <tr><td><code>colors.textTertiary</code></td><td><code>rgba(255,255,255,0.38)</code></td><td>Eyebrows, timestamps</td></tr>
+        <tr><td><code>colors.primary</code></td><td><code>#2383E2</code></td><td>Primary CTA, focus rings, AI border</td></tr>
+        <tr><td><code>colors.primaryMuted</code></td><td><code>rgba(35,131,226,0.12)</code></td><td>AI verdict background fill</td></tr>
+        <tr><td><code>colors.success</code></td><td><code>#2EA043</code></td><td>Category winner, "best for" pill</td></tr>
+        <tr><td><code>colors.successMuted</code></td><td><code>rgba(46,160,67,0.08)</code></td><td>Winner row tint</td></tr>
+        <tr><td><code>colors.error</code></td><td><code>#EB5757</code></td><td>Trade-off severity: dealbreaker</td></tr>
+        <tr><td><code>colors.ai</code></td><td><code>#A259FF</code></td><td>AI confidence, summary eyebrow</td></tr>
+        <tr><td><code>colors.aiMuted</code></td><td><code>rgba(162,89,255,0.10)</code></td><td>AI section fill</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size: 12px; color: var(--text-3);">
+      Light theme values are already in <code>Colors.ts</code> — components consume
+      <code>useThemeColors()</code>. <strong>Never hardcode a hex in a component.</strong>
+    </p>
+
+    <h3>1.2 Spacing &amp; radius</h3>
+    <p>8pt grid (mirrors <code>docs/design.md</code> §4):</p>
+    <div class="grid-2">
+      <div>
+        <h4>Spacing</h4>
+        <table class="spec-table">
+          <tbody>
+            <tr><td><code>xs</code></td><td>4pt</td><td>gap inside a chip, icon-to-text</td></tr>
+            <tr><td><code>sm</code></td><td>8pt</td><td>gap between row icons, between header items</td></tr>
+            <tr><td><code>md</code></td><td>16pt</td><td>card padding, gap between cards</td></tr>
+            <tr><td><code>lg</code></td><td>24pt</td><td>section separation</td></tr>
+            <tr><td><code>xl</code></td><td>32pt</td><td>top of major sections</td></tr>
+            <tr><td><code>xxl</code></td><td>48pt</td><td>sticky CTA + safe-area inset</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h4>Radius</h4>
+        <table class="spec-table">
+          <tbody>
+            <tr><td><code>sm</code></td><td>8pt</td><td>small chips, secondary buttons</td></tr>
+            <tr><td><code>md</code></td><td>12pt</td><td>product card</td></tr>
+            <tr><td><code>lg</code></td><td>16pt</td><td>category score cards, AI verdict card</td></tr>
+            <tr><td><code>pill</code></td><td>999</td><td>priority chips, retailer pills</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3>1.3 Motion</h3>
+    <p>
+      Reuse the existing Animated pattern from <code>components/ui/Button.tsx</code>
+      (0.96 scale on press, spring physics, native driver). The compare screen adds two
+      <strong>specific</strong> motions — do not introduce a new animation library.
+    </p>
+    <ul style="color: var(--text-2); padding-left: 20px;">
+      <li><strong>Mount stagger:</strong> product cards and category score cards fade in with <code>translateY: 10 → 0</code> over 400ms, <strong>80ms</strong> delay per index.</li>
+      <li><strong>Spec bar grow:</strong> when a category card expands or a priority chip is toggled, the <code>SpecVisualBar</code> width animates 0 → target over 250ms with ease-out.</li>
+    </ul>
+  </section>
+
+  <hr class="divider" />
+
+  <section id="anatomy">
+    <span class="section-num">§2</span>
+    <h2>Screen anatomy</h2>
+    <p>The screen reads top → bottom. The product selector and CTA bar are sticky; everything else scrolls.</p>
+
+    <div class="mockup-wrap">
+      <div class="phone" role="img" aria-label="Compare screen wireframe showing sticky product selector, AI verdict, priority chips, category score cards, trade-offs, and sticky CTA bar.">
+        <div class="phone-notch"></div>
+        <div class="phone-body">
+          <div class="m-header">
+            <span>← Comparison</span>
+            <span style="color: var(--text-3); font-size: 12px;">⋮</span>
+          </div>
+          <div class="m-sticky">
+            <div class="m-product">
+              <div class="m-product-img">📱</div>
+              <div class="m-product-name">Galaxy S24</div>
+              <div class="m-product-meta">SAMSUNG · $1,299</div>
+            </div>
+            <div class="m-product">
+              <div class="m-product-img">📱</div>
+              <div class="m-product-name">iPhone 15</div>
+              <div class="m-product-meta">APPLE · $1,099</div>
+            </div>
+          </div>
+          <div class="m-verdict">
+            <div class="m-verdict-label"><span class="sparkle">✦</span>AI VERDICT</div>
+            <div class="m-verdict-text">The S24 wins on display and zoom; the iPhone 15 wins on battery efficiency and long-term resale.</div>
+            <div class="m-pill-row">
+              <span class="m-pill">Best Zoom: S24</span>
+              <span class="m-pill">Best Value: iPhone</span>
+            </div>
+          </div>
+          <div>
+            <div class="label-tiny" style="margin-bottom: 6px;">What matters to you?</div>
+            <div class="m-chips">
+              <span class="m-chip">Camera</span>
+              <span class="m-chip active">Battery</span>
+              <span class="m-chip">Performance</span>
+              <span class="m-chip">Value</span>
+            </div>
+          </div>
+          <div class="m-cat">
+            <div class="m-cat-head">
+              <div class="m-cat-title">📸 Camera</div>
+              <div class="m-rank">1st: S24</div>
+            </div>
+            <div class="m-cat-insight">S24's 3× optical zoom is real zoom.</div>
+            <div class="m-bar winner">
+              <span class="m-bar-name">S24</span>
+              <span class="m-bar-track"><span class="m-bar-fill" style="width: 100%;"></span></span>
+              <span class="m-bar-val">50 MP</span>
+            </div>
+            <div class="m-bar">
+              <span class="m-bar-name">iP15</span>
+              <span class="m-bar-track"><span class="m-bar-fill" style="width: 88%;"></span></span>
+              <span class="m-bar-val">48 MP</span>
+            </div>
+            <div class="m-expand">▸ Show 4 specs</div>
+          </div>
+          <div class="m-cat">
+            <div class="m-cat-head">
+              <div class="m-cat-title">🔋 Battery</div>
+              <div class="m-rank">1st: iP15</div>
+            </div>
+            <div class="m-cat-insight">iOS efficiency edges out the S24 despite smaller capacity.</div>
+            <div class="m-bar">
+              <span class="m-bar-name">S24</span>
+              <span class="m-bar-track"><span class="m-bar-fill" style="width: 92%;"></span></span>
+              <span class="m-bar-val">4,400 mAh</span>
+            </div>
+            <div class="m-bar winner">
+              <span class="m-bar-name">iP15</span>
+              <span class="m-bar-track"><span class="m-bar-fill" style="width: 100%;"></span></span>
+              <span class="m-bar-val">17.3 hr</span>
+            </div>
+            <div class="m-expand">▸ Show 3 specs</div>
+          </div>
+          <div class="m-tradeoff">
+            <div class="m-tradeoff-label">⚠ Trade-offs &amp; data gaps</div>
+            <div class="m-tradeoff-row"><span class="sev">S24:</span><span>No headphone jack</span></div>
+            <div class="m-tradeoff-row"><span class="sev">iP15:</span><span>60Hz display only</span></div>
+            <div class="m-tradeoff-row" style="color: var(--text-3); font-size: 9px;">Battery data · 6mo · medium</div>
+          </div>
+          <div class="m-cta">
+            <div class="m-cta-btn">View Deals →</div>
+            <div class="m-cta-icons">
+              <div class="m-cta-icon">🔖</div>
+              <div class="m-cta-icon">↗</div>
+              <div class="m-cta-icon">🔔</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mockup-caption">Compare screen · 2 products · collapsed state</div>
+    </div>
+
+    <h3>2.1 2 vs 3 products</h3>
+    <p>The product selector changes shape, not behavior. The category cards adapt the bar layout.</p>
+    <div class="branch">
+      <div class="lane">
+        <h4>2 products · split</h4>
+        <p>Two equal-width cards in a row, <code>flex: 1</code> each, 12pt gap. Each card: image, name, retailer pill, price.</p>
+        <div class="when">products.length === 2</div>
+      </div>
+      <div class="lane">
+        <h4>3+ products · horizontal pager</h4>
+        <p>One full-width product card visible at a time. Snap-paged <code>FlatList</code>. Pager dots beneath. Bars inside category cards stack vertically (3 rows, not 3 columns).</p>
+        <div class="when">products.length &gt;= 3</div>
+      </div>
+    </div>
+
+    <div class="callout caution">
+      <span class="label">Hard rule</span>
+      <p style="margin: 0;"><strong>Never force a 3-column spec grid at 390pt.</strong> The values become unreadable, and PRD F-004.7 explicitly forbids it.</p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <section id="components">
+    <span class="section-num">§3</span>
+    <h2>Component tree</h2>
+    <p>State lives in <code>CompareScreen</code>. Children are controlled via props (replacing v1's <code>useState</code> calls inside sub-blocks).</p>
+<pre><code>CompareScreen                          app/compare.tsx
+├── StickyProductSelector              components/comparison/StickyProductSelector.tsx
+│   ├── ProductMiniCard × 2-3
+│   └── PagerDots (only when 3 products)
+├── AIVerdictCard                      components/comparison/AIVerdictCard.tsx
+│   ├── SparkleIcon
+│   └── BestForPill × n
+├── PriorityChipRow                    components/comparison/PriorityChipRow.tsx
+│   └── PriorityChip × n
+├── CategoryList (SectionList)         components/comparison/CategoryList.tsx
+│   └── CategoryScoreCard × 6          components/comparison/CategoryScoreCard.tsx
+│       ├── CategoryHeader (icon + title + rank)
+│       ├── WinnerLine
+│       ├── InsightLine
+│       ├── SpecVisualBar × n          components/comparison/SpecVisualBar.tsx
+│       ├── ExpandToggle
+│       └── ExpandableSpecGroup        components/comparison/ExpandableSpecGroup.tsx
+│           └── SpecRow × n
+│               └── SpecCell × n
+├── TradeoffCard                       components/comparison/TradeoffCard.tsx
+│   └── TradeoffRow × n
+├── StickyCTABar                       components/comparison/StickyCTABar.tsx
+│   ├── PrimaryDealButton
+│   └── IconAction × 3
+└── CompareLoadingSkeleton             components/comparison/CompareLoadingSkeleton.tsx</code></pre>
+  </section>
+
+  <hr class="divider" />
+
+  <section id="contract">
+    <span class="section-num">§4</span>
+    <h2>Data contract</h2>
+    <p>The existing <code>Product</code> type in <code>store/useComparisonStore.ts</code> already has: <code>id</code>, <code>name</code>, <code>imageUrl</code>, <code>retailer</code>, <code>retailerColor</code>, <code>price</code>, <code>specs[]</code>, <code>badges?</code>. v2 adds four <strong>AI-side</strong> fields returned alongside the existing payload.</p>
+
+<pre><code><span class="tk-kw">export type</span> <span class="tk-ty">PriorityKey</span> =
+  | <span class="tk-cm">'camera'</span> | <span class="tk-cm">'battery'</span> | <span class="tk-cm">'performance'</span> | <span class="tk-cm">'display'</span>
+  | <span class="tk-cm">'gaming'</span> | <span class="tk-cm">'value'</span> | <span class="tk-cm">'sound'</span> | <span class="tk-cm">'durability'</span>;
+
+<span class="tk-kw">export interface</span> <span class="tk-ty">CategoryScore</span> {
+  productId: <span class="tk-ty">string</span>;
+  score: <span class="tk-ty">number</span>;             <span class="tk-cm">// 0–100 within this category</span>
+  valueLabel: <span class="tk-ty">string</span>;        <span class="tk-cm">// human, e.g. "4,400 mAh"</span>
+  isWinner: <span class="tk-ty">boolean</span>;
+  normalized: <span class="tk-ty">number</span>;        <span class="tk-cm">// 0–1, for SpecVisualBar width</span>
+}
+
+<span class="tk-kw">export interface</span> <span class="tk-ty">CategoryComparison</span> {
+  key: <span class="tk-ty">PriorityKey</span>;
+  title: <span class="tk-ty">string</span>;            <span class="tk-cm">// "Camera"</span>
+  icon: <span class="tk-ty">string</span>;             <span class="tk-cm">// lucide-react-native icon name</span>
+  insight: <span class="tk-ty">string</span>;          <span class="tk-cm">// AI one-liner</span>
+  winnerId: <span class="tk-ty">string</span> | <span class="tk-kw">null</span>;
+  scores: <span class="tk-ty">CategoryScore</span>[];
+  specGroup: <span class="tk-ty">SpecRow</span>[];     <span class="tk-cm">// raw specs, expandable</span>
+}
+
+<span class="tk-kw">export interface</span> <span class="tk-ty">Tradeoff</span> {
+  productId: <span class="tk-ty">string</span>;
+  text: <span class="tk-ty">string</span>;
+  severity: <span class="tk-cm">'info'</span> | <span class="tk-cm">'caution'</span> | <span class="tk-cm">'dealbreaker'</span>;
+}
+
+<span class="tk-kw">export interface</span> <span class="tk-ty">DataWarning</span> {
+  text: <span class="tk-ty">string</span>;
+  confidence: <span class="tk-cm">'low'</span> | <span class="tk-cm">'medium'</span> | <span class="tk-cm">'high'</span>;
+  ageDays?: <span class="tk-ty">number</span>;          <span class="tk-cm">// surfaces "6 months old" in UI</span>
+}
+
+<span class="tk-kw">export interface</span> <span class="tk-ty">BestForBadge</span> {
+  productId: <span class="tk-ty">string</span>;
+  label: <span class="tk-ty">string</span>;             <span class="tk-cm">// "Best for Zoom"</span>
+}
+
+<span class="tk-kw">export interface</span> <span class="tk-ty">ComparisonInsight</span> {
+  verdict: <span class="tk-ty">string</span>;                            <span class="tk-cm">// 1–2 sentence summary</span>
+  bestFor: <span class="tk-ty">BestForBadge</span>[];                    <span class="tk-cm">// 1–2 per product</span>
+  categories: <span class="tk-ty">CategoryComparison</span>[];           <span class="tk-cm">// 6 categories</span>
+  tradeoffs: <span class="tk-ty">Tradeoff</span>[];
+  warnings: <span class="tk-ty">DataWarning</span>[];
+  byPriority: <span class="tk-ty">Record</span>&lt;<span class="tk-ty">PriorityKey</span>, <span class="tk-ty">string</span>&gt;;  <span class="tk-cm">// winner per priority key</span>
+  bestOverallId: <span class="tk-ty">string</span>;
+  bestValueId: <span class="tk-ty">string</span>;
+  generatedAt: <span class="tk-ty">string</span>;                        <span class="tk-cm">// ISO timestamp</span>
+  sourceConfidence: <span class="tk-cm">'low'</span> | <span class="tk-cm">'medium'</span> | <span class="tk-cm">'high'</span>;
+}</code></pre>
+
+    <div class="callout ai">
+      <span class="label">AI prompt contract</span>
+      <p>Lives in <code>server/src/services/gemini.ts</code>. The Gemini call already runs per-comparison. v2 extends the response schema with <code>ComparisonInsight</code> shape above and instructs the model to: <strong>(a)</strong> keep <code>verdict</code> to ≤ 2 sentences, <strong>(b)</strong> return <strong>exactly 6</strong> categories regardless of product type, <strong>(c)</strong> include at least one tradeoff per product or an empty array (never <code>null</code>).</p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <section id="interaction">
+    <span class="section-num">§5</span>
+    <h2>Interaction model</h2>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Trigger</th><th>Effect</th><th>Network?</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>User toggles a priority chip</td><td>Re-weight category scores client-side; verdict + winner pills re-derive from <code>byPriority</code></td><td>No</td></tr>
+        <tr><td>User expands a category card</td><td>Animate <code>ExpandableSpecGroup</code> height; show raw spec table with per-cell winner highlight</td><td>No</td></tr>
+        <tr><td>User collapses</td><td>Reverse animation</td><td>No</td></tr>
+        <tr><td>User taps a product in sticky selector</td><td>Push product detail screen (existing behavior)</td><td>No</td></tr>
+        <tr><td>User taps a <code>Best for</code> pill</td><td>Scroll <code>SectionList</code> to the matching product's first winning category</td><td>No</td></tr>
+        <tr><td>Pull to refresh</td><td>Re-fetch <code>/api/compare</code>, replace cache, preserve scroll position</td><td>Yes</td></tr>
+        <tr><td>Tap primary CTA</td><td>Phase 1 → "Compare with another" (back to home); Phase 2 → open retailer page</td><td>Phase 1: No</td></tr>
+        <tr><td>Tap save / share / alert</td><td>Existing hooks (save = store, share = <code>expo-sharing</code>, alert = store)</td><td>No</td></tr>
+        <tr><td>3-product comparison</td><td>Switch product selector to horizontal pager; render 3 stacked bars in each category card</td><td>No</td></tr>
+      </tbody>
+    </table>
+
+    <h3>5.1 Client-side re-weighting</h3>
+    <p>When a priority chip is toggled, <code>usePriorityWeighting()</code> re-derives the "best for you" winner per category without a network call. The math is intentionally simple so the team can ship and revise.</p>
+
+<pre><code><span class="tk-kw">function</span> <span class="tk-ty">weightedScore</span>(productId, categories, selectedPriorities) {
+  <span class="tk-kw">let</span> totalWeight = <span class="tk-nu">0</span>;
+  <span class="tk-kw">let</span> weightedSum = <span class="tk-nu">0</span>;
+  <span class="tk-kw">for</span> (<span class="tk-kw">const</span> cat <span class="tk-kw">of</span> categories) {
+    <span class="tk-kw">const</span> weight = selectedPriorities.includes(cat.key) ? <span class="tk-nu">2.5</span> : <span class="tk-nu">1</span>;
+    <span class="tk-kw">const</span> score = cat.scores.find(s =&gt; s.productId === productId)?.score ?? <span class="tk-nu">0</span>;
+    weightedSum += score * weight;
+    totalWeight += weight;
+  }
+  <span class="tk-kw">return</span> weightedSum / totalWeight;
+}</code></pre>
+
+    <p style="font-size: 12px; color: var(--text-3);">
+      The formula weights selected categories ×2.5, default ×1. The constants are placeholders
+      for v2; <strong>tune them in user testing before Phase 2</strong>. A 2.5× multiplier may
+      be too aggressive if Jordan selects 3+ priorities.
+    </p>
+
+    <h3>5.2 Priority weight preview</h3>
+    <p>Below is how the re-weighting shifts the category winners when "Battery" is selected. The <strong>Camera</strong> card stays the same; the <strong>Performance</strong> card's winner flips because battery-prioritized users care more about sustained output.</p>
+    <div class="weight-bars">
+      <div class="weight-row hot">
+        <span class="name">Battery <span style="color: var(--primary); font-size: 9px;">· active</span></span>
+        <span class="track"><span class="fill" style="width: 100%;"></span></span>
+        <span class="val">×2.5</span>
+      </div>
+      <div class="weight-row">
+        <span class="name">Camera</span>
+        <span class="track"><span class="fill" style="width: 40%;"></span></span>
+        <span class="val">×1.0</span>
+      </div>
+      <div class="weight-row">
+        <span class="name">Display</span>
+        <span class="track"><span class="fill" style="width: 40%;"></span></span>
+        <span class="val">×1.0</span>
+      </div>
+      <div class="weight-row">
+        <span class="name">Performance</span>
+        <span class="track"><span class="fill" style="width: 40%;"></span></span>
+        <span class="val">×1.0</span>
+      </div>
+      <div class="weight-row">
+        <span class="name">Value</span>
+        <span class="track"><span class="fill" style="width: 40%;"></span></span>
+        <span class="val">×1.0</span>
+      </div>
+      <div class="weight-row">
+        <span class="name">Sound</span>
+        <span class="track"><span class="fill" style="width: 40%;"></span></span>
+        <span class="val">×1.0</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <section id="states">
+    <span class="section-num">§6</span>
+    <h2>States &amp; wireframes</h2>
+    <p>Every state is a <strong>first-class render</strong>, not a branch inside a happy path. PRD F-008.1 is explicit: no blank screens.</p>
+    <table class="spec-table">
+      <thead><tr><th>State</th><th>Render</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Loading</strong> (first fetch)</td>
+          <td><code>CompareLoadingSkeleton</code>: pulsing logo + 6 greyed category cards in the exact final shape (no spinner)</td>
+        </tr>
+        <tr>
+          <td><strong>Cached</strong> (instant)</td>
+          <td>Render from <code>useComparisonStore</code>, then revalidate in background (stale-while-revalidate)</td>
+        </tr>
+        <tr>
+          <td><strong>Partial failure</strong> (1 product missing)</td>
+          <td>Other 2 products render fully; missing product row in sticky selector shows <code>—</code> and a small <code>!</code> icon; tapping opens an inline retry sheet</td>
+        </tr>
+        <tr>
+          <td><strong>Full failure</strong></td>
+          <td><code>ErrorState</code> with <code>Try again</code> button — reuse existing <code>components/home/ErrorOverlay.tsx</code> pattern</td>
+        </tr>
+        <tr>
+          <td><strong>No categories</strong> (very rare)</td>
+          <td>Trade-off card becomes the dominant element; verdict still renders with category-less recommendation</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>3-product wireframe</h3>
+    <p>The sticky product selector changes only — the body is identical to the 2-product layout, except category bars stack as 3 rows instead of 2.</p>
+    <div class="mockup-wrap">
+      <div class="phone" role="img" aria-label="3-product compare screen wireframe: single product card in a horizontal pager above the same AI verdict and category score cards.">
+        <div class="phone-notch"></div>
+        <div class="phone-body">
+          <div class="m-header">
+            <span>← Comparison</span>
+            <span style="color: var(--text-3); font-size: 12px;">⋮</span>
+          </div>
+          <div class="m-sticky" style="grid-template-columns: 1fr;">
+            <div class="m-product">
+              <div class="m-product-img">📱</div>
+              <div class="m-product-name">Galaxy S24 Ultra</div>
+              <div class="m-product-meta">SAMSUNG · $1,649</div>
+            </div>
+            <div style="display: flex; gap: 4px; justify-content: center; margin-top: 6px;">
+              <span style="width: 6px; height: 6px; background: var(--primary); border-radius: 999px;"></span>
+              <span style="width: 6px; height: 6px; background: var(--border); border-radius: 999px;"></span>
+              <span style="width: 6px; height: 6px; background: var(--border); border-radius: 999px;"></span>
+            </div>
+          </div>
+          <div class="m-verdict">
+            <div class="m-verdict-label"><span class="sparkle">✦</span>AI VERDICT</div>
+            <div class="m-verdict-text">Three-way comparison — the S24 Ultra is the best all-rounder; iPhone 15 Pro wins on ecosystem; Pixel 8 wins on value.</div>
+            <div class="m-pill-row">
+              <span class="m-pill">Best Overall: S24U</span>
+              <span class="m-pill">Best Value: Pixel 8</span>
+            </div>
+          </div>
+          <div class="m-cat">
+            <div class="m-cat-head">
+              <div class="m-cat-title">📸 Camera</div>
+              <div class="m-rank">1st: S24U</div>
+            </div>
+            <div class="m-cat-insight">S24U's 5× optical zoom beats all three.</div>
+            <div class="m-bar winner">
+              <span class="m-bar-name">S24U</span>
+              <span class="m-bar-track"><span class="m-bar-fill" style="width: 100%;"></span></span>
+              <span class="m-bar-val">200 MP</span>
+            </div>
+            <div class="m-bar">
+              <span class="m-bar-name">iP15P</span>
+              <span class="m-bar-track"><span class="m-bar-fill" style="width: 72%;"></span></span>
+              <span class="m-bar-val">48 MP</span>
+            </div>
+            <div class="m-bar">
+              <span class="m-bar-name">P8</span>
+              <span class="m-bar-track"><span class="m-bar-fill" style="width: 64%;"></span></span>
+              <span class="m-bar-val">50 MP</span>
+            </div>
+            <div class="m-expand">▸ Show 4 specs</div>
+          </div>
+        </div>
+      </div>
+      <div class="mockup-caption">Compare screen · 3 products · pager + stacked bars</div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <section id="a11y">
+    <span class="section-num">§7</span>
+    <h2>Accessibility</h2>
+    <p>The PRD is explicit (NF-011 through NF-014). v2 inherits and tightens.</p>
+    <ul style="color: var(--text-2); padding-left: 20px;">
+      <li><strong>Color independence:</strong> every winner indicator pairs a color with a non-color signal — <code>1st</code> / <code>2nd</code> / <code>3rd</code> rank pill, <code>✓</code> icon, or bold weight. <strong>Never</strong> green/red alone.</li>
+      <li><strong>Tap targets:</strong> all chips, expand toggles, and CTA buttons are ≥ 44×44pt via intrinsic size or <code>hitSlop</code>.</li>
+      <li><strong>Dynamic type:</strong> every <code>Text</code> uses <code>allowFontScaling</code> (default true). Card layouts re-validate at the largest accessibility size; the sticky selector and category cards must not clip text.</li>
+      <li><strong>Screen reader:</strong> <code>CategoryScoreCard</code> reads <em>"Camera. Winner: Galaxy S24. 92 out of 100. 4 specs. Double tap to expand."</em></li>
+      <li><strong>Reduced motion:</strong> the bar-grow and expand animations are gated on <code>AccessibilityInfo.isReduceMotionEnabled()</code>. When true, the expanded spec group appears immediately without height transition.</li>
+      <li><strong>Focus order:</strong> top-to-bottom, left-to-right within a card.</li>
+    </ul>
+  </section>
+
+  <hr class="divider" />
+
+  <section id="impl">
+    <span class="section-num">§8</span>
+    <h2>Implementation notes</h2>
+
+    <h3>8.1 Reuse, don't re-invent</h3>
+    <ul style="color: var(--text-2); padding-left: 20px;">
+      <li><code>Card</code> (<code>components/ui/Card.tsx</code>) is the surface primitive — every card on this screen uses it.</li>
+      <li><code>Button</code> (<code>components/ui/Button.tsx</code>) for the primary CTA — its existing 0.96 scale + haptic on press is the spec. <strong>Do not write a new press animation</strong> in <code>StickyCTABar</code>.</li>
+      <li><code>useThemeColors</code> is the only color source. The hex literals in <code>app/compare.tsx</code> lines 177 and 194 are a v1 leak — v2 routes everything through the token map.</li>
+      <li><code>ProductCard</code> already animates fade + slide on mount. v2 keeps the same animation primitive but reduces the per-index delay from 100ms → 80ms.</li>
+    </ul>
+
+    <h3>8.2 List rendering</h3>
+    <p>Use <code>SectionList</code> (not <code>ScrollView</code>) for the body. This is the <strong>single most important performance change</strong> from v1: 6 category cards × 6 spec bars + expandable spec groups inside = a real DOM, and a <code>ScrollView</code> will jank on a 3-year-old device (PRD NF-004).</p>
+
+    <h3>8.3 Sticky element rendering</h3>
+    <p>The sticky selector and sticky CTA are <strong>outside</strong> the <code>SectionList</code>, rendered as siblings in a <code>View</code> with <code>flex: 1</code> for the list between them. This avoids sticky-list bugs on Android.</p>
+<pre><code>&lt;View style={{ flex: 1, backgroundColor: colors.background }}>
+  &lt;StickyProductSelector products={products} />
+  &lt;SectionList sections={sections} /* ... */ />
+  &lt;TradeoffCard /* ... */ />   {/* inline, not sticky */}
+  &lt;StickyCTABar /* ... */ />
+&lt;/View></code></pre>
+
+    <h3>8.4 What v1 gets <strong>removed</strong></h3>
+    <p>These v1 elements do not appear in v2 and should be deleted in the refactor:</p>
+    <ul style="color: var(--text-2); padding-left: 20px;">
+      <li><code>selectedCategory</code> state and the horizontal category chip tabs at the top — replaced by priority chips + collapsed-by-default category cards.</li>
+      <li><code>CategoryBox</code> and its pill-style tab UI.</li>
+      <li><code>Overview</code> view — replaced by the AI Verdict card at the top.</li>
+      <li><code>bigBox</code> and <code>specResultBoxesRow</code> — the winner-highlighted box pattern is preserved but moves <strong>inside</strong> the expanded <code>SpecRow</code>.</li>
+      <li>The hard-coded <code>vsBadge</code> / <code>vsText</code> "VS" between two product values — v2's stacked bars communicate the same idea without the inline label.</li>
+    </ul>
+  </section>
+
+  <hr class="divider" />
+
+  <section id="acceptance">
+    <span class="section-num">§9</span>
+    <h2>Acceptance criteria</h2>
+    <p>Phase 1 v2 ships when <strong>all</strong> of the following are observable on a real iPhone SE (4.7") and a real Pixel 6a:</p>
+    <ul class="checklist">
+      <li>Tapping a priority chip re-ranks the verdict and the per-category "Winner:" line in under 100ms with no network call (verify in DevTools network tab).</li>
+      <li>The AI Verdict card is the first non-header element the user sees. Its body is ≤ 2 sentences and uses the words "wins on" and "best for" naturally.</li>
+      <li>Every category card shows a rank pill (<code>1st</code> / <code>2nd</code> / <code>3rd</code>) alongside any color-based winner indicator. Removing all color from a screenshot still leaves the winner identifiable.</li>
+      <li>3-product comparisons use the pager selector and stacked bars inside each category card. A 3-column spec grid never appears at 390pt width.</li>
+      <li>The expandable spec group inside a category card shows the existing v1 spec table (winner-highlighted cells), preserving the per-cell winner indication.</li>
+      <li>All hex literals in <code>app/compare.tsx</code> are removed; every color reads from <code>useThemeColors()</code>.</li>
+      <li>Trade-off &amp; warnings card is present even when the AI returns zero trade-offs (renders an empty-state line: "No notable trade-offs identified").</li>
+      <li>Sticky product selector and sticky CTA bar remain pinned through a full scroll, on both iOS and Android, with no flicker.</li>
+      <li>No <code>useNativeDriver: false</code> on bar-grow or expand animations (the Animated API native driver must be used for transform and opacity only — height animations use <code>LayoutAnimation</code>).</li>
+      <li>SpecTable behavior from PRD hard rule #16 (2, 3, and 4 product columns) is honored by <code>ExpandableSpecGroup</code>.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+  (function() {
+    const buttons = document.querySelectorAll('.theme-toggle button');
+    const html = document.documentElement;
+    function setTheme(target) {
+      if (target === 'system') {
+        html.removeAttribute('data-theme');
+      } else {
+        html.setAttribute('data-theme', target);
+      }
+      buttons.forEach(b => {
+        b.setAttribute('aria-pressed', b.getAttribute('data-theme-target') === target ? 'true' : 'false');
+      });
+      try { localStorage.setItem('specmatch-theme', target); } catch (e) {}
+    }
+    let saved = 'system';
+    try { saved = localStorage.getItem('specmatch-theme') || 'system'; } catch (e) {}
+    setTheme(saved);
+    buttons.forEach(b => {
+      b.addEventListener('click', () => setTheme(b.getAttribute('data-theme-target')));
+    });
+  })();
+</script>
