@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet, Pressable, Image } from "react-native";
 import { useRouter } from "expo-router";
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+
 import * as Haptics from "expo-haptics";
+import { Smartphone, Tablet, Laptop, Watch, Headphones, Tv, Refrigerator, AirVent, Monitor, Keyboard, Cpu, Battery, Camera, Ruler, Microchip, Volume2, Wifi, LayoutDashboard, Star, Zap, ArrowLeft } from "lucide-react-native";
 import { useComparisonStore, Product } from "../store/useComparisonStore";
 import { useThemeColors } from "../constants/Colors";
 import { Card } from "../components/ui/Card";
@@ -18,35 +19,32 @@ function normalizeTitle(title: string) {
 }
 
 // Maps category strings to MaterialCommunityIcons names
-function getCategoryIconName(category: string): keyof typeof MaterialCommunityIcons.glyphMap {
+function getCategoryIcon(category: string) {
   const c = category.toLowerCase();
   
-  // Devices
-  if (c.includes("phone")) return "cellphone";
-  if (c.includes("tablet") || c.includes("ipad")) return "tablet";
-  if (c.includes("laptop") || c.includes("macbook")) return "laptop";
-  if (c.includes("watch") || c.includes("smartwatch")) return "watch-variant";
-  if (c.includes("headphone")) return "headphones";
-  if (c.includes("earphone") || c.includes("buds")) return "earbuds";
-  if (c.includes("tv") || c.includes("television")) return "television";
-  if (c.includes("fridge") || c.includes("refrigerator")) return "fridge";
-  if (c.includes("ac") || c.includes("air")) return "air-conditioner";
-  if (c.includes("desktop") || c.includes("pc")) return "desktop-tower-monitor";
-  if (c.includes("monitor")) return "monitor";
-  if (c.includes("keyboard")) return "keyboard";
+  if (c.includes("phone")) return Smartphone;
+  if (c.includes("tablet") || c.includes("ipad")) return Tablet;
+  if (c.includes("laptop") || c.includes("macbook")) return Laptop;
+  if (c.includes("watch") || c.includes("smartwatch")) return Watch;
+  if (c.includes("headphone") || c.includes("earphone") || c.includes("buds")) return Headphones;
+  if (c.includes("tv") || c.includes("television")) return Tv;
+  if (c.includes("fridge") || c.includes("refrigerator")) return Refrigerator;
+  if (c.includes("ac") || c.includes("air")) return AirVent;
+  if (c.includes("desktop") || c.includes("pc")) return Monitor;
+  if (c.includes("monitor")) return Monitor;
+  if (c.includes("keyboard")) return Keyboard;
 
-  // Specs
-  if (c.includes("performance") || c.includes("processor") || c.includes("speed")) return "cpu-64-bit";
-  if (c.includes("display") || c.includes("screen")) return "monitor-shimmer";
-  if (c.includes("battery") || c.includes("power")) return "battery-charging-100";
-  if (c.includes("camera") || c.includes("video")) return "camera-iris";
-  if (c.includes("design") || c.includes("build") || c.includes("size")) return "ruler-square";
-  if (c.includes("memory") || c.includes("ram") || c.includes("storage")) return "memory";
-  if (c.includes("audio") || c.includes("sound")) return "volume-high";
-  if (c.includes("network") || c.includes("connectivity") || c.includes("cellular")) return "wifi";
-  if (c.includes("overview")) return "view-dashboard";
+  if (c.includes("performance") || c.includes("processor") || c.includes("speed")) return Cpu;
+  if (c.includes("display") || c.includes("screen")) return Monitor;
+  if (c.includes("battery") || c.includes("power")) return Battery;
+  if (c.includes("camera") || c.includes("video")) return Camera;
+  if (c.includes("design") || c.includes("build") || c.includes("size") || c.includes("weight")) return Ruler;
+  if (c.includes("memory") || c.includes("ram") || c.includes("storage")) return Microchip;
+  if (c.includes("audio") || c.includes("sound")) return Volume2;
+  if (c.includes("network") || c.includes("connectivity") || c.includes("cellular")) return Wifi;
+  if (c.includes("overview")) return LayoutDashboard;
   
-  return "star-circle-outline";
+  return Star;
 }
 
 function ProductHeaderBox({ product, index, colors }: { product: Product; index: number; colors: any }) {
@@ -65,9 +63,7 @@ function ProductHeaderBox({ product, index, colors }: { product: Product; index:
       <View style={styles.productImagePlaceholder}>
         {product.imageUrl ? (
           <Image source={{ uri: product.imageUrl }} style={{ width: 56, height: 40, borderRadius: 8 }} resizeMode="contain" />
-        ) : (
-          <MaterialCommunityIcons name={getCategoryIconName(product.name)} size={28} color={isLeft ? colors.primary : colors.textSecondary} />
-        )}
+        ) : ((() => { const Icon = getCategoryIcon(product.name); return <Icon size={28} color={isLeft ? colors.primary : colors.textSecondary} />; })())}
       </View>
       <Text style={[styles.productHeaderText, { color: colors.text }]} numberOfLines={2}>
         {normalizeTitle(product.name)}
@@ -89,7 +85,7 @@ function CategoryBox({ category, isSelected, onSelect, colors, index }: { catego
       ]}
     >
       <View >
-        <MaterialCommunityIcons name={getCategoryIconName(category)} size={24} color={isSelected ? colors.background : colors.text} style={{ opacity: isSelected ? 1 : 0.8 }} />
+        {(() => { const Icon = getCategoryIcon(category); return <Icon size={20} color={isSelected ? colors.background : colors.text} strokeWidth={2.5} style={{ opacity: isSelected ? 1 : 0.8 }} />; })()}
       </View>
       <Text style={[styles.categoryBoxText, { color: isSelected ? colors.background : colors.text }]}>
         {category}
@@ -179,7 +175,7 @@ export default function CompareScreen() {
           <Card style={[styles.heroCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.heroHeader}>
               <View style={[styles.aiBadge, { backgroundColor: 'rgba(35, 131, 226, 0.15)' }]}>
-                <Feather name="zap" size={14} color={colors.primary} />
+                <Zap size={14} color={colors.primary} fill={colors.primary} />
                 <Text style={[styles.heroLabel, { color: colors.primary }]}>AI VERDICT</Text>
               </View>
             </View>
@@ -217,7 +213,7 @@ export default function CompareScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }} hitSlop={12} style={styles.backIcon}>
-          <Feather name="arrow-left" size={24} color={colors.text} />
+          <ArrowLeft size={24} color={colors.text} strokeWidth={2.5} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Comparison</Text>
         <View style={{ width: 40 }} />
