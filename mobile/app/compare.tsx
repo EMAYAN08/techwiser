@@ -212,7 +212,7 @@ export default function CompareScreen() {
       </View>
 
       {/* SCROLLABLE RESULTS PORTION */}
-      <ScrollView contentContainerStyle={styles.scrollBody}>
+      <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
         {renderContent()}
       </ScrollView>
     </View>

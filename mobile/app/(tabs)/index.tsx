@@ -106,6 +106,7 @@ export default function Home() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         scrollEnabled={scrollEnabled}
+        showsVerticalScrollIndicator={false}
       >
         <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.text }]}>
           Workspace

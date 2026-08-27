@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useComparisonStore, Product } from '../../store/useComparisonStore';
 import { useRouter } from 'expo-router';
@@ -32,7 +32,7 @@ export default function LibraryScreen() {
         <Text style={[styles.headerTitle, { color: colors.text }]}>Tech Library</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {allProducts.length === 0 ? (
           <View style={styles.emptyState}>
             <Feather name="folder" size={48} color={colors.textTertiary} />

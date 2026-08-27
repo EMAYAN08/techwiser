@@ -72,7 +72,7 @@ export default function SettingsScreen() {
         <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         
         <Text style={[styles.sectionTitle, { color: colors.textTertiary }]}>PREFERENCES</Text>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
