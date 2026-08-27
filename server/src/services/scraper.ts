@@ -1,79 +1,57 @@
-import puppeteer from 'puppeteer';
-import fs from 'fs';
-import os from 'os';
-
-function getExecutablePath() {
-  // If running in Docker/Render, use the environment variable provided by the Docker image
-  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-    return process.env.PUPPETEER_EXECUTABLE_PATH;
-  }
-  
-  // If local Windows, fallback to standard Chrome installations to bypass corporate firewall block
-  if (os.platform() === 'win32') {
-    const paths = [
-      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-      'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-    ];
-    for (const p of paths) {
-      if (fs.existsSync(p)) return p;
-    }
-  }
-  
-  // Let puppeteer resolve bundled Chromium as last resort
-  return undefined;
-}
-
 export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUrl: string | null }> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    executablePath: getExecutablePath(),
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-blink-features=AutomationControlled',
-      '--disable-dev-shm-usage', // Essential for Docker/Render environments
-    ],
-  });
+  let rawText = "";
+  let imageUrl: string | null = null;
 
   try {
-    const page = await browser.newPage();
-    
-    // Rotate User-Agents
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    );
-    
-    await page.setViewport({ width: 1920, height: 1080 });
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-
-    const { innerText, imageUrl } = await page.evaluate(() => {
-      // Find image first before removing elements
-      let img = document.querySelector('meta[property="og:image"]')?.getAttribute('content') 
-             || document.querySelector('meta[name="og:image"]')?.getAttribute('content')
-             || document.querySelector('meta[property="twitter:image"]')?.getAttribute('content');
-             
-      if (!img) {
-        // Fallback to first large image that looks like a product image
-        const imgs = Array.from(document.querySelectorAll('img'));
-        const productImg = imgs.find(i => {
-           const src = i.getAttribute('src') || '';
-           return src.startsWith('http') && !src.includes('logo') && !src.includes('icon');
-        });
-        if (productImg) img = productImg.getAttribute('src');
-      }
-
-      const elementsToRemove = document.querySelectorAll('script, style, svg, noscript, iframe');
-      elementsToRemove.forEach(el => el.remove());
+    // 1. Image Extraction: Lightweight fetch (avoids Puppeteer anti-bot blocking & memory crashes)
+    try {
+      const htmlResponse = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html'
+        },
+        signal: AbortSignal.timeout(6000)
+      });
+      const html = await htmlResponse.text();
       
-      return {
-        innerText: document.body.innerText,
-        imageUrl: img || null
-      };
-    });
+      // Look for OpenGraph image
+      const ogImageMatch = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i);
+      if (ogImageMatch && ogImageMatch[1]) {
+        imageUrl = ogImageMatch[1];
+      } else {
+        // Fallback: look for a likely product image
+        const imgMatch = html.match(/<img[^>]+src=["'](https:\/\/[^"']+(?:jpg|png|webp))["']/i);
+        if (imgMatch && imgMatch[1]) {
+          imageUrl = imgMatch[1];
+        }
+      }
+    } catch (imgError: any) {
+      console.log(`Image extraction warning for ${url}:`, imgError.message);
+    }
 
-    return { rawText: innerText, imageUrl };
-  } finally {
-    await browser.close();
+    // 2. Text Extraction using Jina AI (Bypasses anti-bot captchas natively)
+    try {
+      const jinaResponse = await fetch('https://r.jina.ai/' + url, {
+        headers: {
+          'Accept': 'text/plain',
+          'X-Return-Format': 'markdown'
+        },
+        signal: AbortSignal.timeout(10000)
+      });
+      
+      if (jinaResponse.ok) {
+        rawText = await jinaResponse.text();
+      } else {
+        throw new Error(`Jina returned ${jinaResponse.status}`);
+      }
+    } catch (jinaError: any) {
+      console.log(`Jina extraction warning for ${url}:`, jinaError.message);
+      rawText = "Failed to extract text. The retailer may have blocked the request.";
+    }
+
+    return { rawText, imageUrl };
+  } catch (error: any) {
+    console.error(`Scrape failed for ${url}:`, error.message);
+    return { rawText: "Failed to scrape.", imageUrl: null };
   }
 }
