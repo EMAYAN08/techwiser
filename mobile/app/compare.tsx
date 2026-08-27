@@ -6,9 +6,6 @@ import * as Haptics from "expo-haptics";
 import { useComparisonStore, Product } from "../store/useComparisonStore";
 import { useThemeColors } from "../constants/Colors";
 import { Card } from "../components/ui/Card";
-import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, withSpring, useSharedValue, FadeInRight } from "react-native-reanimated";
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 // Helper to shorten long product names
 function normalizeTitle(title: string) {
@@ -55,8 +52,7 @@ function getCategoryIconName(category: string): keyof typeof MaterialCommunityIc
 function ProductHeaderBox({ product, index, colors }: { product: Product; index: number; colors: any }) {
   const isLeft = index === 0;
   return (
-    <Animated.View 
-      entering={FadeInDown.delay(index * 100).springify().damping(18)}
+    <View 
       style={[
         styles.productHeaderBox, 
         { 
@@ -65,55 +61,40 @@ function ProductHeaderBox({ product, index, colors }: { product: Product; index:
       ]}
     >
       <View style={styles.productImagePlaceholder}>
-        <MaterialCommunityIcons name={getCategoryIconName(product.name)} size={28} color="#FFF" />
+        <MaterialCommunityIcons name={getCategoryIconName(product.name)} size={28} color="rgba(255,255,255,0.9)" />
       </View>
       <Text style={styles.productHeaderText} numberOfLines={2}>
         {normalizeTitle(product.name)}
       </Text>
-    </Animated.View>
+    </View>
   );
 }
 
 function CategoryBox({ category, isSelected, onSelect, colors, index }: { category: string; isSelected: boolean; onSelect: () => void; colors: any; index: number }) {
-  const scale = useSharedValue(1);
-
-  const rStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: scale.value }],
-    };
-  });
-
   return (
-    <AnimatedPressable
-      entering={FadeInRight.delay(index * 50).springify().damping(20)}
+    <Pressable
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onSelect();
       }}
-      onPressIn={() => { scale.value = withSpring(0.92, { damping: 15, stiffness: 300 }); }}
-      onPressOut={() => { scale.value = withSpring(1, { damping: 15, stiffness: 300 }); }}
       style={[
         styles.categoryBox,
-        { backgroundColor: isSelected ? colors.text : colors.surface },
-        rStyle
+        { backgroundColor: isSelected ? colors.text : colors.surface }
       ]}
     >
       <View style={[styles.categoryIconContainer, { backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : colors.surfaceHighlight }]}>
         <MaterialCommunityIcons name={getCategoryIconName(category)} size={24} color={isSelected ? colors.background : colors.text} style={{ opacity: isSelected ? 1 : 0.8 }} />
       </View>
-      <Text style={[styles.categoryBoxText, { color: isSelected ? colors.background : colors.textSecondary }]} numberOfLines={1}>
-        {category}
+      <Text style={[styles.categoryBoxText, { color: isSelected ? colors.background : colors.text }]}>
+        {category === "Overview" ? "OVERVIEW" : category.toUpperCase()}
       </Text>
-    </AnimatedPressable>
+    </Pressable>
   );
 }
 
 function SpecResultBoxes({ specRow, colors, index }: { specRow: any; colors: any; index: number }) {
   return (
-    <Animated.View 
-      entering={FadeInUp.delay(index * 100).springify().damping(20)} 
-      style={styles.specResultContainer}
-    >
+    <View style={styles.specResultContainer}>
       <Text style={[styles.specResultLabel, { color: colors.textSecondary }]}>{specRow.label}</Text>
       <View style={styles.specResultBoxesRow}>
         {specRow.values.map((val: string, idx: number) => {
@@ -138,7 +119,7 @@ function SpecResultBoxes({ specRow, colors, index }: { specRow: any; colors: any
           );
         })}
       </View>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -188,10 +169,7 @@ export default function CompareScreen() {
   const renderContent = () => {
     if (selectedCategory === "Overview") {
       return (
-        <Animated.View 
-          entering={FadeInDown.springify().damping(20)}
-          style={styles.overviewContainer}
-        >
+        <View style={styles.overviewContainer}>
           <Card borderRadius={20} style={[styles.heroCard, { backgroundColor: colors.surface, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 4 }]}>
             <View style={styles.heroHeader}>
               <View style={[styles.aiBadge, { backgroundColor: 'rgba(35, 131, 226, 0.15)' }]}>
@@ -203,7 +181,7 @@ export default function CompareScreen() {
           </Card>
           
           {keyDifferences.length > 0 && (
-            <Animated.View entering={FadeInUp.delay(150).springify().damping(20)} style={{ marginTop: 24 }}>
+            <View style={{ marginTop: 24 }}>
               <Text style={[styles.overviewSectionTitle, { color: colors.textTertiary }]}>KEY DIFFERENCES</Text>
               <View style={[styles.differencesCard, { backgroundColor: colors.surface }]}>
                 {keyDifferences.map((diff, i) => (
@@ -219,9 +197,9 @@ export default function CompareScreen() {
                   </View>
                 ))}
               </View>
-            </Animated.View>
+            </View>
           )}
-        </Animated.View>
+        </View>
       );
     }
 
