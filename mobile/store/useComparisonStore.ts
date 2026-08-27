@@ -1,4 +1,4 @@
-﻿import { create } from "zustand";
+import { create } from "zustand";
 
 export interface Spec {
   label: string;
@@ -18,6 +18,7 @@ export interface Product {
   retailerColor: string;
   price?: string;
   url: string;
+  imageUrl?: string | null;
   specs: Spec[];
   aiSummary?: string;
   badges?: string[];

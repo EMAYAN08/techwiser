@@ -1,4 +1,4 @@
-﻿import dotenv from 'dotenv';
+import dotenv from 'dotenv';
 dotenv.config(); // Must be called BEFORE importing our own services
 
 import express, { Request, Response } from 'express';
@@ -30,12 +30,12 @@ app.post('/api/compare', async (req: Request, res: Response) => {
     // 1. Scrape URLs in parallel
     const scrapeResults = await Promise.allSettled(urls.map(url => scrapeUrl(url)));
     
-    const scrapedData: {url: string, rawText: string}[] = [];
+    const scrapedData: {url: string, rawText: string, imageUrl: string | null}[] = [];
     const failedUrls: string[] = [];
 
     scrapeResults.forEach((result, index) => {
       if (result.status === 'fulfilled') {
-        scrapedData.push({ url: urls[index], rawText: result.value });
+        scrapedData.push({ url: urls[index], rawText: result.value.rawText, imageUrl: result.value.imageUrl });
       } else {
         console.error(`Failed to scrape ${urls[index]}:`, result.reason);
         failedUrls.push(urls[index]);
@@ -51,7 +51,8 @@ app.post('/api/compare', async (req: Request, res: Response) => {
     console.log(`Sending ${scrapedData.length} successfully scraped pages to Gemini...`);
     let comparisonResult: any;
     try {
-      comparisonResult = await generateComparison(scrapedData);
+      // Pass only rawText to generateComparison so Gemini doesn't get confused
+      comparisonResult = await generateComparison(scrapedData.map(d => ({ url: d.url, rawText: d.rawText })));
     } catch (geminiError: unknown) {
       console.error('Gemini extraction error:', geminiError);
       res.status(500).json({ error: 'Failed to parse specifications and compare products via AI.' });
@@ -76,6 +77,9 @@ app.post('/api/compare', async (req: Request, res: Response) => {
     comparisonResult.products = comparisonResult.products.map((p: any, i: number) => {
       p.id = `product-${i}`;
       p.retailerColor = RETAILER_COLORS[p.retailer?.toLowerCase()] || "#333333";
+      // Inject the extracted image URL from scraping phase
+      const matchedData = scrapedData.find(d => d.url === p.url);
+      p.imageUrl = matchedData?.imageUrl || null;
       return p;
     });
 

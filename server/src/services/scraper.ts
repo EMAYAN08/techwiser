@@ -24,7 +24,7 @@ function getExecutablePath() {
   return undefined;
 }
 
-export async function scrapeUrl(url: string): Promise<string> {
+export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUrl: string | null }> {
   const browser = await puppeteer.launch({
     headless: true,
     executablePath: getExecutablePath(),
@@ -47,13 +47,32 @@ export async function scrapeUrl(url: string): Promise<string> {
     await page.setViewport({ width: 1920, height: 1080 });
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
 
-    const innerText = await page.evaluate(() => {
+    const { innerText, imageUrl } = await page.evaluate(() => {
+      // Find image first before removing elements
+      let img = document.querySelector('meta[property="og:image"]')?.getAttribute('content') 
+             || document.querySelector('meta[name="og:image"]')?.getAttribute('content')
+             || document.querySelector('meta[property="twitter:image"]')?.getAttribute('content');
+             
+      if (!img) {
+        // Fallback to first large image that looks like a product image
+        const imgs = Array.from(document.querySelectorAll('img'));
+        const productImg = imgs.find(i => {
+           const src = i.getAttribute('src') || '';
+           return src.startsWith('http') && !src.includes('logo') && !src.includes('icon');
+        });
+        if (productImg) img = productImg.getAttribute('src');
+      }
+
       const elementsToRemove = document.querySelectorAll('script, style, svg, noscript, iframe');
       elementsToRemove.forEach(el => el.remove());
-      return document.body.innerText;
+      
+      return {
+        innerText: document.body.innerText,
+        imageUrl: img || null
+      };
     });
 
-    return innerText;
+    return { rawText: innerText, imageUrl };
   } finally {
     await browser.close();
   }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, ScrollView, StyleSheet, Pressable, Animated } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Pressable, Animated, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -37,7 +37,11 @@ function ProductHeaderBox({ product, index, colors }: { product: Product; index:
   return (
     <View style={[styles.productHeaderBox, { backgroundColor: product.retailerColor || (isLeft ? colors.primary : colors.error) }]}>
       <View style={styles.productImagePlaceholder}>
-        <Feather name={getCategoryIcon(product.name)} size={28} color="rgba(255,255,255,0.8)" />
+        {product.imageUrl ? (
+          <Image source={{ uri: product.imageUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} resizeMode="cover" />
+        ) : (
+          <Feather name={getCategoryIcon(product.name)} size={20} color="rgba(255,255,255,0.8)" />
+        )}
       </View>
       <Text style={styles.productHeaderText} numberOfLines={2}>
         {normalizeTitle(product.name)}
@@ -225,16 +229,16 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 16, fontWeight: "600" },
   backIcon: { padding: 6 },
   
-  fixedHeaderContainer: { borderBottomWidth: 1, paddingBottom: 12, paddingTop: 16 },
-  productRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 16, gap: 12, marginBottom: 16 },
-  productHeaderBox: { flex: 1, borderRadius: 12, padding: 16, alignItems: "center", justifyContent: "center", minHeight: 120 },
-  productImagePlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(0,0,0,0.2)", alignItems: "center", justifyContent: "center", marginBottom: 12 },
-  productHeaderText: { color: "#FFF", fontSize: 14, fontWeight: "700", textAlign: "center", letterSpacing: 0.5 },
+  fixedHeaderContainer: { borderBottomWidth: 1, paddingBottom: 8, paddingTop: 12 },
+  productRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 16, gap: 12, marginBottom: 12 },
+  productHeaderBox: { flex: 1, borderRadius: 12, padding: 12, alignItems: "center", justifyContent: "center", minHeight: 80 },
+  productImagePlaceholder: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.2)", alignItems: "center", justifyContent: "center", marginBottom: 8 },
+  productHeaderText: { color: "#FFF", fontSize: 13, fontWeight: "700", textAlign: "center", letterSpacing: 0.5 },
 
   categoryScroll: { flexGrow: 0 },
-  categoryScrollContent: { paddingHorizontal: 16, gap: 12 },
-  categoryBox: { width: 80, height: 80, borderRadius: 12, alignItems: "center", justifyContent: "center", padding: 8 },
-  categoryBoxText: { fontSize: 11, fontWeight: "600", marginTop: 8, textAlign: "center" },
+  categoryScrollContent: { paddingHorizontal: 16, gap: 10 },
+  categoryBox: { width: 64, height: 64, borderRadius: 12, alignItems: "center", justifyContent: "center", padding: 6 },
+  categoryBoxText: { fontSize: 10, fontWeight: "600", marginTop: 6, textAlign: "center" },
 
   scrollBody: { padding: 16, paddingBottom: 60 },
 
