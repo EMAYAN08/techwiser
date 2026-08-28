@@ -13,7 +13,7 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { ArrowLeft, Crown, Sparkles, ArrowLeftRight, PackageOpen } from "lucide-react-native";
+import { ArrowLeft, Crown, Sparkles, ArrowLeftRight, PackageOpen, Trophy } from "lucide-react-native";
 
 import { useComparisonStore } from "../store/useComparisonStore";
 import { useThemeColors } from "../constants/Colors";
@@ -21,11 +21,7 @@ import { Typography } from "../constants/Typography";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { getCategoryIcon } from "../components/comparison/CategoryIcon";
-import { CategorySection } from "../components/comparison/CategorySection";
-import {
-  SpecBarRow,
-  type DetailedSpecRow,
-} from "../components/comparison/SpecBarRow";
+import { type DetailedSpecRow, type DetailedSpecValue } from "../components/comparison/SpecBarRow";
 
 const OVERVIEW_KEY = "Overview";
 
@@ -255,6 +251,125 @@ function KeyDifferencesCard({
 }
 
 // ---------------------------------------------------------------------------
+// Category body (label on its own line, values stacked beneath in columns
+// that align vertically with the sticky product cards above)
+// ---------------------------------------------------------------------------
+
+interface ValueCardProps {
+  value: DetailedSpecValue;
+  colors: ReturnType<typeof useThemeColors>["colors"];
+  width: number;
+}
+
+function ValueCard({ value, colors, width }: ValueCardProps) {
+  const isWinner = value.isWinner && !value.isDraw;
+  return (
+    <View
+      style={[
+        styles.valueCard,
+        {
+          width,
+          backgroundColor: isWinner ? colors.successMuted : colors.surface,
+          borderColor: isWinner ? colors.success : colors.border,
+        },
+      ]}
+      accessible={false}
+    >
+      {isWinner && (
+        <View style={[styles.valueCardTrophyWrap, { backgroundColor: colors.success }]}>
+          <Trophy size={9} color={colors.background} strokeWidth={2.5} />
+        </View>
+      )}
+      <Text
+        style={[
+          styles.valueCardText,
+          { color: isWinner ? colors.success : colors.text },
+        ]}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
+        {value.displayValue}
+      </Text>
+    </View>
+  );
+}
+
+interface CategoryBodyProps {
+  category: { key: string; rows: DetailedSpecRow[] };
+  colors: ReturnType<typeof useThemeColors>["colors"];
+  valueColumnWidth: number;
+  headerGap: number;
+}
+
+function CategoryBody({
+  category,
+  colors,
+  valueColumnWidth,
+  headerGap,
+}: CategoryBodyProps) {
+  if (category.rows.length === 0) {
+    return (
+      <View style={styles.emptyCategory}>
+        <Text style={[styles.emptyCategoryText, { color: colors.textSecondary }]}>
+          No specs available in this category.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View>
+      {category.rows.map((row, i) => {
+        const rowA11y =
+          row.label +
+          ". " +
+          row.values
+            .map((v) => {
+              const win = v.isWinner && !v.isDraw ? " (Winner)" : "";
+              return `${v.productName}: ${v.displayValue}${win}`;
+            })
+            .join(". ");
+
+        return (
+          <View
+            key={row.label}
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel={rowA11y}
+          >
+            {i > 0 && (
+              <View
+                style={[styles.specDivider, { backgroundColor: colors.border }]}
+              />
+            )}
+            <Text
+              style={[
+                styles.specLabel,
+                { color: colors.textSecondary },
+              ]}
+              numberOfLines={2}
+            >
+              {row.label}
+            </Text>
+            <View style={[styles.specValuesRow, { gap: headerGap }]}>
+              {row.values.map((v) => (
+                <ValueCard
+                  key={v.productId}
+                  value={v}
+                  colors={colors}
+                  width={valueColumnWidth}
+                />
+              ))}
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Category pill
 // ---------------------------------------------------------------------------
 
@@ -293,7 +408,7 @@ function CategoryPill({ label, isSelected, onPress }: CategoryPillProps) {
             : { backgroundColor: "transparent", borderColor: colors.border },
         ]}
       >
-        <Icon size={14} strokeWidth={2} color={isSelected ? colors.background : colors.textSecondary} />
+        <Icon size={14} strokeWidth={2} color={isSelected ? colors.background : colors.text} />
         <Text
           style={[styles.pillLabel, { color: isSelected ? colors.background : colors.textSecondary }]}
           numberOfLines={1}
@@ -363,6 +478,18 @@ export default function CompareScreen() {
 
   const { products, keyDifferences, aiSummary } = activeComparison;
   const productA = products[0];
+
+  // Width of one value card in the category body. Matches the sticky
+  // product card width above so columns align pixel-perfect.
+  const valueColumnWidth = useMemo(
+    () =>
+      Math.max(
+        60,
+        (width - 2 * screenPadding - (products.length - 1) * headerGap) /
+          products.length
+      ),
+    [width, screenPadding, headerGap, products.length]
+  );
   const productB = products[1];
 
   // Group specs by category for category views.
@@ -461,18 +588,19 @@ export default function CompareScreen() {
         </View>
       );
     }
-    const sectionProps = {
-      category: found.key,
-      rows: found.rows,
-      defaultExpanded: true,
-      colors,
-    };
-    return <CategorySection {...sectionProps} />;
+    return (
+      <CategoryBody
+        category={found}
+        colors={colors}
+        valueColumnWidth={valueColumnWidth}
+        headerGap={headerGap}
+      />
+    );
   };
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      {/* HEADER */}
+      {/* STICKY: header */}
       <View style={[styles.header, { paddingHorizontal: screenPadding, paddingTop: insets.top + 4 }]}>
         <Pressable
           onPress={handleBack}
@@ -490,60 +618,76 @@ export default function CompareScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
+      {/* STICKY: product cards */}
+      <View
+        style={[
+          styles.productRow,
+          {
+            paddingHorizontal: screenPadding,
+            gap: headerGap,
+            backgroundColor: colors.background,
+          },
+        ]}
+      >
+        {productA && (
+          <ProductHeaderCard
+            product={productA}
+            index={0}
+            isRecommended={recommendedIndex === 0}
+          />
+        )}
+        {productB && (
+          <ProductHeaderCard
+            product={productB}
+            index={1}
+            isRecommended={recommendedIndex === 1}
+          />
+        )}
+      </View>
+
+      {/* STICKY: category pills */}
+      <View
+        style={[
+          styles.pillsWrap,
+          {
+            paddingHorizontal: screenPadding,
+            borderTopColor: colors.border,
+            borderBottomColor: colors.border,
+            backgroundColor: colors.background,
+          },
+        ]}
+      >
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.pillsContent}
+        >
+          {categoryList.map((cat) => (
+            <CategoryPill
+              key={cat}
+              label={cat}
+              isSelected={selectedCategory === cat}
+              onPress={() => handleSelectCategory(cat)}
+            />
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* SCROLLING: body */}
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingHorizontal: screenPadding, paddingBottom: insets.bottom + 32 },
+          {
+            paddingHorizontal: screenPadding,
+            paddingTop: 24,
+            paddingBottom: insets.bottom + 32,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* PRODUCT HEADERS */}
-        <View style={[styles.productRow, { gap: headerGap }]}>
-          {productA && (
-            <ProductHeaderCard
-              product={productA}
-              index={0}
-              isRecommended={recommendedIndex === 0}
-            />
-          )}
-          {productB && (
-            <ProductHeaderCard
-              product={productB}
-              index={1}
-              isRecommended={recommendedIndex === 1}
-            />
-          )}
-        </View>
-
-        {/* CATEGORY PILLS */}
-        <View
-          style={[
-            styles.pillsWrap,
-            { borderTopColor: colors.border, borderBottomColor: colors.border },
-          ]}
-        >
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.pillsContent}
-          >
-            {categoryList.map((cat) => (
-              <CategoryPill
-                key={cat}
-                label={cat}
-                isSelected={selectedCategory === cat}
-                onPress={() => handleSelectCategory(cat)}
-              />
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* BODY */}
-        <View style={styles.body}>
-          {selectedCategory === OVERVIEW_KEY
-            ? renderOverview()
-            : renderCategory(selectedCategory)}
-        </View>
+        {selectedCategory === OVERVIEW_KEY
+          ? renderOverview()
+          : renderCategory(selectedCategory)}
       </ScrollView>
     </View>
   );
@@ -576,11 +720,12 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   headerSpacer: { width: 40, height: 40 },
-  scrollContent: { paddingTop: 8 },
+  scrollContent: {},
 
   productRow: {
     flexDirection: "row",
-    marginBottom: 22,
+    paddingTop: 8,
+    paddingBottom: 22,
   },
 
   // Product header card
@@ -644,7 +789,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: 22,
   },
   pillsContent: { gap: 8, paddingRight: 4 },
   pill: {
@@ -662,9 +806,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: -0.1,
   },
-
-  // Body
-  body: { flex: 1 },
 
   // AI Verdict
   aiCard: {
@@ -783,6 +924,49 @@ const styles = StyleSheet.create({
   emptyButton: { marginTop: 24, alignSelf: "stretch" },
   emptyCategory: { paddingVertical: 32, alignItems: "center" },
   emptyCategoryText: { ...Typography.body, fontSize: 14 },
+
+  // Category body
+  specDivider: {
+    height: StyleSheet.hairlineWidth,
+    width: "100%",
+  },
+  specLabel: {
+    fontSize: 13,
+    fontWeight: "500",
+    paddingTop: 14,
+    paddingBottom: 6,
+  },
+  specValuesRow: {
+    flexDirection: "row",
+    paddingBottom: 14,
+  },
+
+  // Value card
+  valueCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    minHeight: 48,
+    justifyContent: "center",
+    position: "relative",
+  },
+  valueCardTrophyWrap: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  valueCardText: {
+    fontSize: 15,
+    fontWeight: "600",
+    lineHeight: 20,
+    textAlign: "left",
+  },
 
   detailedCta: { marginTop: 24 },
 });
