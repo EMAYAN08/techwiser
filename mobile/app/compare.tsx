@@ -483,44 +483,87 @@ export default function CompareScreen() {
   // Group specs by category for category views.
   const categories = useMemo(() => {
     if (!productA) return [] as Array<{ key: string; rows: DetailedSpecRow[] }>;
-    const map = new Map<string, DetailedSpecRow[]>();
-    const specCount = productA.specs.length;
-    for (let i = 0; i < specCount; i++) {
-      const lead = productA.specs[i];
-      if (!lead) continue;
-      const values = products.map((p) => {
-        const s = p.specs[i];
-        return {
-          productId: p.id,
-          productName: p.name,
-          productColor: p.retailerColor,
-          displayValue: s?.value ?? "—",
-          numericValue: typeof s?.numericValue === "number" ? s.numericValue : null,
-          isWinner: !!s?.isWinner,
-          isDraw: !!s?.isDraw,
-        };
+    
+    // 1) Support new backend schema format (groupedSpecs)
+    if ((activeComparison as any).groupedSpecs) {
+      const gs = (activeComparison as any).groupedSpecs;
+      return Object.entries(gs).map(([key, specsArray]: [string, any]) => {
+        const rows = specsArray.map((spec: any) => {
+          const values = products.map((p, pIndex) => ({
+            productId: p.id,
+            productName: p.name,
+            productColor: p.retailerColor,
+            displayValue: spec.values && spec.values[pIndex] ? spec.values[pIndex] : "�",
+            numericValue: null,
+            isWinner: spec.winnerIndex === pIndex,
+            isDraw: spec.winnerIndex === -1,
+          }));
+          return { label: spec.label, values, unit: spec.unit || "" };
+        });
+        return { key, rows };
       });
-      const row: DetailedSpecRow = { label: lead.label, unit: lead.unit, values };
-      const list = map.get(lead.category) ?? [];
-      list.push(row);
-      map.set(lead.category, list);
     }
-    return Array.from(map.entries()).map(([key, rows]) => ({ key, rows }));
-  }, [productA, products]);
+
+    // 2) Fallback to old mock format (product.specs)
+    if (productA.specs) {
+      const map = new Map<string, DetailedSpecRow[]>();
+      const specCount = productA.specs.length;
+      for (let i = 0; i < specCount; i++) {
+        const lead = productA.specs[i];
+        if (!lead) continue;
+        const values = products.map((p) => {
+          const s = p.specs[i];
+          return {
+            productId: p.id,
+            productName: p.name,
+            productColor: p.retailerColor,
+            displayValue: s?.value ?? "�",
+            numericValue: typeof s?.numericValue === "number" ? s.numericValue : null,
+            isWinner: !!s?.isWinner,
+            isDraw: !!s?.isDraw,
+          };
+        });
+        const row: DetailedSpecRow = { label: lead.label, unit: lead.unit, values };
+        const list = map.get(lead.category) ?? [];
+        list.push(row);
+        map.set(lead.category, list);
+      }
+      return Array.from(map.entries()).map(([key, rows]) => ({ key, rows }));
+    }
+    
+    return [];
+  }, [productA, products, activeComparison]);
 
   // Decorate key differences with winner index from the underlying specs.
   const decoratedDifferences = useMemo<KeyDifference[]>(() => {
     if (!productA) return [];
     return keyDifferences.map((diff) => {
-      const idx = productA.specs.findIndex(
-        (s) => s.label === diff.label && s.category !== OVERVIEW_KEY
-      );
-      if (idx < 0) return { ...diff, winnerIndex: null };
-      const isDraw = !!productA.specs[idx]?.isDraw;
-      const raw = products.findIndex((p) => p.specs[idx]?.isWinner);
-      return { ...diff, winnerIndex: isDraw ? null : raw < 0 ? null : raw };
+      let winnerIndex = null;
+      let isDraw = false;
+
+      if ((activeComparison as any).groupedSpecs) {
+        for (const [group, specs] of Object.entries((activeComparison as any).groupedSpecs)) {
+          const match = (specs as any[]).find(s => s.label === diff.label);
+          if (match) {
+             if (match.winnerIndex === -1) isDraw = true;
+             else winnerIndex = match.winnerIndex;
+             break;
+          }
+        }
+      } else if (productA.specs) {
+        const idx = productA.specs.findIndex(
+          (s) => s.label === diff.label && s.category !== OVERVIEW_KEY
+        );
+        if (idx >= 0) {
+          isDraw = !!productA.specs[idx]?.isDraw;
+          const winnerIdx = products.findIndex((p) => p.specs[idx]?.isWinner);
+          winnerIndex = winnerIdx >= 0 ? winnerIdx : null;
+        }
+      }
+
+      return { ...diff, winnerIndex, isDraw };
     });
-  }, [keyDifferences, productA, products]);
+  }, [keyDifferences, productA, products, activeComparison]);
 
   const categoryList = useMemo(
     () => [OVERVIEW_KEY, ...categories.map((c) => c.key)],
