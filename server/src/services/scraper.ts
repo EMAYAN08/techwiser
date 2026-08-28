@@ -64,8 +64,11 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
       // Trigger Python Scrapling Microservice Fallback
       console.log("Jina got blocked. Triggering Python Scrapling Microservice...");
       try {
-        const pyScraperUrl = process.env.PYTHON_SCRAPER_URL || "http://127.0.0.1:8000";
-        const pyRes = await fetch(`${pyScraperUrl}/scrape`, {
+        const rawPyUrl = process.env.PYTHON_SCRAPER_URL || "http://127.0.0.1:8000";
+        const pyScraperUrl = rawPyUrl.replace(/\/+$/, ''); // strip trailing slash
+        const fetchUrl = `${pyScraperUrl}/scrape`;
+        console.log("Fetching Python Microservice at:", fetchUrl);
+        const pyRes = await fetch(fetchUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url })

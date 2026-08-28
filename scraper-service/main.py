@@ -50,6 +50,7 @@ def prune_json(obj, depth=0):
         return obj
 
 @app.post("/scrape")
+@app.post("/scrape/")
 async def scrape_endpoint(req: ScrapeRequest):
     try:
         print(f"Scraping URL: {req.url}")
