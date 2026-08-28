@@ -83,8 +83,15 @@ export async function findOfficialSpecs(productTitle: string): Promise<string> {
   if (productTitle.toLowerCase().includes("access denied") || productTitle.toLowerCase().includes("just a moment")) return "";
   
   // Clean up title (often has " | BestBuy Canada" etc)
-  const cleanTitle = productTitle.split("|")[0].split("-")[0].trim();
-  const query = `${cleanTitle} official site tech specs specifications`;
+  let cleanTitle = productTitle.split("|")[0].split("-")[0].replace(/\b(unlocked|smartphone|fitness tracker|smartwatch|with|monitor|gps|midnight|zen|graphite)\b/gi, '').trim();
+  
+  // Truncate to first 4 words to ensure a broad, accurate product search
+  const words = cleanTitle.split(/\s+/);
+  if (words.length > 4) {
+    cleanTitle = words.slice(0, 4).join(" ");
+  }
+  
+  const query = `${cleanTitle} official specs`;
   
   try {
     console.log(`Searching official specs for: ${query}`);
