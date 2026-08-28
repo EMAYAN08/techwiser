@@ -13,7 +13,7 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { ArrowLeft, Crown, Sparkles, ArrowLeftRight, PackageOpen, Trophy } from "lucide-react-native";
+import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy } from "lucide-react-native";
 
 import { useComparisonStore } from "../store/useComparisonStore";
 import { useThemeColors } from "../constants/Colors";
@@ -44,9 +44,10 @@ interface ProductHeaderCardProps {
   product: { name: string; retailerColor: string; imageUrl?: string | null };
   isRecommended: boolean;
   index: number;
+  compact: boolean;
 }
 
-function ProductHeaderCard({ product, isRecommended, index }: ProductHeaderCardProps) {
+function ProductHeaderCard({ product, isRecommended, index, compact }: ProductHeaderCardProps) {
   const { colors } = useThemeColors();
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(8)).current;
@@ -78,6 +79,7 @@ function ProductHeaderCard({ product, isRecommended, index }: ProductHeaderCardP
         borderRadius={16}
         style={[
           styles.headerCard,
+          compact && styles.headerCardCompact,
           isRecommended && { borderColor: colors.success, borderWidth: 1 },
         ]}
       >
@@ -90,19 +92,28 @@ function ProductHeaderCard({ product, isRecommended, index }: ProductHeaderCardP
         <View
           style={[
             styles.headerImageWrap,
+            compact && styles.headerImageWrapCompact,
             { backgroundColor: colors.surfaceHighlight, borderColor: colors.border },
           ]}
         >
           {product.imageUrl ? (
-            <Image source={{ uri: product.imageUrl }} style={styles.headerImage} resizeMode="contain" />
+            <Image
+              source={{ uri: product.imageUrl }}
+              style={[styles.headerImage, compact && styles.headerImageCompact]}
+              resizeMode="contain"
+            />
           ) : (
-            <Icon size={28} color={colors.textSecondary} strokeWidth={1.75} />
+            <Icon size={compact ? 20 : 28} color={colors.textSecondary} strokeWidth={1.75} />
           )}
         </View>
 
         <Text
-          style={[styles.headerName, { color: colors.text }]}
-          numberOfLines={2}
+          style={[
+            styles.headerName,
+            compact && styles.headerNameCompact,
+            { color: colors.text },
+          ]}
+          numberOfLines={compact ? 3 : 2}
           ellipsizeMode="tail"
         >
           {normalizeTitle(product.name)}
@@ -111,12 +122,17 @@ function ProductHeaderCard({ product, isRecommended, index }: ProductHeaderCardP
         <View
           style={[
             styles.retailerPill,
+            compact && styles.retailerPillCompact,
             { borderColor: product.retailerColor || colors.border },
           ]}
         >
           <View style={[styles.retailerDot, { backgroundColor: product.retailerColor || colors.textTertiary }]} />
           <Text
-            style={[styles.retailerText, { color: product.retailerColor || colors.textSecondary }]}
+            style={[
+              styles.retailerText,
+              compact && styles.retailerTextCompact,
+              { color: product.retailerColor || colors.textSecondary },
+            ]}
             numberOfLines={1}
           >
             {product.retailerColor ? "RETAILER" : "STORE"}
@@ -163,12 +179,10 @@ interface KeyDifference {
 
 function KeyDifferencesCard({
   differences,
-  leftColor,
-  rightColor,
+  productColors,
 }: {
   differences: KeyDifference[];
-  leftColor: string;
-  rightColor: string;
+  productColors: string[];
 }) {
   const { colors } = useThemeColors();
   if (differences.length === 0) return null;
@@ -176,76 +190,51 @@ function KeyDifferencesCard({
   return (
     <Card borderRadius={16} style={styles.diffCard}>
       <Text style={[styles.diffHeading, { color: colors.textTertiary }]}>KEY DIFFERENCES</Text>
-      {differences.map((diff, i) => {
-        const leftWin = diff.winnerIndex === 0;
-        const rightWin = diff.winnerIndex === 1;
-        const isDraw = diff.winnerIndex === null;
-        return (
-          <View
-            key={`${diff.label}-${i}`}
-            style={[
-              styles.diffRow,
-              i < differences.length - 1 && {
-                borderBottomWidth: StyleSheet.hairlineWidth,
-                borderBottomColor: colors.border,
-              },
-            ]}
-          >
-            <Text style={[styles.diffLabel, { color: colors.textSecondary }]}>{diff.label}</Text>
-            <View style={styles.diffValuesRow}>
-              <View
-                style={[
-                  styles.diffCol,
-                  { borderTopColor: leftWin ? leftColor : "transparent" },
-                ]}
-              >
-                <Text
+      {differences.map((diff, i) => (
+        <View
+          key={`${diff.label}-${i}`}
+          style={[
+            styles.diffRow,
+            i < differences.length - 1 && {
+              borderBottomWidth: StyleSheet.hairlineWidth,
+              borderBottomColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.diffLabel, { color: colors.textSecondary }]}>{diff.label}</Text>
+          <View style={styles.diffValuesRow}>
+            {diff.values.map((val, idx) => {
+              const win = diff.winnerIndex === idx;
+              const isDraw = diff.winnerIndex === null;
+              const accentColor = productColors[idx] ?? colors.primary;
+              return (
+                <View
+                  key={idx}
                   style={[
-                    styles.diffValue,
-                    {
-                      color: isDraw || leftWin ? colors.text : colors.textSecondary,
-                    },
-                    leftWin && styles.diffValueWinner,
+                    styles.diffCol,
+                    idx === diff.values.length - 1 && styles.diffColLast,
+                    { borderTopColor: win ? accentColor : "transparent" },
                   ]}
-                  numberOfLines={2}
                 >
-                  {diff.values[0] ?? "—"}
-                </Text>
-                {leftWin && <Text style={[styles.diffWinnerTag, { color: leftColor }]}>WINNER</Text>}
-              </View>
-
-              <View style={[styles.diffDivider, { backgroundColor: colors.border }]}>
-                <View style={[styles.diffDividerIconWrap, { backgroundColor: colors.background }]}>
-                  <ArrowLeftRight size={10} color={colors.textTertiary} strokeWidth={2} />
+                  <Text
+                    style={[
+                      styles.diffValue,
+                      {
+                        color: isDraw || win ? colors.text : colors.textSecondary,
+                      },
+                      win && styles.diffValueWinner,
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {val || "—"}
+                  </Text>
+                  {win && <Text style={[styles.diffWinnerTag, { color: accentColor }]}>WINNER</Text>}
                 </View>
-              </View>
-
-              <View
-                style={[
-                  styles.diffCol,
-                  styles.diffColRight,
-                  { borderTopColor: rightWin ? rightColor : "transparent" },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.diffValue,
-                    styles.diffValueRight,
-                    {
-                      color: isDraw || rightWin ? colors.text : colors.textSecondary,
-                    },
-                    rightWin && styles.diffValueWinner,
-                  ]}
-                  numberOfLines={2}
-                >
-                  {diff.values[1] ?? "—"}
-                </Text>
-                {rightWin && <Text style={[styles.diffWinnerTag, { color: rightColor }]}>WINNER</Text>}
-              </View>
-            </View>
+              );
+            })}
           </View>
-        );
-      })}
+        </View>
+      ))}
     </Card>
   );
 }
@@ -490,7 +479,6 @@ export default function CompareScreen() {
       ),
     [width, screenPadding, headerGap, products.length]
   );
-  const productB = products[1];
 
   // Group specs by category for category views.
   const categories = useMemo(() => {
@@ -522,7 +510,7 @@ export default function CompareScreen() {
 
   // Decorate key differences with winner index from the underlying specs.
   const decoratedDifferences = useMemo<KeyDifference[]>(() => {
-    if (!productA || !productB) return [];
+    if (!productA) return [];
     return keyDifferences.map((diff) => {
       const idx = productA.specs.findIndex(
         (s) => s.label === diff.label && s.category !== OVERVIEW_KEY
@@ -532,7 +520,7 @@ export default function CompareScreen() {
       const raw = products.findIndex((p) => p.specs[idx]?.isWinner);
       return { ...diff, winnerIndex: isDraw ? null : raw < 0 ? null : raw };
     });
-  }, [keyDifferences, productA, productB, products]);
+  }, [keyDifferences, productA, products]);
 
   const categoryList = useMemo(
     () => [OVERVIEW_KEY, ...categories.map((c) => c.key)],
@@ -566,8 +554,7 @@ export default function CompareScreen() {
         <View style={{ marginTop: 20 }}>
           <KeyDifferencesCard
             differences={decoratedDifferences}
-            leftColor={productA?.retailerColor ?? colors.primary}
-            rightColor={productB?.retailerColor ?? colors.primary}
+            productColors={products.map((p) => p.retailerColor || colors.primary)}
           />
         </View>
       )}
@@ -629,20 +616,15 @@ export default function CompareScreen() {
           },
         ]}
       >
-        {productA && (
+        {products.map((p, i) => (
           <ProductHeaderCard
-            product={productA}
-            index={0}
-            isRecommended={recommendedIndex === 0}
+            key={p.id}
+            product={p}
+            index={i}
+            isRecommended={recommendedIndex === i}
+            compact={products.length >= 3}
           />
-        )}
-        {productB && (
-          <ProductHeaderCard
-            product={productB}
-            index={1}
-            isRecommended={recommendedIndex === 1}
-          />
-        )}
+        ))}
       </View>
 
       {/* STICKY: category pills */}
@@ -736,6 +718,10 @@ const styles = StyleSheet.create({
     minHeight: 168,
     position: "relative",
   },
+  headerCardCompact: {
+    padding: 8,
+    minHeight: 0,
+  },
   crownWrap: {
     position: "absolute",
     top: 10,
@@ -756,7 +742,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 4,
   },
+  headerImageWrapCompact: {
+    width: 44,
+    height: 40,
+    borderRadius: 8,
+    marginBottom: 6,
+    marginTop: 0,
+  },
   headerImage: { width: 64, height: 56 },
+  headerImageCompact: { width: 40, height: 36 },
   headerName: {
     ...Typography.body,
     fontSize: 14,
@@ -765,6 +759,12 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
     lineHeight: 18,
     marginBottom: 8,
+  },
+  headerNameCompact: {
+    fontSize: 11,
+    lineHeight: 13,
+    letterSpacing: -0.1,
+    marginBottom: 4,
   },
   retailerPill: {
     flexDirection: "row",
@@ -776,12 +776,21 @@ const styles = StyleSheet.create({
     gap: 5,
     maxWidth: "100%",
   },
+  retailerPillCompact: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    gap: 4,
+  },
   retailerDot: { width: 6, height: 6, borderRadius: 3 },
   retailerText: {
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 0.6,
     textTransform: "uppercase",
+  },
+  retailerTextCompact: {
+    fontSize: 8,
+    letterSpacing: 0.4,
   },
 
   // Pills
@@ -856,40 +865,30 @@ const styles = StyleSheet.create({
     textTransform: "none",
     marginBottom: 10,
   },
-  diffValuesRow: { flexDirection: "row", alignItems: "stretch" },
+  diffValuesRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 8,
+  },
   diffCol: {
     flex: 1,
     minWidth: 0,
     borderTopWidth: 2,
     paddingTop: 8,
   },
-  diffColRight: { alignItems: "flex-end" },
+  diffColLast: { alignItems: "flex-end" },
   diffValue: {
     ...Typography.body,
     fontSize: 15,
     fontWeight: "500",
     lineHeight: 20,
   },
-  diffValueRight: { textAlign: "right" },
   diffValueWinner: { fontWeight: "700" },
   diffWinnerTag: {
     fontSize: 9,
     fontWeight: "800",
     letterSpacing: 0.8,
     marginTop: 4,
-  },
-  diffDivider: {
-    width: 1,
-    marginHorizontal: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  diffDividerIconWrap: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
   },
 
   // Empty / fallback

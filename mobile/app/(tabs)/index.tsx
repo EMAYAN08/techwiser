@@ -60,7 +60,7 @@ export default function Home() {
     setLoading(true, "Fetching product pages...");
     
     try {
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:3000";
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || "https://techwiser.onrender.com";
       console.log(`Sending comparison to ${apiUrl}/api/compare`);
 
       const response = await fetch(`${apiUrl}/api/compare`, {
