@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
-dotenv.config(); // Must be called BEFORE importing our own services
+dotenv.config();
 
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { scrapeUrl } from './services/scraper';
-import { generateComparison } from './services/gemini';
+import { scrapeUrl, findOfficialSpecs } from './services/scraper';
+import { generateComparison } from './services/llm';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,15 +27,21 @@ app.post('/api/compare', async (req: Request, res: Response) => {
 
     console.log(`Starting comparison for ${urls.length} URLs...`);
 
-    // 1. Scrape URLs in parallel
+    // 1. Scrape Retailer URLs in parallel
     const scrapeResults = await Promise.allSettled(urls.map(url => scrapeUrl(url)));
     
-    const scrapedData: {url: string, rawText: string, imageUrl: string | null}[] = [];
+    const scrapedData: {url: string, retailerText: string, imageUrl: string | null, title: string, officialText: string}[] = [];
     const failedUrls: string[] = [];
 
     scrapeResults.forEach((result, index) => {
       if (result.status === 'fulfilled') {
-        scrapedData.push({ url: urls[index], rawText: result.value.rawText, imageUrl: result.value.imageUrl });
+        scrapedData.push({ 
+          url: urls[index], 
+          retailerText: result.value.rawText, 
+          imageUrl: result.value.imageUrl,
+          title: result.value.title,
+          officialText: ""
+        });
       } else {
         console.error(`Failed to scrape ${urls[index]}:`, result.reason);
         failedUrls.push(urls[index]);
@@ -47,23 +53,35 @@ app.post('/api/compare', async (req: Request, res: Response) => {
       return;
     }
 
-    // 2. Extract and Compare using Gemini
-    console.log(`Sending ${scrapedData.length} successfully scraped pages to Gemini...`);
+    // 2. Discover Official Specs in parallel
+    console.log("Discovering official brand specs...");
+    const officialResults = await Promise.allSettled(scrapedData.map(d => findOfficialSpecs(d.title)));
+    officialResults.forEach((res, index) => {
+      if (res.status === 'fulfilled') {
+        scrapedData[index].officialText = res.value;
+      }
+    });
+
+    // 3. Extract and Compare using OpenRouter (Single API Call)
+    console.log(`Sending ${scrapedData.length} multi-source payloads to OpenRouter...`);
     let comparisonResult: any;
     try {
-      // Pass only rawText to generateComparison so Gemini doesn't get confused
-      comparisonResult = await generateComparison(scrapedData.map(d => ({ url: d.url, rawText: d.rawText })));
-    } catch (geminiError: unknown) {
-      console.error('Gemini extraction error:', geminiError);
+      comparisonResult = await generateComparison(scrapedData.map(d => ({ 
+        url: d.url, 
+        retailerText: d.retailerText,
+        officialText: d.officialText,
+        title: d.title
+      })));
+    } catch (llmError: unknown) {
+      console.error('LLM extraction error:', llmError);
       res.status(500).json({ error: 'Failed to parse specifications and compare products via AI.' });
       return;
     }
 
-    // 3. Add IDs and structure metadata
+    // 4. Add IDs and structure metadata
     comparisonResult.id = Date.now().toString();
     comparisonResult.createdAt = new Date().toISOString();
     
-    // Assign IDs to products and match retailer colors (from PRD spec)
     const RETAILER_COLORS: Record<string, string> = {
       "bestbuy": "#003B64",
       "amazon": "#FF9900",
@@ -76,10 +94,11 @@ app.post('/api/compare', async (req: Request, res: Response) => {
 
     comparisonResult.products = comparisonResult.products.map((p: any, i: number) => {
       p.id = `product-${i}`;
-      p.retailerColor = RETAILER_COLORS[p.retailer?.toLowerCase()] || "#333333";
-      // Inject the extracted image URL from scraping phase
-      const matchedData = scrapedData.find(d => d.url === p.url);
+      p.retailerColor = RETAILER_COLORS[p.retailer?.toLowerCase().replace(/[^a-z]/g, '')] || "#333333";
+      // Inject the extracted image URL from scraping phase (fuzzy match url if needed)
+      const matchedData = scrapedData[i]; 
       p.imageUrl = matchedData?.imageUrl || null;
+      p.url = matchedData?.url || p.url; // Use original exact URL
       return p;
     });
 

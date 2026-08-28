@@ -1,9 +1,9 @@
-export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUrl: string | null }> {
+export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUrl: string | null; title: string }> {
   let rawText = "";
   let imageUrl: string | null = null;
+  let title = "";
 
   try {
-    // 1. Fetch JSON from Jina AI (bypasses anti-bot captchas, returns text AND image metadata)
     try {
       const jinaResponse = await fetch('https://r.jina.ai/' + url, {
         headers: {
@@ -18,8 +18,8 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
         const data = jsonData.data;
         
         rawText = data?.content || data?.text || "";
+        title = data?.title || "";
         
-        // Jina automatically extracts the main product image or og:image
         if (data?.image) {
           imageUrl = data.image;
         }
@@ -28,15 +28,14 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
       }
     } catch (jinaError: any) {
       console.log(`Jina extraction warning for ${url}:`, jinaError.message);
-      rawText = "Failed to extract text. The retailer may have blocked the request.";
+      rawText = "Failed to extract text.";
     }
 
-    // 2. Fallback Image Extraction: Lightweight fetch if Jina missed the image
     if (!imageUrl) {
       try {
         const htmlResponse = await fetch(url, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
             'Accept': 'text/html'
           },
           signal: AbortSignal.timeout(6000)
@@ -47,7 +46,6 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
         if (ogImageMatch && ogImageMatch[1]) {
           imageUrl = ogImageMatch[1];
         } else {
-          // If no og:image, grab the first likely product image from markdown just in case
           const mdImgMatch = rawText.match(/!\[.*?\]\((https:\/\/[^\)]+(?:jpg|png|webp|jpeg)[^\)]*)\)/i);
           if (mdImgMatch && mdImgMatch[1]) {
             imageUrl = mdImgMatch[1];
@@ -58,9 +56,40 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
       }
     }
 
-    return { rawText, imageUrl };
+    return { rawText, imageUrl, title };
   } catch (error: any) {
     console.error(`Scrape failed for ${url}:`, error.message);
-    return { rawText: "Failed to scrape.", imageUrl: null };
+    return { rawText: "Failed to scrape.", imageUrl: null, title: "" };
+  }
+}
+
+export async function findOfficialSpecs(productTitle: string): Promise<string> {
+  if (!productTitle) return "";
+  
+  // Clean up title (often has " | BestBuy Canada" etc)
+  const cleanTitle = productTitle.split("|")[0].split("-")[0].trim();
+  const query = `${cleanTitle} official site tech specs specifications`;
+  
+  try {
+    console.log(`Searching official specs for: ${query}`);
+    // Use s.jina.ai for search and extraction in one go!
+    // X-Return-Format: markdown will return markdown of the top results or the directly fetched page if it auto-redirects
+    const jinaSearchResponse = await fetch(`https://s.jina.ai/${encodeURIComponent(query)}`, {
+      headers: {
+        'Accept': 'text/plain',
+        'X-Return-Format': 'markdown'
+      },
+      signal: AbortSignal.timeout(12000)
+    });
+    
+    if (jinaSearchResponse.ok) {
+      const markdown = await jinaSearchResponse.text();
+      // Cap at 15000 chars to avoid overwhelming the LLM
+      return markdown.substring(0, 15000);
+    }
+    return "";
+  } catch (e: any) {
+    console.error(`Official specs search failed for ${cleanTitle}:`, e.message);
+    return "";
   }
 }
