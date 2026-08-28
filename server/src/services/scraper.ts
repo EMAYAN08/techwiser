@@ -56,7 +56,22 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
       }
     }
 
-    return { rawText, imageUrl, title };
+    let finalTitle = title;
+    if (!finalTitle || finalTitle.toLowerCase().includes("access denied") || finalTitle.toLowerCase().includes("just a moment")) {
+      try {
+        const urlObj = new URL(url);
+        const parts = urlObj.pathname.split('/').filter(p => p.length > 0 && p.toLowerCase() !== 'en-ca' && p.toLowerCase() !== 'product' && p.toLowerCase() !== 'dp' && isNaN(Number(p)));
+        // Grab the longest string segment, which is almost always the SEO product slug
+        let slug = parts.reduce((a, b) => a.length > b.length ? a : b, "");
+        if (slug) {
+          finalTitle = decodeURIComponent(slug).replace(/-/g, ' ');
+        }
+      } catch (e) {
+        console.log("Failed to parse URL for title fallback", e);
+      }
+    }
+    
+    return { rawText, imageUrl, title: finalTitle };
   } catch (error: any) {
     console.error(`Scrape failed for ${url}:`, error.message);
     return { rawText: "Failed to scrape.", imageUrl: null, title: "" };
