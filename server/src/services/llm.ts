@@ -76,7 +76,7 @@ You must output ONLY valid JSON matching this exact structure:
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'google/gemini-2.0-pro-exp-02-05:free',
+      model: 'minimax/minimax-m3:free',
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: systemPrompt },
