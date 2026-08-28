@@ -87,7 +87,8 @@ You must output ONLY valid JSON matching this exact structure:
     const content = response.choices[0]?.message?.content;
     if (!content) throw new Error("No content received from OpenRouter");
     
-    return JSON.parse(content);
+    let cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleanContent);
   } catch (err: any) {
     console.error("OpenRouter LLM Error:", err.message || err);
     throw err;
