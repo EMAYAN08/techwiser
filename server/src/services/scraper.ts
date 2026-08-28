@@ -136,9 +136,11 @@ export async function findOfficialSpecs(productTitle: string): Promise<string> {
     
     if (jinaSearchResponse.ok) {
       const markdown = await jinaSearchResponse.text();
+      console.log(`Jina search for ${query} returned ${markdown.length} chars`);
       // Cap at 15000 chars to avoid overwhelming the LLM
       return markdown.substring(0, 15000);
     }
+    console.log(`Jina search for ${query} failed with status ${jinaSearchResponse.status}`);
     return "";
   } catch (e: any) {
     console.error(`Official specs search failed for ${cleanTitle}:`, e.message);
