@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ScrollView, StyleSheet, View, Text, Animated } from "react-native";
+import { ScrollView, StyleSheet, View, Text, Animated, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { URLInputGroup } from "../../components/home/URLInputGroup";
@@ -24,8 +24,14 @@ const RETAILER_COLORS: Record<string, string> = {
 
 export default function Home() {
   const router = useRouter();
-  const { urls, isLoading, setLoading, setActiveComparison, addRecentComparison } =
-    useComparisonStore();
+  const {
+    urls,
+    isLoading,
+    setLoading,
+    setActiveComparison,
+    addRecentComparison,
+    seedMockComparison,
+  } = useComparisonStore();
   const [inputMode, setInputMode] = useState<InputMode>("url");
   const { colors } = useThemeColors();
   const [scrollEnabled, setScrollEnabled] = useState(true);
@@ -133,7 +139,85 @@ export default function Home() {
         </Animated.View>
 
         <RecentComparisons />
+
+        {__DEV__ && <DevSeedPanel
+          onSeedTwo={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            seedMockComparison("two");
+            router.push("/compare");
+          }}
+          onSeedThree={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            seedMockComparison("three");
+            router.push("/compare");
+          }}
+          onOpenDetailed={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            seedMockComparison("two");
+            router.push("/compare/detailed");
+          }}
+        />}
       </ScrollView>
+    </View>
+  );
+}
+
+interface DevSeedPanelProps {
+  onSeedTwo: () => void;
+  onSeedThree: () => void;
+  onOpenDetailed: () => void;
+}
+
+function DevSeedPanel({ onSeedTwo, onSeedThree, onOpenDetailed }: DevSeedPanelProps) {
+  const { colors } = useThemeColors();
+  return (
+    <View
+      style={[
+        styles.devPanel,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+      ]}
+    >
+      <Text style={[styles.devLabel, { color: colors.textTertiary }]}>
+        DEV SEED
+      </Text>
+      <View style={styles.devRow}>
+        <Pressable
+          onPress={onSeedTwo}
+          accessibilityRole="button"
+          accessibilityLabel="Seed 2-product comparison"
+          style={({ pressed }) => [
+            styles.devBtn,
+            { backgroundColor: colors.background, borderColor: colors.border },
+            pressed && { opacity: 0.6 },
+          ]}
+        >
+          <Text style={[styles.devBtnText, { color: colors.text }]}>2 products</Text>
+        </Pressable>
+        <Pressable
+          onPress={onSeedThree}
+          accessibilityRole="button"
+          accessibilityLabel="Seed 3-product comparison"
+          style={({ pressed }) => [
+            styles.devBtn,
+            { backgroundColor: colors.background, borderColor: colors.border },
+            pressed && { opacity: 0.6 },
+          ]}
+        >
+          <Text style={[styles.devBtnText, { color: colors.text }]}>3 products</Text>
+        </Pressable>
+        <Pressable
+          onPress={onOpenDetailed}
+          accessibilityRole="button"
+          accessibilityLabel="Open detailed comparison"
+          style={({ pressed }) => [
+            styles.devBtn,
+            { backgroundColor: colors.background, borderColor: colors.border },
+            pressed && { opacity: 0.6 },
+          ]}
+        >
+          <Text style={[styles.devBtnText, { color: colors.text }]}>Detailed</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -153,5 +237,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "rgba(255,255,255,0.38)",
     marginBottom: 24,
+  },
+
+  // Dev seed panel
+  devPanel: {
+    marginTop: 24,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  devLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  devRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  devBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+    minHeight: 36,
+    justifyContent: "center",
+  },
+  devBtnText: {
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: -0.1,
   },
 });
