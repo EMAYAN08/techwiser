@@ -47,7 +47,28 @@ async def scrape_endpoint(req: ScrapeRequest):
         print(f"Scraping URL (TLS Impersonation): {req.url}")
         
         # Use curl_cffi with Safari impersonation to bypass Akamai
+        
+        # BestBuy Canada API Bypass
+        if "bestbuy.ca" in req.url:
+            sku_match = re.search(r'/(\d+)(?:\?|$)', req.url)
+            if sku_match:
+                sku = sku_match.group(1)
+                api_url = f"https://www.bestbuy.ca/api/v2/json/product/{sku}"
+                print(f"Bypassing Akamai via BestBuy API: {api_url}")
+                api_resp = curl_requests.get(api_url, impersonate="safari17_0", timeout=15)
+                if api_resp.status_code == 200:
+                    data = api_resp.json()
+                    specs = data.get("specs", [])
+                    name = data.get("name", "")
+                    return {
+                        "status": "success",
+                        "type": "json",
+                        "data": json.dumps({"name": name, "specs": specs})[:20000]
+                    }
+                    
+        # Fallback to standard request for other sites
         response = curl_requests.get(req.url, impersonate="safari17_0", timeout=15)
+
         print(f"Response status: {response.status_code}, Length: {len(response.text)}")
         
         if "Access Denied" in response.text or "Just a moment" in response.text:
