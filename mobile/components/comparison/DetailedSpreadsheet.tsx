@@ -71,7 +71,7 @@ interface DetailedSpreadsheetProps {
   onBack: () => void;
 }
 
-export function DetailedSpreadsheet({ products, onBack }: DetailedSpreadsheetProps) {
+export function DetailedSpreadsheet({ products, groupedSpecs, onBack }: DetailedSpreadsheetProps) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { colors } = useThemeColors();
@@ -84,21 +84,42 @@ export function DetailedSpreadsheet({ products, onBack }: DetailedSpreadsheetPro
   // rows, with no horizontal scroll inside. The body has one horizontal
   // ScrollView, one page per product.
   const pages = useMemo<ProductPage[]>(() => {
-    return products.map((p) => {
-      const rows = p.specs.map((s) => ({
-        label: s.label,
-        category: s.category,
-        value: {
-          productId: p.id,
-          productName: p.name,
-          displayValue: s.value ?? "—",
-          isWinner: !!s.isWinner,
-          isDraw: !!s.isDraw,
-        },
-      }));
+    return products.map((p, pIndex) => {
+      let rows: PageRow[] = [];
+      
+      if (groupedSpecs) {
+        for (const [category, specs] of Object.entries(groupedSpecs)) {
+          for (const spec of (specs as any[])) {
+            rows.push({
+              label: spec.label,
+              category,
+              value: {
+                productId: p.id,
+                productName: p.name,
+                displayValue: spec.values && spec.values[pIndex] ? spec.values[pIndex] : "�",
+                isWinner: spec.winnerIndex === pIndex,
+                isDraw: spec.winnerIndex === -1,
+              }
+            });
+          }
+        }
+      } else if (p.specs) {
+        rows = p.specs.map((s) => ({
+          label: s.label,
+          category: s.category,
+          value: {
+            productId: p.id,
+            productName: p.name,
+            displayValue: s.value ?? "�",
+            isWinner: !!s.isWinner,
+            isDraw: !!s.isDraw,
+          },
+        }));
+      }
+
       return { product: p, rows };
     });
-  }, [products]);
+  }, [products, groupedSpecs]);
 
   // All unique labels, in first-product order. Used to drive selection and
   // for category eyebrow placement.

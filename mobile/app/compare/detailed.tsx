@@ -18,6 +18,7 @@ export default function DetailedCompareScreen() {
   return (
     <DetailedSpreadsheet
       products={activeComparison.products}
+      groupedSpecs={(activeComparison as any).groupedSpecs}
       onBack={handleBack}
     />
   );
