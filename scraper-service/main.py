@@ -60,10 +60,12 @@ async def scrape_endpoint(req: ScrapeRequest):
                     data = api_resp.json()
                     specs = data.get("specs", [])
                     name = data.get("name", "")
+                    image_url = data.get("highResImage") or data.get("thumbnailImage") or ""
                     return {
                         "status": "success",
                         "type": "json",
-                        "data": json.dumps({"name": name, "specs": specs})[:20000]
+                        "data": json.dumps({"name": name, "specs": specs})[:20000],
+                        "imageUrl": image_url
                     }
                     
         # Fallback to standard request for other sites
