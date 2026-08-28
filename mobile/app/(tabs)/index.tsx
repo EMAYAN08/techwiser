@@ -107,22 +107,19 @@ export default function Home() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <LoadingOverlay visible={isLoading} />
-      <View style={{ paddingHorizontal: 24, paddingTop: 64, paddingBottom: 16 }}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        scrollEnabled={scrollEnabled}
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.text }]}>
           Workspace
         </Animated.Text>
         <Text style={[styles.subheader, { color: colors.textTertiary }]}>Compare any 2-4 Canadian tech products</Text>
 
         <InputModeTabs activeMode={inputMode} onModeChange={handleModeChange} />
-      </View>
-
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32 }}
-        keyboardShouldPersistTaps="handled"
-        scrollEnabled={scrollEnabled}
-        showsVerticalScrollIndicator={false}
-      >
 
         <Animated.View style={{ opacity: panelFade }}>
           {inputMode === "url" && (
