@@ -48,8 +48,10 @@ async def scrape_endpoint(req: ScrapeRequest):
         
         # Use curl_cffi with Safari impersonation to bypass Akamai
         response = curl_requests.get(req.url, impersonate="safari17_0", timeout=15)
+        print(f"Response status: {response.status_code}, Length: {len(response.text)}")
         
         if "Access Denied" in response.text or "Just a moment" in response.text:
+            print("BLOCKED BY AKAMAI")
             return {
                 "status": "error",
                 "message": "Blocked by anti-bot firewall despite TLS spoofing.",
