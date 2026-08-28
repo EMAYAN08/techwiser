@@ -1,3 +1,38 @@
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+puppeteer.use(StealthPlugin());
+
+async function puppeteerFallback(url: string): Promise<string> {
+  let browser = null;
+  try {
+    console.log("Launching Puppeteer fallback for: " + url);
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+    });
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1280, height: 800 });
+    
+    // Wait until DOM is loaded, but cap at 10s to avoid hanging Render
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    
+    const text = await page.evaluate(() => {
+      // Remove scripts, styles, etc to save memory and tokens
+      document.querySelectorAll('script, style, nav, footer, header').forEach(el => el.remove());
+      return document.body.innerText;
+    });
+    
+    return text.substring(0, 15000); // Cap size
+  } catch (err: any) {
+    console.error("Puppeteer fallback failed:", err.message);
+    return "";
+  } finally {
+    if (browser) {
+      await browser.close().catch(() => {});
+    }
+  }
+}
+
 export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUrl: string | null; title: string }> {
   let rawText = "";
   let imageUrl: string | null = null;
@@ -58,6 +93,12 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
 
     let finalTitle = title;
     if (!finalTitle || finalTitle.toLowerCase().includes("access denied") || finalTitle.toLowerCase().includes("just a moment")) {
+      // Trigger Puppeteer fallback since Jina got blocked
+      console.log("Jina got blocked. Triggering Puppeteer...");
+      const pText = await puppeteerFallback(url);
+      if (pText && pText.trim().length > 100) {
+        rawText = pText; // Replace the access denied message with actual scraped text
+      }
       try {
         const urlObj = new URL(url);
         const parts = urlObj.pathname.split('/').filter(p => p.length > 0 && p.toLowerCase() !== 'en-ca' && p.toLowerCase() !== 'product' && p.toLowerCase() !== 'dp' && isNaN(Number(p)));
