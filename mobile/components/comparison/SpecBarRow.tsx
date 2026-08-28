@@ -1,8 +1,14 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import {
+  Animated,
+  AccessibilityInfo,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Trophy } from "lucide-react-native";
 import { useThemeColors } from "../../constants/Colors";
-import { Fonts } from "../../constants/Typography";
+import { Fonts, Typography } from "../../constants/Typography";
 
 type Palette = ReturnType<typeof useThemeColors>["colors"];
 
@@ -27,90 +33,71 @@ interface SpecBarRowProps {
   colors: Palette;
 }
 
-function normalizeShortName(name: string): string {
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function shortName(name: string): string {
   const trimmed = name.trim();
   if (trimmed.length === 0) return name;
   const first = trimmed.split(/\s+/)[0] ?? trimmed;
-  return first.length > 8 ? first.slice(0, 8) : first;
+  return first.length > 10 ? first.slice(0, 10) : first;
 }
 
-interface BarFillProps {
-  pct: number;
-  color: string;
-  trackHeight: number;
+// ---------------------------------------------------------------------------
+// Two-column comparison card (2 products)
+// ---------------------------------------------------------------------------
+
+interface TwoColCardProps {
+  value: DetailedSpecValue;
+  colors: Palette;
+  isLast: boolean;
 }
 
-function BarFill({ pct, color, trackHeight }: BarFillProps) {
-  const anim = useRef(new Animated.Value(0)).current;
-  const targetWidth = `${pct * 100}%`;
-
-  useEffect(() => {
-    Animated.timing(anim, {
-      toValue: pct,
-      duration: 600,
-      useNativeDriver: false,
-    }).start();
-  }, [anim, pct]);
-
-  const widthInterpolated = anim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0%", targetWidth],
-  });
-
+function TwoColCard({ value, colors, isLast }: TwoColCardProps) {
+  const isWinner = value.isWinner && !value.isDraw;
   return (
-    <Animated.View
+    <View
       style={[
-        styles.barFill,
+        styles.twoColCard,
         {
-          width: widthInterpolated,
-          height: trackHeight,
-          borderRadius: trackHeight / 2,
-          backgroundColor: color,
+          backgroundColor: isWinner ? colors.successMuted : colors.surface,
+          borderColor: isWinner ? colors.success : colors.border,
         },
       ]}
-    />
-  );
-}
-
-interface TwoColProductRowProps {
-  value: DetailedSpecValue;
-  pct: number;
-  fillColor: string;
-  colors: Palette;
-}
-
-function TwoColProductRow({
-  value,
-  pct,
-  fillColor,
-  colors,
-}: TwoColProductRowProps) {
-  const valueColor = value.isWinner ? colors.success : colors.text;
-  return (
-    <View style={styles.perProductRow}>
-      <View
-        style={[styles.retailerDot, { backgroundColor: value.productColor }]}
-      />
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={
+        isWinner
+          ? `${value.displayValue}. Winner.`
+          : value.displayValue
+      }
+    >
+      {isWinner && (
+        <View style={[styles.trophyWrap, { backgroundColor: colors.success }]}>
+          <Trophy size={9} color={colors.background} strokeWidth={2.5} />
+        </View>
+      )}
       <Text
-        style={[styles.shortName, { color: colors.textSecondary }]}
+        style={[
+          styles.twoColName,
+          { color: isWinner ? colors.success : colors.textSecondary },
+        ]}
         numberOfLines={1}
       >
-        {normalizeShortName(value.productName)}
+        {shortName(value.productName)}
       </Text>
-      <View
-        style={[
-          styles.barTrack,
-          { backgroundColor: colors.surfaceHighlight },
-        ]}
-      >
-        <BarFill pct={pct} color={fillColor} trackHeight={8} />
-      </View>
       <Text
         style={[
-          styles.valueText,
-          { color: valueColor, fontFamily: Fonts.mono },
+          styles.twoColValue,
+          {
+            color: isWinner ? colors.success : colors.text,
+            fontFamily: Fonts.mono,
+          },
         ]}
-        numberOfLines={1}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
       >
         {value.displayValue}
       </Text>
@@ -118,31 +105,59 @@ function TwoColProductRow({
   );
 }
 
-interface StackedProductRowProps {
+// ---------------------------------------------------------------------------
+// Stacked row (3+ products) with animated thin bar
+// ---------------------------------------------------------------------------
+
+interface StackedRowProps {
   value: DetailedSpecValue;
   pct: number;
   fillColor: string;
   colors: Palette;
 }
 
-function StackedProductRow({
-  value,
-  pct,
-  fillColor,
-  colors,
-}: StackedProductRowProps) {
-  const valueColor = value.isWinner ? colors.success : colors.text;
+function StackedRow({ value, pct, fillColor, colors }: StackedRowProps) {
+  const width = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let cancelled = false;
+    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (cancelled) return;
+      if (enabled) {
+        width.setValue(pct);
+        return;
+      }
+      Animated.timing(width, {
+        toValue: pct,
+        duration: 400,
+        useNativeDriver: false,
+      }).start();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pct, width]);
+
+  const interpolatedWidth = width.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", `${pct * 100}%`],
+  });
+
+  const isWinner = value.isWinner && !value.isDraw;
+  const valueColor = isWinner ? colors.success : colors.text;
+  const nameColor = isWinner ? colors.success : colors.textSecondary;
+
   return (
     <View style={styles.stackedRow}>
-      <View style={styles.stackedBarWrap}>
-        <BarFill pct={pct} color={fillColor} trackHeight={6} />
-      </View>
-      <View style={styles.stackedRightCol}>
+      <View style={styles.stackedTopRow}>
+        {isWinner && (
+          <View style={[styles.stackedDot, { backgroundColor: colors.success }]} />
+        )}
         <Text
-          style={[styles.stackedName, { color: colors.textTertiary }]}
+          style={[styles.stackedName, { color: nameColor }]}
           numberOfLines={1}
         >
-          {normalizeShortName(value.productName)}
+          {shortName(value.productName)}
         </Text>
         <Text
           style={[
@@ -154,79 +169,51 @@ function StackedProductRow({
           {value.displayValue}
         </Text>
       </View>
+      <View
+        style={[
+          styles.stackedTrack,
+          { backgroundColor: colors.surfaceHighlight },
+        ]}
+      >
+        <Animated.View
+          style={[
+            styles.stackedFill,
+            {
+              width: interpolatedWidth,
+              backgroundColor: fillColor,
+            },
+          ]}
+        />
+      </View>
     </View>
   );
 }
 
-interface NonNumericChipsProps {
-  values: DetailedSpecValue[];
-  colors: Palette;
-}
-
-function NonNumericChips({ values, colors }: NonNumericChipsProps) {
-  return (
-    <View style={styles.chipsRow}>
-      {values.map((v) => {
-        const isWinner = v.isWinner;
-        return (
-          <View
-            key={v.productId}
-            style={[
-              styles.chip,
-              {
-                backgroundColor: isWinner
-                  ? colors.successMuted
-                  : colors.surfaceHighlight,
-                borderWidth: isWinner ? 1 : 0,
-                borderColor: colors.success,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.chipText,
-                { color: isWinner ? colors.success : colors.text },
-              ]}
-              numberOfLines={1}
-            >
-              <Text style={{ color: colors.textTertiary }}>
-                {normalizeShortName(v.productName)} ·{" "}
-              </Text>
-              {v.displayValue}
-            </Text>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
+// ---------------------------------------------------------------------------
+// Public row
+// ---------------------------------------------------------------------------
 
 export function SpecBarRow({ row, colors }: SpecBarRowProps) {
   const values = row.values;
 
   const allMissing = useMemo(
     () => values.every((v) => !v.displayValue || v.displayValue === "—"),
-    [values],
+    [values]
   );
 
   const hasNumeric = useMemo(
     () => values.some((v) => v.numericValue !== null),
-    [values],
-  );
-
-  const hasAnyWinner = useMemo(
-    () => values.some((v) => v.isWinner),
-    [values],
+    [values]
   );
 
   const hasDraw = useMemo(
     () => values.some((v) => v.isDraw),
-    [values],
+    [values]
   );
 
   const max = useMemo(
     () => Math.max(...values.map((v) => v.numericValue ?? 0)),
-    [values],
+    [values]
   );
 
   const pctFor = (v: DetailedSpecValue): number => {
@@ -236,141 +223,192 @@ export function SpecBarRow({ row, colors }: SpecBarRowProps) {
     return Math.max(0.05, Math.min(1, p));
   };
 
-  const barColorFor = (v: DetailedSpecValue): string => {
+  const fillColorFor = (v: DetailedSpecValue): string => {
     if (hasDraw) return colors.textTertiary;
     return v.isWinner ? colors.success : colors.textTertiary;
   };
 
   return (
     <View style={styles.outer}>
-      <View style={styles.labelRow}>
-        {hasAnyWinner && (
-          <Trophy size={12} color={colors.success} strokeWidth={2.25} />
-        )}
-        <Text style={[styles.labelText, { color: colors.text }]}>
-          {row.label}
-        </Text>
-      </View>
+      <Text style={[styles.label, { color: colors.textTertiary }]}>
+        {row.label}
+      </Text>
 
       {allMissing ? (
-        <Text style={[styles.missingText, { color: colors.textTertiary }]}>
+        <Text style={[styles.missing, { color: colors.textTertiary }]}>
           Not enough verified info
         </Text>
-      ) : !hasNumeric ? (
-        <NonNumericChips values={values} colors={colors} />
-      ) : (
-        values.map((v) => {
-          const pct = pctFor(v);
-          const fillColor = barColorFor(v);
-          if (values.length <= 2) {
-            return (
-              <TwoColProductRow
-                key={v.productId}
-                value={v}
-                pct={pct}
-                fillColor={fillColor}
-                colors={colors}
-              />
-            );
-          }
-          return (
-            <StackedProductRow
+      ) : values.length <= 2 ? (
+        <View style={styles.twoColRow}>
+          {values.map((v, i) => (
+            <TwoColCard
               key={v.productId}
               value={v}
-              pct={pct}
-              fillColor={fillColor}
+              colors={colors}
+              isLast={i === values.length - 1}
+            />
+          ))}
+        </View>
+      ) : !hasNumeric ? (
+        // 3+ products with no numeric values: just stack name + value.
+        <View style={styles.stackedList}>
+          {values.map((v) => (
+            <View key={v.productId} style={styles.textOnlyRow}>
+              <Text
+                style={[styles.textOnlyName, { color: colors.textSecondary }]}
+                numberOfLines={1}
+              >
+                {shortName(v.productName)}
+              </Text>
+              <Text
+                style={[
+                  styles.textOnlyValue,
+                  {
+                    color: v.isWinner ? colors.success : colors.text,
+                    fontFamily: Fonts.mono,
+                  },
+                ]}
+                numberOfLines={1}
+              >
+                {v.displayValue}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View style={styles.stackedList}>
+          {values.map((v) => (
+            <StackedRow
+              key={v.productId}
+              value={v}
+              pct={pctFor(v)}
+              fillColor={fillColorFor(v)}
               colors={colors}
             />
-          );
-        })
+          ))}
+        </View>
       )}
     </View>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
+
 const styles = StyleSheet.create({
   outer: {
-    flexDirection: "column",
-    gap: 6,
-    paddingVertical: 8,
+    paddingVertical: 14,
   },
-  labelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 2,
-  },
-  labelText: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  perProductRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  retailerDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  shortName: {
-    width: 56,
+  label: {
+    ...Typography.caption,
     fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    marginBottom: 10,
   },
-  barTrack: {
+
+  // Two-column cards
+  twoColRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  twoColCard: {
     flex: 1,
-    height: 8,
-    borderRadius: 4,
-    overflow: "hidden",
+    minWidth: 0,
+    minHeight: 96,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
   },
-  barFill: {
-    borderRadius: 4,
+  trophyWrap: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  valueText: {
-    minWidth: 64,
-    textAlign: "right",
-    fontSize: 13,
-    fontVariant: ["tabular-nums"],
+  twoColName: {
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.2,
+    marginBottom: 6,
+    textTransform: "uppercase",
+  },
+  twoColValue: {
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+    lineHeight: 24,
+  },
+
+  // Stacked rows (3+)
+  stackedList: {
+    gap: 12,
   },
   stackedRow: {
+    gap: 6,
+  },
+  stackedTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    marginBottom: 6,
+    gap: 6,
   },
-  stackedBarWrap: {
-    flex: 1,
+  stackedDot: {
+    width: 6,
     height: 6,
     borderRadius: 3,
-    overflow: "hidden",
-  },
-  stackedRightCol: {
-    width: 88,
   },
   stackedName: {
-    fontSize: 10,
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "500",
   },
   stackedValue: {
-    fontSize: 13,
-    fontVariant: ["tabular-nums"],
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "right",
+    minWidth: 80,
   },
-  chipsRow: {
+  stackedTrack: {
+    height: 3,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  stackedFill: {
+    height: "100%",
+    borderRadius: 2,
+  },
+
+  // Text-only rows (3+ non-numeric)
+  textOnlyRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-    marginTop: 4,
-  },
-  chip: {
-    paddingHorizontal: 10,
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 6,
-    borderRadius: 100,
   },
-  chipText: {
-    fontSize: 12,
+  textOnlyName: {
+    fontSize: 13,
+    fontWeight: "500",
+    flex: 1,
   },
-  missingText: {
-    fontSize: 12,
+  textOnlyValue: {
+    fontSize: 14,
+    fontWeight: "500",
+    textAlign: "right",
+  },
+
+  // Missing
+  missing: {
+    fontSize: 13,
     fontStyle: "italic",
+    paddingVertical: 8,
   },
 });

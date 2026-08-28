@@ -5,12 +5,17 @@ import {
   Text,
   View,
   Pressable,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import { PackageOpen, ArrowLeft } from "lucide-react-native";
 
 import { useComparisonStore } from "../../store/useComparisonStore";
 import { useThemeColors } from "../../constants/Colors";
+import { Typography } from "../../constants/Typography";
+import { Button } from "../../components/ui/Button";
 import { DetailedCompareHeader } from "../../components/comparison/DetailedCompareHeader";
 import { CategorySection } from "../../components/comparison/CategorySection";
 import type {
@@ -20,8 +25,12 @@ import type {
 
 export default function DetailedCompareScreen() {
   const router = useRouter();
-  const { activeComparison } = useComparisonStore();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { colors } = useThemeColors();
+  const { activeComparison } = useComparisonStore();
+
+  const screenPadding = Math.max(16, Math.min(24, Math.round(width * 0.05)));
 
   const categories = useMemo(() => {
     if (!activeComparison) return [];
@@ -63,7 +72,12 @@ export default function DetailedCompareScreen() {
   }, [activeComparison]);
 
   const handleBack = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.back();
+  };
+
+  const handleBackLink = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.back();
   };
 
@@ -72,25 +86,24 @@ export default function DetailedCompareScreen() {
       <View
         style={[styles.emptyRoot, { backgroundColor: colors.background }]}
       >
-        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-          No comparison loaded.
-        </Text>
-        <Pressable
-          onPress={handleBack}
-          style={({ pressed }) => [
-            styles.backBtn,
-            {
-              backgroundColor: pressed
-                ? colors.surfaceHighlight
-                : colors.surface,
-              borderColor: colors.border,
-            },
+        <View
+          style={[
+            styles.emptyIconWrap,
+            { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
         >
-          <Text style={[styles.backBtnText, { color: colors.primary }]}>
-            Go back
-          </Text>
-        </Pressable>
+          <PackageOpen size={32} color={colors.textTertiary} strokeWidth={1.5} />
+        </View>
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>
+          Nothing to compare yet
+        </Text>
+        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+          Add two product URLs on the home screen to see the full
+          specification breakdown.
+        </Text>
+        <View style={styles.emptyButton}>
+          <Button title="Go back" variant="primary" onPress={handleBack} />
+        </View>
       </View>
     );
   }
@@ -102,7 +115,13 @@ export default function DetailedCompareScreen() {
         onBack={handleBack}
       />
       <ScrollView
-        contentContainerStyle={styles.scrollBody}
+        contentContainerStyle={[
+          styles.scrollBody,
+          {
+            paddingHorizontal: screenPadding,
+            paddingBottom: insets.bottom + 40,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {categories.map((cat, idx) => (
@@ -114,6 +133,21 @@ export default function DetailedCompareScreen() {
             colors={colors}
           />
         ))}
+
+        <Pressable
+          onPress={handleBackLink}
+          accessibilityRole="link"
+          accessibilityLabel="Back to comparison overview"
+          style={({ pressed }) => [
+            styles.backLink,
+            { borderTopColor: colors.border, opacity: pressed ? 0.6 : 1 },
+          ]}
+        >
+          <ArrowLeft size={16} color={colors.textSecondary} strokeWidth={2.25} />
+          <Text style={[styles.backLinkText, { color: colors.textSecondary }]}>
+            Back to comparison
+          </Text>
+        </Pressable>
       </ScrollView>
     </View>
   );
@@ -124,28 +158,54 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollBody: {
-    padding: 16,
-    paddingBottom: 80,
+    paddingTop: 20,
   },
+  backLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 24,
+    marginTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  backLinkText: {
+    ...Typography.body,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  // Empty
   emptyRoot: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
   },
-  emptyText: {
-    fontSize: 16,
-    marginBottom: 20,
-    fontWeight: "500",
-  },
-  backBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 20,
+  emptyIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
   },
-  backBtnText: {
-    fontSize: 15,
-    fontWeight: "600",
+  emptyTitle: {
+    ...Typography.headline,
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    ...Typography.body,
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  emptyButton: {
+    marginTop: 24,
+    alignSelf: "stretch",
   },
 });
