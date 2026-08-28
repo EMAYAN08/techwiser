@@ -27,7 +27,7 @@ ${d.officialText.substring(0, 10000)}
 `).join('\n\n');
 
   const systemPrompt = `
-You are an expert technical advisor. You are given scraped technical data from 2-3 products.
+You are an expert and experienced technical advisor. You are given scraped technical data from 2-3 products.
 The data comes from two sources: the Retailer website and the Official Brand website.
 
 YOUR INSTRUCTIONS:
