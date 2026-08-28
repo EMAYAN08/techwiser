@@ -61,11 +61,25 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
 
     let finalTitle = title;
     if (!finalTitle || finalTitle.toLowerCase().includes("access denied") || finalTitle.toLowerCase().includes("just a moment")) {
-      // Trigger Puppeteer fallback since Jina got blocked
-      console.log("Jina got blocked. Triggering Puppeteer...");
-      const pText = await puppeteerFallback(url);
-      if (pText && pText.trim().length > 100) {
-        rawText = pText; // Replace the access denied message with actual scraped text
+      // Trigger Python Scrapling Microservice Fallback
+      console.log("Jina got blocked. Triggering Python Scrapling Microservice...");
+      try {
+        const pyScraperUrl = process.env.PYTHON_SCRAPER_URL || "http://127.0.0.1:8000";
+        const pyRes = await fetch(`${pyScraperUrl}/scrape`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url })
+        });
+        if (pyRes.ok) {
+          const pyData = await pyRes.json();
+          if (pyData.status === "success" && pyData.data && pyData.data.length > 100) {
+            rawText = "RETAILER DATA (FROM SCRAPLING):\n" + pyData.data;
+          }
+        } else {
+          console.log("Python Scraper failed:", pyRes.status);
+        }
+      } catch (err: any) {
+        console.error("Python Scraper unavailable:", err.message);
       }
       try {
         const urlObj = new URL(url);
