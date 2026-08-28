@@ -1,4 +1,4 @@
-{
+export const TechCategories = {
   "Computing & Mobile": {
     "Subcategories": [
       "Smartphones",
@@ -42,4 +42,4 @@
       "Ecosystem": ["Companion App", "OS Compatibility", "Subscription Required"]
     }
   }
-}
+};

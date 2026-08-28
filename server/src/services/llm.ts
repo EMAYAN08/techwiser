@@ -1,6 +1,5 @@
 import OpenAI from 'openai';
-import fs from 'fs';
-import path from 'path';
+import { TechCategories } from '../schemas/tech_categories';
 
 export async function generateComparison(
   productDataList: { url: string; retailerText: string; officialText: string; title: string }[]
@@ -10,8 +9,7 @@ export async function generateComparison(
     apiKey: process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY, // Fallback just in case
   });
 
-  const schemaPath = path.join(__dirname, '../schemas/tech_categories.json');
-  const schemaJson = fs.readFileSync(schemaPath, 'utf8');
+  const schemaJson = JSON.stringify(TechCategories, null, 2);
 
   // Build a string for each product data
   const dataString = productDataList.map((d, i) => `

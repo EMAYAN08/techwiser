@@ -65,6 +65,7 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
 
 export async function findOfficialSpecs(productTitle: string): Promise<string> {
   if (!productTitle) return "";
+  if (productTitle.toLowerCase().includes("access denied") || productTitle.toLowerCase().includes("just a moment")) return "";
   
   // Clean up title (often has " | BestBuy Canada" etc)
   const cleanTitle = productTitle.split("|")[0].split("-")[0].trim();
