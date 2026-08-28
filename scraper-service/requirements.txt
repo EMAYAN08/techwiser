@@ -8,3 +8,5 @@ curl_cffi>=0.7.1
 patchright>=1.62.1
 msgspec>=0.21.1
 playwright>=1.42.0
+browserforge>=1.2.4
+camoufox>=0.5.5
