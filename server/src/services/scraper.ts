@@ -78,6 +78,9 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
           console.log("Python Scraper responded with status:", pyData.status, "Data length:", pyData.data ? pyData.data.length : 0);
           if (pyData.status === "success" && pyData.data && pyData.data.length > 100) {
             rawText = "RETAILER DATA (FROM SCRAPLING):\n" + pyData.data;
+            if (pyData.imageUrl && !imageUrl) {
+              imageUrl = pyData.imageUrl;
+            }
           } else {
             console.log("Python Scraper returned error or insufficient data. Status:", pyData.status, "Message:", pyData.message);
           }
