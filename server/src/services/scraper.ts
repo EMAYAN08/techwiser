@@ -1,39 +1,5 @@
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-puppeteer.use(StealthPlugin());
 
-async function puppeteerFallback(url: string): Promise<string> {
-  let browser = null;
-  try {
-    console.log("Launching Puppeteer fallback for: " + url);
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
-    });
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 800 });
-    
-    // Wait until DOM is loaded, but cap at 10s to avoid hanging Render
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 35000 });
-    // BestBuy uses React, wait 5 seconds for specs to render instead of networkidle2 which hangs on ads
-    await new Promise(r => setTimeout(r, 5000));
-    
-    const text = await page.evaluate(() => {
-      // Remove scripts, styles, etc to save memory and tokens
-      document.querySelectorAll('script, style, nav, footer, header').forEach(el => el.remove());
-      return document.body.innerText;
-    });
-    
-    return text.substring(0, 15000); // Cap size
-  } catch (err: any) {
-    console.error("Puppeteer fallback failed:", err.message);
-    return "";
-  } finally {
-    if (browser) {
-      await browser.close().catch(() => {});
-    }
-  }
-}
+
 
 export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUrl: string | null; title: string }> {
   let rawText = "";
