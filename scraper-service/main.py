@@ -9,6 +9,11 @@ app = FastAPI(title="SpecMatch Scraper API")
 class ScrapeRequest(BaseModel):
     url: str
 
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok", "service": "SpecMatch Scraper API"}
+
+
 def prune_json(obj, depth=0):
     """
     Recursively prunes massive state JSONs to only include relevant product info.
