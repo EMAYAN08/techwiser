@@ -67,6 +67,7 @@ interface ProductPage {
 // ---------------------------------------------------------------------------
 
 interface DetailedSpreadsheetProps {
+  groupedSpecs?: any;
   products: Product[];
   onBack: () => void;
 }
@@ -85,7 +86,7 @@ export function DetailedSpreadsheet({ products, groupedSpecs, onBack }: Detailed
   // ScrollView, one page per product.
   const pages = useMemo<ProductPage[]>(() => {
     return products.map((p, pIndex) => {
-      let rows: PageRow[] = [];
+      let rows: Array<{ label: string; category: string; value: CellValue; }> = [];
       
       if (groupedSpecs) {
         for (const [category, specs] of Object.entries(groupedSpecs)) {
