@@ -14,9 +14,9 @@ async function puppeteerFallback(url: string): Promise<string> {
     await page.setViewport({ width: 1280, height: 800 });
     
     // Wait until DOM is loaded, but cap at 10s to avoid hanging Render
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 15000 });
-    // BestBuy uses React, wait a bit for specs to render
-    await new Promise(r => setTimeout(r, 2000));
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 35000 });
+    // BestBuy uses React, wait 5 seconds for specs to render instead of networkidle2 which hangs on ads
+    await new Promise(r => setTimeout(r, 5000));
     
     const text = await page.evaluate(() => {
       // Remove scripts, styles, etc to save memory and tokens
