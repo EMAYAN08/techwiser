@@ -14,9 +14,6 @@ URL: ${d.url}
 Title: ${d.title}
 RETAILER SOURCE TEXT:
 ${d.retailerText.substring(0, 8000)}
-
-OFFICIAL SOURCE TEXT (IF ANY):
-${d.officialText.substring(0, 10000)}
 ------------------------
 `).join('\n\n');
 
