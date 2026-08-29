@@ -60,11 +60,31 @@ async def scrape_endpoint(req: ScrapeRequest):
                     data = api_resp.json()
                     specs = data.get("specs", [])
                     name = data.get("name", "")
+                    
+                    # Extract rich descriptions and included items
+                    short_desc = data.get("shortDescription", "")
+                    long_desc = data.get("longDescription", "")
+                    whats_in_box = data.get("whatsInTheBox", "")
+                    
+                    if long_desc:
+                        long_desc = BeautifulSoup(long_desc, "html.parser").get_text(separator=" ", strip=True)
+                    if short_desc:
+                        short_desc = BeautifulSoup(short_desc, "html.parser").get_text(separator=" ", strip=True)
+                        
                     image_url = data.get("highResImage") or data.get("thumbnailImage") or ""
+                    
+                    payload = {
+                        "name": name,
+                        "overview": short_desc,
+                        "description": long_desc,
+                        "whatsIncluded": whats_in_box,
+                        "specs": specs
+                    }
+                    
                     return {
                         "status": "success",
                         "type": "json",
-                        "data": json.dumps({"name": name, "specs": specs})[:20000],
+                        "data": json.dumps(payload)[:20000],
                         "imageUrl": image_url
                     }
                     
