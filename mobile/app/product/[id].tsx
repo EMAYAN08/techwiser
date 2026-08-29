@@ -16,8 +16,28 @@ export default function ProductDetailScreen() {
   const product = useMemo(() => {
     for (const comp of recentComparisons) {
       if (comp.result) {
-        const found = comp.result.products.find(p => p.id === id);
-        if (found) return found;
+        const productIndex = comp.result.products.findIndex(p => p.id === id);
+        if (productIndex !== -1) {
+          const baseProduct = comp.result.products[productIndex];
+          
+          // Reconstruct the flat specs array for this specific product from the groupedSpecs
+          const flatSpecs: { label: string; value: string }[] = [];
+          if (comp.result.groupedSpecs) {
+            Object.values(comp.result.groupedSpecs).forEach((group: any) => {
+              group.forEach((spec: any) => {
+                if (spec.values && spec.values[productIndex] && spec.values[productIndex] !== "N/A" && spec.values[productIndex] !== "Not specified") {
+                  flatSpecs.push({
+                    label: spec.label,
+                    value: spec.values[productIndex]
+                  });
+                }
+              });
+            });
+          }
+          
+          // Fallback if there are still old objects that use baseProduct.specs
+          return { ...baseProduct, specs: flatSpecs.length > 0 ? flatSpecs : (baseProduct.specs || []) };
+        }
       }
     }
     return null;
