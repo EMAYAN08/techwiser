@@ -149,24 +149,20 @@ async def search_and_scrape(req: SearchRequest):
     print(f"Searching DuckDuckGo for: {req.query}")
     
     try:
-        url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(req.query)}"
+        # Use Yahoo Search to avoid DuckDuckGo datacenter tarpit/timeouts
+        url = f"https://search.yahoo.com/search?p={urllib.parse.quote(req.query)}"
         resp = curl_requests.get(url, impersonate="safari17_0", timeout=15)
         soup = BeautifulSoup(resp.text, "html.parser")
         
         top_url = None
-        for a in soup.select('.result__snippet'):
+        for a in soup.select('.compTitle a'):
             href = a.get('href')
-            if href and href.startswith("http") and "youtube.com" not in href:
-                # Basic check to ensure it's not a DDG redirect, DDG HTML uses direct links usually
-                if "//duckduckgo.com/l/?uddg=" in href:
-                    # parse uddg
-                    from urllib.parse import urlparse, parse_qs
-                    parsed = urlparse(href)
-                    uddg = parse_qs(parsed.query).get('uddg')
-                    if uddg:
-                        href = uddg[0]
-                top_url = href
-                break
+            if href and "RU=" in href:
+                extracted = href.split("RU=")[1].split("/RK=")[0]
+                decoded = urllib.parse.unquote(extracted)
+                if "yahoo.com" not in decoded and "bing.com/aclick" not in decoded and "youtube.com" not in decoded:
+                    top_url = decoded
+                    break
                 
         if not top_url:
             return {"status": "error", "message": "No search results found"}
