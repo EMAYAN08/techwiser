@@ -1,6 +1,3 @@
-
-
-
 export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUrl: string | null; title: string }> {
   let rawText = "";
   let imageUrl: string | null = null;
@@ -107,52 +104,5 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
   } catch (error: any) {
     console.error(`Scrape failed for ${url}:`, error.message);
     return { rawText: "Failed to scrape.", imageUrl: null, title: "" };
-  }
-}
-
-export async function findOfficialSpecs(productTitle: string): Promise<string> {
-  if (!productTitle) return "";
-  if (productTitle.toLowerCase().includes("access denied") || productTitle.toLowerCase().includes("just a moment")) return "";
-  
-  // Clean up title (often has " | BestBuy Canada" etc)
-  let cleanTitle = productTitle.split("|")[0].split("-")[0].replace(/\b(unlocked|smartphone|fitness tracker|smartwatch|with|monitor|gps|midnight|zen|graphite)\b/gi, '').trim();
-  
-  // Truncate to first 4 words to ensure a broad, accurate product search
-  const words = cleanTitle.split(/\s+/);
-  if (words.length > 4) {
-    cleanTitle = words.slice(0, 4).join(" ");
-  }
-  
-  const query = `${cleanTitle} official specs`;
-  
-  try {
-    console.log(`Searching official specs for: ${query}`);
-    
-    const rawPyUrl = process.env.PYTHON_SCRAPER_URL || "http://127.0.0.1:8000";
-    const pyScraperUrl = rawPyUrl.replace(/\/+$/, '');
-    const fetchUrl = `${pyScraperUrl}/search`;
-    
-    const searchRes = await fetch(fetchUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query }),
-      signal: AbortSignal.timeout(20000)
-    });
-    
-    if (searchRes.ok) {
-      const pyData = await searchRes.json();
-      if (pyData.status === "success" && pyData.data) {
-        console.log(`Official specs found at ${pyData.sourceUrl} (${pyData.data.length} chars)`);
-        return pyData.data.substring(0, 15000);
-      } else {
-        console.log(`Python search failed: ${pyData.message}`);
-      }
-    } else {
-      console.log(`Python search HTTP error: ${searchRes.status}`);
-    }
-    return "";
-  } catch (e: any) {
-    console.error(`Official specs search failed for ${cleanTitle}:`, e.message);
-    return "";
   }
 }

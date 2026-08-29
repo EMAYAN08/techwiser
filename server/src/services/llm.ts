@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { TechCategories } from '../schemas/tech_categories';
 
 export async function generateComparison(
-  productDataList: { url: string; retailerText: string; officialText: string; title: string }[]
+  productDataList: { url: string; retailerText: string; title: string }[]
 ): Promise<any> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -22,11 +22,11 @@ ${d.officialText.substring(0, 10000)}
 
   const systemPrompt = `
 You are an expert and experienced technical advisor. You are given scraped technical data from 2-3 products.
-The data comes from two sources: the Retailer website and the Official Brand website.
+The data comes from the Retailer website.
 
 YOUR INSTRUCTIONS:
 1. Identify the single best-fitting subcategory for these products from the provided JSON Taxonomy (e.g. "Smartphones").
-2. Merge the Retailer and Official specs. Extract EVERY SINGLE technical specification provided. Do not omit any details. If sources conflict, trust the Official specs.
+2. Extract EVERY SINGLE technical specification provided. Do not omit any details.
 3. Group these extracted specs exactly according to the \`Attribute_Groups\` listed in the JSON Taxonomy for that subcategory. If a spec doesn't fit any group, place it in an "Other Specifications" group.
 4. Compare the products to determine the winner for each spec (if applicable).
 5. Provide a short AI summary (2-3 sentences) comparing the products overall, factoring in the extracted overviews and product descriptions.
@@ -94,3 +94,4 @@ You must output ONLY valid JSON matching this exact structure:
     throw err;
   }
 }
+

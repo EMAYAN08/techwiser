@@ -3,7 +3,7 @@ dotenv.config();
 
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { scrapeUrl, findOfficialSpecs } from './services/scraper';
+import { scrapeUrl } from './services/scraper';
 import { generateComparison } from './services/llm';
 
 const app = express();
@@ -30,7 +30,7 @@ app.post('/api/compare', async (req: Request, res: Response) => {
     // 1. Scrape Retailer URLs in parallel
     const scrapeResults = await Promise.allSettled(urls.map(url => scrapeUrl(url)));
     
-    const scrapedData: {url: string, retailerText: string, imageUrl: string | null, title: string, officialText: string}[] = [];
+    const scrapedData: {url: string, retailerText: string, imageUrl: string | null, title: string, }[] = [];
     const failedUrls: string[] = [];
 
     scrapeResults.forEach((result, index) => {
@@ -40,7 +40,7 @@ app.post('/api/compare', async (req: Request, res: Response) => {
           retailerText: result.value.rawText, 
           imageUrl: result.value.imageUrl,
           title: result.value.title,
-          officialText: ""
+          
         });
       } else {
         console.error(`Failed to scrape ${urls[index]}:`, result.reason);
@@ -53,23 +53,14 @@ app.post('/api/compare', async (req: Request, res: Response) => {
       return;
     }
 
-    // 2. Discover Official Specs in parallel
-    console.log("Discovering official brand specs...");
-    const officialResults = await Promise.allSettled(scrapedData.map(d => findOfficialSpecs(d.title)));
-    officialResults.forEach((res, index) => {
-      if (res.status === 'fulfilled') {
-        scrapedData[index].officialText = res.value;
-      }
-    });
-
-    // 3. Extract and Compare using OpenRouter (Single API Call)
+// 2. Extract and Compare using OpenRouter (Single API Call)
     console.log(`Sending ${scrapedData.length} multi-source payloads to OpenRouter...`);
     let comparisonResult: any;
     try {
       comparisonResult = await generateComparison(scrapedData.map(d => ({ 
         url: d.url, 
         retailerText: d.retailerText,
-        officialText: d.officialText,
+        
         title: d.title
       })));
     } catch (llmError: unknown) {
@@ -122,7 +113,7 @@ app.post('/api/test-scrape', async (req: Request, res: Response) => {
 
     const scrapeResults = await Promise.allSettled(urls.map(url => scrapeUrl(url)));
     
-    const scrapedData: {url: string, retailerText: string, imageUrl: string | null, title: string, officialText: string}[] = [];
+    const scrapedData: {url: string, retailerText: string, imageUrl: string | null, title: string, }[] = [];
     const failedUrls: string[] = [];
 
     scrapeResults.forEach((result, index) => {
@@ -132,19 +123,11 @@ app.post('/api/test-scrape', async (req: Request, res: Response) => {
           retailerText: result.value.rawText, 
           imageUrl: result.value.imageUrl,
           title: result.value.title,
-          officialText: ""
+          
         });
       } else {
         console.error(`Failed to scrape ${urls[index]}:`, result.reason);
         failedUrls.push(urls[index]);
-      }
-    });
-
-    console.log("Discovering official brand specs for TEST...");
-    const officialResults = await Promise.allSettled(scrapedData.map(d => findOfficialSpecs(d.title)));
-    officialResults.forEach((res, index) => {
-      if (res.status === 'fulfilled') {
-        scrapedData[index].officialText = res.value;
       }
     });
 
@@ -158,3 +141,5 @@ app.post('/api/test-scrape', async (req: Request, res: Response) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+
