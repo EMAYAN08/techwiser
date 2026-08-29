@@ -88,7 +88,19 @@ export function DetailedSpreadsheet({ products, groupedSpecs, onBack }: Detailed
     return products.map((p, pIndex) => {
       let rows: Array<{ label: string; category: string; value: CellValue; }> = [];
       
-      if (groupedSpecs) {
+      if (p.rawSpecs && p.rawSpecs.length > 0) {
+        rows = p.rawSpecs.map((s) => ({
+          label: s.label,
+          category: "Specifications",
+          value: {
+            productId: p.id,
+            productName: p.name,
+            displayValue: s.value ?? "-",
+            isWinner: false,
+            isDraw: false,
+          },
+        }));
+      } else if (groupedSpecs) {
         for (const [category, specs] of Object.entries(groupedSpecs)) {
           for (const spec of (specs as any[])) {
             rows.push({
