@@ -29,7 +29,7 @@ YOUR INSTRUCTIONS:
 2. Merge the Retailer and Official specs. Extract EVERY SINGLE technical specification provided. Do not omit any details. If sources conflict, trust the Official specs.
 3. Group these extracted specs exactly according to the \`Attribute_Groups\` listed in the JSON Taxonomy for that subcategory. If a spec doesn't fit any group, place it in an "Other Specifications" group.
 4. Compare the products to determine the winner for each spec (if applicable).
-5. Provide a short AI summary (2-3 sentences) comparing the products overall.
+5. Provide a short AI summary (2-3 sentences) comparing the products overall, factoring in the extracted overviews and product descriptions.
 6. Identify 3-5 key differences.
 
 --- JSON TAXONOMY ---
