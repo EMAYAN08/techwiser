@@ -28,7 +28,15 @@ app.post('/api/compare', async (req: Request, res: Response) => {
     console.log(`Starting comparison for ${urls.length} URLs...`);
 
     // 1. Scrape Retailer URLs in parallel
-    const scrapeResults = await Promise.allSettled(urls.map(url => scrapeUrl(url)));
+        // 1. Scrape Retailer URLs sequentially to avoid triggering strict anti-bot rate limits (like Akamai returning 403 on parallel requests)
+    const scrapeResults = [];
+    for (const url of urls) {
+      scrapeResults.push(await Promise.allSettled([scrapeUrl(url)]).then(res => res[0]));
+      // Add a 1.5 second delay between requests to avoid rate limits
+      if (urls.indexOf(url) < urls.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+    }
     
     const scrapedData: {url: string, retailerText: string, imageUrl: string | null, title: string, }[] = [];
     const failedUrls: string[] = [];
@@ -111,7 +119,15 @@ app.post('/api/test-scrape', async (req: Request, res: Response) => {
 
     console.log(`Starting TEST scrape for ${urls.length} URLs...`);
 
-    const scrapeResults = await Promise.allSettled(urls.map(url => scrapeUrl(url)));
+        // 1. Scrape Retailer URLs sequentially to avoid triggering strict anti-bot rate limits (like Akamai returning 403 on parallel requests)
+    const scrapeResults = [];
+    for (const url of urls) {
+      scrapeResults.push(await Promise.allSettled([scrapeUrl(url)]).then(res => res[0]));
+      // Add a 1.5 second delay between requests to avoid rate limits
+      if (urls.indexOf(url) < urls.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+    }
     
     const scrapedData: {url: string, retailerText: string, imageUrl: string | null, title: string, }[] = [];
     const failedUrls: string[] = [];
@@ -141,5 +157,6 @@ app.post('/api/test-scrape', async (req: Request, res: Response) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
 
 
