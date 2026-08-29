@@ -16,28 +16,8 @@ export default function ProductDetailScreen() {
   const product = useMemo(() => {
     for (const comp of recentComparisons) {
       if (comp.result) {
-        const productIndex = comp.result.products.findIndex(p => p.id === id);
-        if (productIndex !== -1) {
-          const baseProduct = comp.result.products[productIndex];
-          
-          // Reconstruct the flat specs array for this specific product from the groupedSpecs
-          const flatSpecs: { label: string; value: string }[] = [];
-          if (comp.result.groupedSpecs) {
-            Object.values(comp.result.groupedSpecs).forEach((group: any) => {
-              group.forEach((spec: any) => {
-                if (spec.values && spec.values[productIndex] && spec.values[productIndex] !== "N/A" && spec.values[productIndex] !== "Not specified") {
-                  flatSpecs.push({
-                    label: spec.label,
-                    value: spec.values[productIndex]
-                  });
-                }
-              });
-            });
-          }
-          
-          // Fallback if there are still old objects that use baseProduct.specs
-          return { ...baseProduct, specs: flatSpecs.length > 0 ? flatSpecs : (baseProduct.specs || []) };
-        }
+        const found = comp.result.products.find(p => p.id === id);
+        if (found) return found;
       }
     }
     return null;
@@ -99,8 +79,8 @@ export default function ProductDetailScreen() {
         {/* Specs List */}
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Specifications</Text>
-          {product.specs.map((spec, index) => (
-            <View key={index} style={[styles.specRow, { borderBottomColor: colors.border }, index === product.specs.length - 1 && styles.noBorder]}>
+          {(product.rawSpecs && product.rawSpecs.length > 0 ? product.rawSpecs : (product.specs || [])).map((spec: any, index: number, arr: any[]) => (
+            <View key={index} style={[styles.specRow, { borderBottomColor: colors.border }, index === arr.length - 1 && styles.noBorder]}>
               <Text style={[styles.specLabel, { color: colors.textSecondary }]}>{spec.label}</Text>
               <Text style={[styles.specValue, { color: colors.text }]}>{spec.value}</Text>
             </View>

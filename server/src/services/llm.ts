@@ -55,7 +55,10 @@ You must output ONLY valid JSON matching this exact structure:
       "url": "string (pass back the URL)",
       "price": "string",
       "badges": ["string", "string"],
-      "aiSummary": "string"
+      "aiSummary": "string",
+      "rawSpecs": [
+        { "label": "string (e.g. 'Refresh Rate')", "value": "string (e.g. '120Hz' or '-')" }
+      ]
     }
   ],
   "groupedSpecs": {

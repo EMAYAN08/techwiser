@@ -20,6 +20,7 @@ export interface Product {
   url: string;
   imageUrl?: string | null;
   specs: Spec[];
+  rawSpecs?: Array<{ label: string; value: string }>;
   aiSummary?: string;
   badges?: string[];
 }
@@ -75,6 +76,7 @@ const MOCK_IPHONE: Product = {
   aiSummary:
     "Best-in-class performance and a deeply integrated ecosystem. Great for users already invested in Apple services and those who prioritize video recording and long-term software support.",
   badges: ["Best Video", "Best Ecosystem", "Best Performance"],
+    rawSpecs: [{ label: "Processor", value: "A17 Pro" }, { label: "RAM", value: "8 GB" }],
   specs: [
     // Performance
     { label: "Processor", value: "Apple A17 Pro", category: "Performance", numericValue: 1, isWinner: true },
@@ -182,6 +184,7 @@ const MOCK_PIXEL: Product = {
   aiSummary:
     "The cleanest Android experience with the longest software support window in the Pixel lineup, plus genuinely useful AI features that aren't gimmicks. Falls behind on raw performance and telephoto reach, but the most well-rounded of the three for everyday use.",
   badges: ["Best Software", "Best Value"],
+    rawSpecs: [{ label: "Processor", value: "Tensor G3" }, { label: "RAM", value: "12 GB" }],
   specs: [
     // Performance
     { label: "Processor", value: "Google Tensor G3", category: "Performance", numericValue: 1 },
