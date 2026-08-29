@@ -57,7 +57,8 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
     }
 
     let finalTitle = title;
-    if (!finalTitle || finalTitle.toLowerCase().includes("access denied") || finalTitle.toLowerCase().includes("just a moment")) {
+    const lowerTitle = finalTitle.toLowerCase();
+    if (!finalTitle || lowerTitle.includes("access denied") || lowerTitle.includes("just a moment") || lowerTitle.includes("page not found") || lowerTitle.includes("attention required") || lowerTitle.includes("pardon our interruption") || lowerTitle.includes("are you a human") || lowerTitle.includes("security measure") || rawText.length < 500) {
       // Trigger Python Scrapling Microservice Fallback
       console.log("Jina got blocked. Triggering Python Scrapling Microservice...");
       try {
@@ -106,3 +107,5 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
     return { rawText: "Failed to scrape.", imageUrl: null, title: "" };
   }
 }
+
+
