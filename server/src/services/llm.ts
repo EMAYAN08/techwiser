@@ -1,17 +1,13 @@
-import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 import { TechCategories } from '../schemas/tech_categories';
 
 export async function generateComparison(
   productDataList: { url: string; retailerText: string; officialText: string; title: string }[]
 ): Promise<any> {
-  const openai = new OpenAI({
-    baseURL: 'https://openrouter.ai/api/v1',
-    apiKey: process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY, // Fallback just in case
-  });
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
   const schemaJson = JSON.stringify(TechCategories, null, 2);
 
-  // Build a string for each product data
   const dataString = productDataList.map((d, i) => `
 --- PRODUCT ${i + 1} ---
 URL: ${d.url}
@@ -74,23 +70,24 @@ You must output ONLY valid JSON matching this exact structure:
 }
 `;
 
+  const fullPrompt = systemPrompt + "\n\n--- INPUT DATA ---\n" + dataString;
+
   try {
-    const response = await openai.chat.completions.create({
-      model: 'openrouter/free',
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: dataString }
-      ]
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-flash-lite',
+      contents: fullPrompt,
+      config: {
+        responseMimeType: 'application/json',
+      }
     });
 
-    const content = response.choices[0]?.message?.content;
-    if (!content) throw new Error("No content received from OpenRouter");
+    const content = response.text;
+    if (!content) throw new Error("No content received from Gemini");
     
     let cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(cleanContent);
   } catch (err: any) {
-    console.error("OpenRouter LLM Error:", err.message || err);
+    console.error("Gemini LLM Error:", err.message || err);
     throw err;
   }
 }
