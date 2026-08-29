@@ -127,23 +127,29 @@ export async function findOfficialSpecs(productTitle: string): Promise<string> {
   
   try {
     console.log(`Searching official specs for: ${query}`);
-    // Use s.jina.ai for search and extraction in one go!
-    // X-Return-Format: markdown will return markdown of the top results or the directly fetched page if it auto-redirects
-    const jinaSearchResponse = await fetch(`https://s.jina.ai/${encodeURIComponent(query)}`, {
-      headers: {
-        'Accept': 'text/plain',
-        'X-Return-Format': 'markdown'
-      },
-      signal: AbortSignal.timeout(12000)
+    
+    const rawPyUrl = process.env.PYTHON_SCRAPER_URL || "http://127.0.0.1:8000";
+    const pyScraperUrl = rawPyUrl.replace(/\/+$/, '');
+    const fetchUrl = `${pyScraperUrl}/search`;
+    
+    const searchRes = await fetch(fetchUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+      signal: AbortSignal.timeout(20000)
     });
     
-    if (jinaSearchResponse.ok) {
-      const markdown = await jinaSearchResponse.text();
-      console.log(`Jina search for ${query} returned ${markdown.length} chars`);
-      // Cap at 15000 chars to avoid overwhelming the LLM
-      return markdown.substring(0, 15000);
+    if (searchRes.ok) {
+      const pyData = await searchRes.json();
+      if (pyData.status === "success" && pyData.data) {
+        console.log(`Official specs found at ${pyData.sourceUrl} (${pyData.data.length} chars)`);
+        return pyData.data.substring(0, 15000);
+      } else {
+        console.log(`Python search failed: ${pyData.message}`);
+      }
+    } else {
+      console.log(`Python search HTTP error: ${searchRes.status}`);
     }
-    console.log(`Jina search for ${query} failed with status ${jinaSearchResponse.status}`);
     return "";
   } catch (e: any) {
     console.error(`Official specs search failed for ${cleanTitle}:`, e.message);
