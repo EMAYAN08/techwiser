@@ -25,6 +25,7 @@ export interface Product {
 }
 
 export interface ComparisonResult {
+  groupedSpecs?: any;
   id: string;
   products: Product[];
   keyDifferences: Array<{ label: string; values: string[] }>;
