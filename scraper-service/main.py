@@ -7,6 +7,22 @@ import re
 
 app = FastAPI(title="SpecMatch Scraper API")
 
+import os
+import subprocess
+
+@app.on_event("startup")
+async def startup_event():
+    if not os.path.exists("/tmp/pw_installed"):
+        print("Installing Playwright Chromium...")
+        try:
+            subprocess.run(["playwright", "install", "chromium"], check=True)
+            with open("/tmp/pw_installed", "w") as f:
+                f.write("done")
+            print("Playwright Chromium installed successfully.")
+        except Exception as e:
+            print("Playwright install failed:", e)
+
+
 class ScrapeRequest(BaseModel):
     url: str
 
@@ -167,16 +183,31 @@ async def search_and_scrape(req: SearchRequest):
         if not top_url:
             return {"status": "error", "message": "No search results found"}
             
-        print(f"Top official URL found: {top_url}. Scraping...")
+        print(f"Top official URL found: {top_url}. Scraping with Scrapling/Playwright...")
         
-        page_resp = curl_requests.get(top_url, impersonate="safari17_0", timeout=15)
-        page_soup = BeautifulSoup(page_resp.text, "html.parser")
-        
-        # Prune bloat
-        for element in page_soup(["script", "style", "nav", "footer", "header", "noscript", "svg", "button"]):
-            element.decompose()
+        from scrapling import Fetcher
+        # Scrapling executes JS automatically and waits for network idle
+        try:
+            fetcher = Fetcher(auto_match=False, headless=True)
+            page = fetcher.get(top_url)
+            # Scrapling Response or Adaptor
+            text = page.page.text_content('body') if hasattr(page, 'page') else ""
+            if not text and hasattr(page, 'text_content'):
+                 text = page.text_content()
+            if not text:
+                 # fallback to raw html parsing
+                 page_soup = BeautifulSoup(page.text, "html.parser")
+                 for element in page_soup(["script", "style", "nav", "footer", "header", "noscript", "svg", "button"]):
+                     element.decompose()
+                 text = page_soup.get_text(separator=" ", strip=True)
+        except Exception as pw_err:
+            print(f"Scrapling failed: {pw_err}, falling back to static fetch")
+            page_resp = curl_requests.get(top_url, impersonate="safari17_0", timeout=15)
+            page_soup = BeautifulSoup(page_resp.text, "html.parser")
+            for element in page_soup(["script", "style", "nav", "footer", "header", "noscript", "svg", "button"]):
+                element.decompose()
+            text = page_soup.get_text(separator=" ", strip=True)
             
-        text = page_soup.get_text(separator=" ", strip=True)
         text = re.sub(r'\s+', ' ', text).strip()
         
         return {
