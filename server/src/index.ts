@@ -109,6 +109,52 @@ app.post('/api/compare', async (req: Request, res: Response) => {
   }
 });
 
+app.post('/api/test-scrape', async (req: Request, res: Response) => {
+  try {
+    const { urls } = req.body;
+    
+    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+      res.status(400).json({ error: 'An array of URLs is required.' });
+      return;
+    }
+
+    console.log(`Starting TEST scrape for ${urls.length} URLs...`);
+
+    const scrapeResults = await Promise.allSettled(urls.map(url => scrapeUrl(url)));
+    
+    const scrapedData: {url: string, retailerText: string, imageUrl: string | null, title: string, officialText: string}[] = [];
+    const failedUrls: string[] = [];
+
+    scrapeResults.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        scrapedData.push({ 
+          url: urls[index], 
+          retailerText: result.value.rawText, 
+          imageUrl: result.value.imageUrl,
+          title: result.value.title,
+          officialText: ""
+        });
+      } else {
+        console.error(`Failed to scrape ${urls[index]}:`, result.reason);
+        failedUrls.push(urls[index]);
+      }
+    });
+
+    console.log("Discovering official brand specs for TEST...");
+    const officialResults = await Promise.allSettled(scrapedData.map(d => findOfficialSpecs(d.title)));
+    officialResults.forEach((res, index) => {
+      if (res.status === 'fulfilled') {
+        scrapedData[index].officialText = res.value;
+      }
+    });
+
+    res.json({ data: scrapedData, failedUrls });
+  } catch (error: unknown) {
+    console.error('Unexpected error in /api/test-scrape:', error);
+    res.status(500).json({ error: 'An unexpected error occurred during test scrape.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
