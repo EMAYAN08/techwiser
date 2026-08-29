@@ -139,3 +139,56 @@ async def scrape_endpoint(req: ScrapeRequest):
     except Exception as e:
         print(f"Scrape failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+class SearchRequest(BaseModel):
+    query: str
+
+@app.post("/search")
+async def search_and_scrape(req: SearchRequest):
+    import urllib.parse
+    print(f"Searching DuckDuckGo for: {req.query}")
+    
+    try:
+        url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(req.query)}"
+        resp = curl_requests.get(url, impersonate="safari17_0", timeout=15)
+        soup = BeautifulSoup(resp.text, "html.parser")
+        
+        top_url = None
+        for a in soup.select('.result__snippet'):
+            href = a.get('href')
+            if href and href.startswith("http") and "youtube.com" not in href:
+                # Basic check to ensure it's not a DDG redirect, DDG HTML uses direct links usually
+                if "//duckduckgo.com/l/?uddg=" in href:
+                    # parse uddg
+                    from urllib.parse import urlparse, parse_qs
+                    parsed = urlparse(href)
+                    uddg = parse_qs(parsed.query).get('uddg')
+                    if uddg:
+                        href = uddg[0]
+                top_url = href
+                break
+                
+        if not top_url:
+            return {"status": "error", "message": "No search results found"}
+            
+        print(f"Top official URL found: {top_url}. Scraping...")
+        
+        page_resp = curl_requests.get(top_url, impersonate="safari17_0", timeout=15)
+        page_soup = BeautifulSoup(page_resp.text, "html.parser")
+        
+        # Prune bloat
+        for element in page_soup(["script", "style", "nav", "footer", "header", "noscript", "svg", "button"]):
+            element.decompose()
+            
+        text = page_soup.get_text(separator=" ", strip=True)
+        text = re.sub(r'\s+', ' ', text).strip()
+        
+        return {
+            "status": "success",
+            "sourceUrl": top_url,
+            "data": text[:20000]
+        }
+        
+    except Exception as e:
+        print(f"Search/Scrape failed: {e}")
+        return {"status": "error", "message": str(e)}
