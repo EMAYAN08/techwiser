@@ -13,7 +13,7 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy } from "lucide-react-native";
+import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info } from "lucide-react-native";
 
 import { useComparisonStore } from "../store/useComparisonStore";
 import { useThemeColors } from "../constants/Colors";
@@ -85,6 +85,9 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
           isRecommended && { borderColor: colors.success, borderWidth: 1 },
         ]}
       >
+        <View style={styles.infoWrap}>
+          <Info size={14} color={colors.textTertiary} strokeWidth={2.5} />
+        </View>
         {isRecommended && (
           <View style={[styles.crownWrap, { backgroundColor: colors.successMuted }]}>
             <Crown size={12} color={colors.success} strokeWidth={2.5} />
@@ -782,6 +785,12 @@ const styles = StyleSheet.create({
   headerCardCompact: {
     padding: 8,
     minHeight: 0,
+  },
+  infoWrap: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    zIndex: 2,
   },
   crownWrap: {
     position: "absolute",
