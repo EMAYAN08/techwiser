@@ -15,18 +15,29 @@ import { ArrowLeft, Trophy } from "lucide-react-native";
 
 import { useComparisonStore, Product } from "../../store/useComparisonStore";
 import { useThemeColors } from "../../constants/Colors";
-import { Typography } from "../../constants/Typography";
-import { Fonts } from "../../constants/Typography";
+import { Typography, Fonts } from "../../constants/Typography";
 
-const ROW_MIN_HEIGHT = 60;
+const ROW_MIN_HEIGHT = 56;
 const LABEL_WIDTH = 130;
-const HEADER_HEIGHT = 140;
+const HORIZONTAL_PAGE_GAP = 12;
+const HEADER_SIDE_PADDING = 16;
+const HEADER_HEIGHT = 110;
 
 function normalizeTitle(title: string): string {
   const cleaned = title.replace(/5G|Unlocked|Smartphone|Dual SIM/gi, "").trim();
   const words = cleaned.split(/\s+/).filter(Boolean);
   if (words.length > 3) return words.slice(0, 3).join(" ");
   return cleaned;
+}
+
+export function DetailedSpreadsheetEmpty() {
+  const { colors } = useThemeColors();
+  const router = useRouter();
+  return (
+    <View style={[{ flex: 1, alignItems: 'center', justifyContent: 'center' }, { backgroundColor: colors.background }]}>
+      <Text style={{ color: colors.text }}>No data</Text>
+    </View>
+  );
 }
 
 export function DetailedSpreadsheet() {
@@ -36,25 +47,53 @@ export function DetailedSpreadsheet() {
   const { activeComparison } = useComparisonStore();
   const { width } = useWindowDimensions();
 
-  const PRODUCT_WIDTH = Math.max(140, (width - LABEL_WIDTH) / 1.5);
-
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const headerScrollRef = useRef<ScrollView>(null);
   const bodyScrollRef = useRef<ScrollView>(null);
+  const isSyncing = useRef(false);
 
-  const onBodyScroll = (e: any) => {
-    headerScrollRef.current?.scrollTo({ x: e.nativeEvent.contentOffset.x, animated: false });
-  };
-  const onHeaderScroll = (e: any) => {
-    bodyScrollRef.current?.scrollTo({ x: e.nativeEvent.contentOffset.x, animated: false });
-  };
-
-  if (!activeComparison) return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+  if (!activeComparison) return <DetailedSpreadsheetEmpty />;
 
   const products = activeComparison.products;
 
-  // Build a unified list of row labels from all groupedSpecs
+  const HEADER_STRIDE = (width - 2 * HEADER_SIDE_PADDING) + HORIZONTAL_PAGE_GAP;
+  const VALUE_PANE_WIDTH = width - LABEL_WIDTH - HEADER_SIDE_PADDING;
+  const BODY_STRIDE = VALUE_PANE_WIDTH + HORIZONTAL_PAGE_GAP;
+
+  const onHeaderScroll = (e: any) => {
+    if (isSyncing.current) return;
+    const x = e.nativeEvent.contentOffset.x;
+    const next = Math.max(0, Math.min(products.length - 1, Math.round(x / HEADER_STRIDE)));
+    if (next !== activeIndex) {
+      setActiveIndex(next);
+      isSyncing.current = true;
+      bodyScrollRef.current?.scrollTo({ x: next * BODY_STRIDE, animated: false });
+      setTimeout(() => { isSyncing.current = false; }, 50);
+    }
+  };
+
+  const onBodyScroll = (e: any) => {
+    if (isSyncing.current) return;
+    const x = e.nativeEvent.contentOffset.x;
+    const next = Math.max(0, Math.min(products.length - 1, Math.round(x / BODY_STRIDE)));
+    if (next !== activeIndex) {
+      setActiveIndex(next);
+      isSyncing.current = true;
+      headerScrollRef.current?.scrollTo({ x: next * HEADER_STRIDE, animated: false });
+      setTimeout(() => { isSyncing.current = false; }, 50);
+    }
+  };
+
+  useEffect(() => {
+    // Force sync when active index changes imperatively
+    isSyncing.current = true;
+    bodyScrollRef.current?.scrollTo({ x: activeIndex * BODY_STRIDE, animated: false });
+    headerScrollRef.current?.scrollTo({ x: activeIndex * HEADER_STRIDE, animated: false });
+    setTimeout(() => { isSyncing.current = false; }, 50);
+  }, [activeIndex]);
+
   const rowLabels = useMemo(() => {
     const labels: { label: string; category: string }[] = [];
     if (!activeComparison.groupedSpecs) return labels;
@@ -89,54 +128,59 @@ export function DetailedSpreadsheet() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      {/* TOP BAR */}
-      <View style={[styles.topBar, { paddingTop: insets.top + 4, backgroundColor: colors.background, borderBottomWidth: 1, borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <ArrowLeft size={20} color={colors.text} strokeWidth={2.25} />
-        </Pressable>
-        <Text style={[styles.title, { color: colors.text }]}>Detailed comparison</Text>
-        <View style={styles.titleSpacer} />
-      </View>
-
-      <ScrollView stickyHeaderIndices={[0]} showsVerticalScrollIndicator={false}>
-        {/* STICKY HEADER */}
-        <View style={{ backgroundColor: colors.background, zIndex: 10, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-          <View style={{ flexDirection: "row" }}>
-            {/* Top Left Empty Space */}
-            <View style={{ width: LABEL_WIDTH, borderRightWidth: 1, borderRightColor: colors.border }} />
-
-            {/* Scrollable Product Headers */}
-            <ScrollView
-              ref={headerScrollRef}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              onScroll={onHeaderScroll}
-              scrollEventThrottle={16}
-              contentContainerStyle={{ paddingRight: 16 }}
-            >
-              {products.map((p, i) => (
-                <View key={p.id} style={[styles.headerCell, { width: PRODUCT_WIDTH, borderRightWidth: 1, borderRightColor: colors.border }]}>
-                  <View style={[styles.headerImageWrap, { backgroundColor: colors.surfaceHighlight }]}>
-                    {p.imageUrl ? (
-                      <Image source={{ uri: p.imageUrl }} style={styles.headerImage} resizeMode="contain" />
-                    ) : (
-                      <View style={styles.headerImage} />
-                    )}
-                  </View>
-                  <Text style={[styles.headerName, { color: colors.text }]} numberOfLines={2}>{normalizeTitle(p.name)}</Text>
-                  {p.price && p.price !== "N/A" && (
-                     <Text style={[styles.headerPrice, { color: colors.success }]} numberOfLines={1}>{p.price}</Text>
-                  )}
-                </View>
-              ))}
-            </ScrollView>
-          </View>
+      {/* STICKY TOP SECTION: TopBar + Full-Width Header Pager */}
+      <View style={[styles.stickyHeader, { paddingTop: insets.top + 4, backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+        <View style={styles.topBar}>
+          <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <ArrowLeft size={20} color={colors.text} strokeWidth={2.25} />
+          </Pressable>
+          <Text style={[styles.title, { color: colors.text }]}>Detailed comparison</Text>
+          <View style={styles.titleSpacer} />
         </View>
 
-        {/* BODY */}
+        <ScrollView
+          ref={headerScrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={HEADER_STRIDE}
+          decelerationRate="fast"
+          contentContainerStyle={{ paddingHorizontal: HEADER_SIDE_PADDING, gap: HORIZONTAL_PAGE_GAP }}
+          onScroll={onHeaderScroll}
+          scrollEventThrottle={16}
+        >
+          {products.map((p) => (
+            <View key={p.id} style={[styles.headerPage, { width: width - 2 * HEADER_SIDE_PADDING, backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.headerPageText}>
+                <Text style={[styles.headerPageName, { color: colors.text }]} numberOfLines={2}>{normalizeTitle(p.name)}</Text>
+                {p.retailer && (
+                  <View style={styles.headerPageRetailer}>
+                    <View style={[styles.headerPageDot, { backgroundColor: p.retailerColor || colors.textTertiary }]} />
+                    <Text style={[styles.headerPageRetailerText, { color: colors.textSecondary }]} numberOfLines={1}>{p.retailer.toUpperCase()}</Text>
+                  </View>
+                )}
+                {p.price && p.price !== "N/A" && (
+                   <Text style={[styles.headerPagePrice, { color: colors.success }]} numberOfLines={1}>{p.price}</Text>
+                )}
+              </View>
+              <View style={[styles.headerPageImage, { backgroundColor: colors.surfaceHighlight }]}>
+                {p.imageUrl && <Image source={{ uri: p.imageUrl }} style={styles.headerPageImageReal} resizeMode="contain" />}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+
+        <View style={styles.dotsRow}>
+          {products.map((_, i) => (
+            <View key={i} style={[styles.dot, { backgroundColor: i === activeIndex ? colors.text : colors.border }]} />
+          ))}
+        </View>
+      </View>
+
+      {/* BODY SECTION: Fixed Labels + Horizontal Values */}
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.body}>
         <View style={{ flexDirection: "row", paddingBottom: insets.bottom + 48 }}>
           
-          {/* Fixed Label Column */}
+          {/* FIXED LEFT COLUMN (Specs) */}
           <View style={{ width: LABEL_WIDTH, borderRightWidth: 1, borderRightColor: colors.border }}>
             {rowLabels.map((rl, idx) => {
               const prev = idx > 0 ? rowLabels[idx - 1] : null;
@@ -146,7 +190,7 @@ export function DetailedSpreadsheet() {
               return (
                 <View key={rl.label}>
                   {showCategory && (
-                    <View style={[styles.categoryRow, { borderBottomColor: colors.border }]}>
+                    <View style={[styles.categoryRow, { backgroundColor: colors.surfaceHighlight, borderBottomColor: colors.border }]}>
                       <Text style={[styles.categoryText, { color: colors.textSecondary }]} numberOfLines={1}>{rl.category.toUpperCase()}</Text>
                     </View>
                   )}
@@ -159,17 +203,19 @@ export function DetailedSpreadsheet() {
             })}
           </View>
 
-          {/* Scrollable Value Columns */}
+          {/* HORIZONTAL VALUE COLUMNS */}
           <ScrollView
             ref={bodyScrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
+            snapToInterval={BODY_STRIDE}
+            decelerationRate="fast"
+            contentContainerStyle={{ paddingLeft: 0, paddingRight: HEADER_SIDE_PADDING, gap: HORIZONTAL_PAGE_GAP }}
             onScroll={onBodyScroll}
             scrollEventThrottle={16}
-            contentContainerStyle={{ paddingRight: 16 }}
           >
             {products.map((p, pIdx) => (
-              <View key={p.id} style={{ width: PRODUCT_WIDTH }}>
+              <View key={p.id} style={{ width: VALUE_PANE_WIDTH }}>
                 {rowLabels.map((rl, idx) => {
                   const prev = idx > 0 ? rowLabels[idx - 1] : null;
                   const showCategory = !prev || prev.category !== rl.category;
@@ -179,9 +225,9 @@ export function DetailedSpreadsheet() {
                   return (
                     <View key={rl.label}>
                       {showCategory && (
-                        <View style={[styles.categoryRow, { borderBottomColor: colors.border }]} />
+                        <View style={[styles.categoryRow, { backgroundColor: colors.surfaceHighlight, borderBottomColor: colors.border }]} />
                       )}
-                      <Pressable onPress={() => handleRowPress(rl.label)} style={[styles.valueCell, { borderRightColor: colors.border }, isSelected && { backgroundColor: colors.primaryMuted, borderTopColor: colors.primary, borderBottomColor: colors.primary }]}>
+                      <Pressable onPress={() => handleRowPress(rl.label)} style={[styles.valueCell, isSelected && { backgroundColor: colors.primaryMuted, borderTopColor: colors.primary, borderBottomColor: colors.primary }]}>
                         {val.isWinner && !isSelected && (
                           <View style={[styles.winnerBadge, { backgroundColor: colors.success }]}>
                              <Trophy size={9} color={colors.background} strokeWidth={2.5} />
@@ -206,36 +252,35 @@ export function DetailedSpreadsheet() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14 },
+  stickyHeader: { paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, marginBottom: 14 },
   backBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   title: { ...Typography.headline, fontSize: 16, fontWeight: "700", flex: 1, textAlign: "center" },
   titleSpacer: { width: 40 },
 
-  headerCell: { height: HEADER_HEIGHT, justifyContent: "center", alignItems: "center", padding: 12 },
-  headerImageWrap: { width: 64, height: 64, borderRadius: 12, alignItems: "center", justifyContent: "center", marginBottom: 12 },
-  headerImage: { width: "70%", height: "70%" },
-  headerName: { fontSize: 12, fontWeight: "700", textAlign: "center", lineHeight: 16 },
-  headerPrice: { fontSize: 12, fontWeight: "700", textAlign: "center", marginTop: 4 },
+  headerPage: { height: HEADER_HEIGHT, borderRadius: 14, borderWidth: 1, flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, gap: 14 },
+  headerPageText: { flex: 1, minWidth: 0, justifyContent: "center" },
+  headerPageName: { ...Typography.headline, fontSize: 16, fontWeight: "700", lineHeight: 20, letterSpacing: -0.3 },
+  headerPageRetailer: { flexDirection: "row", alignItems: "center", marginTop: 6, gap: 6 },
+  headerPageDot: { width: 6, height: 6, borderRadius: 3 },
+  headerPageRetailerText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.6 },
+  headerPagePrice: { fontSize: 12, fontWeight: "800", marginTop: 6 },
+  headerPageImage: { width: 80, height: 80, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  headerPageImageReal: { width: "70%", height: "70%" },
 
-  categoryRow: { height: 40, justifyContent: "flex-end", paddingBottom: 6, paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  categoryText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.8 },
+  dotsRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 12, gap: 6 },
+  dot: { width: 5, height: 5, borderRadius: 3 },
+
+  body: { flex: 1 },
+  
+  categoryRow: { height: 32, justifyContent: "flex-end", paddingBottom: 4, paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  categoryText: { fontSize: 10, fontWeight: "700", letterSpacing: 0.8 },
 
   labelCell: { height: ROW_MIN_HEIGHT, justifyContent: "center", paddingHorizontal: 12, borderTopWidth: 1, borderTopColor: "transparent", borderBottomWidth: 1, borderBottomColor: "transparent" },
-  labelText: { fontSize: 13, lineHeight: 18 },
+  labelText: { fontSize: 12, lineHeight: 16 },
   selectionLeftAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 3 },
 
-  valueCell: { height: ROW_MIN_HEIGHT, justifyContent: "center", paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: "transparent", borderBottomWidth: 1, borderBottomColor: "transparent", borderRightWidth: StyleSheet.hairlineWidth },
+  valueCell: { height: ROW_MIN_HEIGHT, justifyContent: "center", paddingHorizontal: 12, borderTopWidth: 1, borderTopColor: "transparent", borderBottomWidth: 1, borderBottomColor: "transparent" },
   valueText: { fontFamily: Fonts.mono, fontSize: 13, lineHeight: 18 },
   winnerBadge: { position: "absolute", top: 8, right: 8, width: 16, height: 16, borderRadius: 8, alignItems: "center", justifyContent: "center" }
 });
-
-export function DetailedSpreadsheetEmpty() {
-  const { colors } = useThemeColors();
-  const router = useRouter();
-  return (
-    <View style={[{ flex: 1, alignItems: 'center', justifyContent: 'center' }, { backgroundColor: colors.background }]}>
-      <Text style={{ color: colors.text }}>No data</Text>
-    </View>
-  );
-}
-
