@@ -12,14 +12,8 @@ export default function DetailedCompareScreen() {
   const handleBack = () => router.back();
 
   if (!activeComparison) {
-    return <DetailedSpreadsheetEmpty onBack={handleBack} />;
+    return <DetailedSpreadsheetEmpty />;
   }
 
-  return (
-    <DetailedSpreadsheet
-      products={activeComparison.products}
-      groupedSpecs={(activeComparison as any).groupedSpecs}
-      onBack={handleBack}
-    />
-  );
+  return <DetailedSpreadsheet />;
 }
