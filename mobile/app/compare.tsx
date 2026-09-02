@@ -76,12 +76,12 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
 
   return (
     <Animated.View style={[styles.headerWrapper, { opacity: fade, transform: [{ translateY: slide }] }]}>
-      <Pressable onPress={onPress} style={{ flex: 1 }}>
+      <Pressable onPress={onPress} style={{ flexGrow: 1 }}>
       <Card
         borderRadius={16}
         style={[
           styles.headerCard,
-          { flex: 1 },
+          { flexGrow: 1 },
           compact && styles.headerCardCompact,
           isRecommended && { borderColor: colors.success, borderWidth: 1 },
         ]}
@@ -651,73 +651,75 @@ export default function CompareScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      {/* STICKY: header */}
-      <View style={[styles.header, { paddingHorizontal: screenPadding, paddingTop: insets.top + 4 }]}>
-        <Pressable
-          onPress={handleBack}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          style={({ pressed }) => [
-            styles.backBtn,
-            { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
+      <View style={{ zIndex: 10, backgroundColor: colors.background }}>
+        {/* STICKY: header */}
+        <View style={[styles.header, { paddingHorizontal: screenPadding, paddingTop: insets.top + 4 }]}>
+          <Pressable
+            onPress={handleBack}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            style={({ pressed }) => [
+              styles.backBtn,
+              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <ArrowLeft size={20} color={colors.text} strokeWidth={2.25} />
+          </Pressable>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Comparison</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+
+        {/* STICKY: product cards */}
+        <View
+          style={[
+            styles.productRow,
+            {
+              paddingHorizontal: screenPadding,
+              gap: headerGap,
+              backgroundColor: colors.background,
+            },
           ]}
         >
-          <ArrowLeft size={20} color={colors.text} strokeWidth={2.25} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Comparison</Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
-      {/* STICKY: product cards */}
-      <View
-        style={[
-          styles.productRow,
-          {
-            paddingHorizontal: screenPadding,
-            gap: headerGap,
-            backgroundColor: colors.background,
-          },
-        ]}
-      >
-        {products.map((p, i) => (
-          <ProductHeaderCard
-            key={p.id}
-            product={p}
-            index={i}
-            isRecommended={recommendedIndex === i}
-            compact={products.length >= 3}
-            onPress={() => router.push('/product/' + p.id)}
-          />
-        ))}
-      </View>
-
-      {/* STICKY: category pills */}
-      <View
-        style={[
-          styles.pillsWrap,
-          {
-            paddingHorizontal: screenPadding,
-            borderTopColor: colors.border,
-            borderBottomColor: colors.border,
-            backgroundColor: colors.background,
-          },
-        ]}
-      >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.pillsContent}
-        >
-          {categoryList.map((cat) => (
-            <CategoryPill
-              key={cat}
-              label={cat}
-              isSelected={selectedCategory === cat}
-              onPress={() => handleSelectCategory(cat)}
+          {products.map((p, i) => (
+            <ProductHeaderCard
+              key={p.id}
+              product={p}
+              index={i}
+              isRecommended={recommendedIndex === i}
+              compact={products.length >= 3}
+              onPress={() => router.push('/product/' + p.id)}
             />
           ))}
-        </ScrollView>
+        </View>
+
+        {/* STICKY: category pills */}
+        <View
+          style={[
+            styles.pillsWrap,
+            {
+              paddingHorizontal: screenPadding,
+              borderTopColor: colors.border,
+              borderBottomColor: colors.border,
+              backgroundColor: colors.background,
+            },
+          ]}
+        >
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.pillsContent}
+          >
+            {categoryList.map((cat) => (
+              <CategoryPill
+                key={cat}
+                label={cat}
+                isSelected={selectedCategory === cat}
+                onPress={() => handleSelectCategory(cat)}
+              />
+            ))}
+          </ScrollView>
+        </View>
       </View>
 
       {/* SCROLLING: body */}
