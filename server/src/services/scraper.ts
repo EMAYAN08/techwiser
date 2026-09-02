@@ -1,6 +1,7 @@
 export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUrl: string | null; title: string }> {
   let rawText = "";
   let imageUrl: string | null = null;
+  let priceText: string | null = null;
   let title = "";
 
   try {
@@ -42,6 +43,13 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
         });
         const html = await htmlResponse.text();
         
+        const priceMatch = html.match(/<meta\s+(?:property|name)=["'](?:product:price:amount|price)["']\s+content=["']([^"']+)["']/i);
+        if (priceMatch && priceMatch[1]) {
+          const currencyMatch = html.match(/<meta\s+(?:property|name)=["'](?:product:price:currency|currency)["']\s+content=["']([^"']+)["']/i);
+          const currency = currencyMatch && currencyMatch[1] ? currencyMatch[1] : "$";
+          priceText = currency + priceMatch[1];
+        }
+
         const ogImageMatch = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i);
         if (ogImageMatch && ogImageMatch[1]) {
           imageUrl = ogImageMatch[1];
@@ -101,11 +109,15 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
       }
     }
     
+        if (priceText && !rawText.includes(priceText)) {
+      rawText = "META PRICE FOUND: " + priceText + "\n\n" + rawText;
+    }
     return { rawText, imageUrl, title: finalTitle };
   } catch (error: any) {
     console.error(`Scrape failed for ${url}:`, error.message);
     return { rawText: "Failed to scrape.", imageUrl: null, title: "" };
   }
 }
+
 
 

@@ -41,7 +41,7 @@ function normalizeTitle(title: string): string {
 // ---------------------------------------------------------------------------
 
 interface ProductHeaderCardProps {
-  product: { name: string; retailerColor: string; imageUrl?: string | null };
+  product: { name: string; retailerColor: string; imageUrl?: string | null; price?: string };
   isRecommended: boolean;
   index: number;
   compact: boolean;
@@ -118,6 +118,19 @@ function ProductHeaderCard({ product, isRecommended, index, compact }: ProductHe
         >
           {normalizeTitle(product.name)}
         </Text>
+
+        {product.price && product.price !== "N/A" && (
+          <Text
+            style={[
+              styles.productPrice,
+              compact && styles.productPriceCompact,
+              { color: colors.text }
+            ]}
+            numberOfLines={1}
+          >
+            {product.price}
+          </Text>
+        )}
 
         <View
           style={[
@@ -809,6 +822,16 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
     marginBottom: 4,
   },
+  productPrice: {
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  productPriceCompact: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
   retailerPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -1012,3 +1035,4 @@ const styles = StyleSheet.create({
 
   detailedCta: { marginTop: 24 },
 });
+

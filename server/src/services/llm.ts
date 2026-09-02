@@ -28,6 +28,7 @@ YOUR INSTRUCTIONS:
 4. Compare the products to determine the winner for each spec (if applicable).
 5. Provide a short AI summary (2-3 sentences) comparing the products overall, factoring in the extracted overviews and product descriptions.
 6. Identify 3-5 key differences.
+7. Extract the exact current price of each product from the retailer text. If not found, use 'N/A'.
 
 --- JSON TAXONOMY ---
 ${schemaJson}
