@@ -87,7 +87,7 @@ You must output ONLY valid JSON matching this exact structure:
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash',
+      model: 'gemini-3.5-flash-lite',
       contents: fullPrompt,
       config: {
         responseMimeType: 'application/json',
