@@ -1,0 +1,4706 @@
+{
+  "smartphones": {
+    "label": "Smartphones",
+    "icon": "phone-portrait-outline",
+    "subcategories": [
+      "iOS",
+      "Android"
+    ],
+    "attributes": {
+      "display_size": {
+        "label": "Display Size",
+        "unit": "inches",
+        "filterType": "range"
+      },
+      "display_type": {
+        "label": "Display Technology",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "OLED",
+          "AMOLED",
+          "Dynamic AMOLED",
+          "Super Retina XDR",
+          "LTPO OLED",
+          "IPS LCD",
+          "ProMotion OLED"
+        ]
+      },
+      "refresh_rate": {
+        "label": "Refresh Rate",
+        "unit": "Hz",
+        "filterType": "multiselect",
+        "options": [
+          "60",
+          "90",
+          "120",
+          "144",
+          "165"
+        ]
+      },
+      "resolution": {
+        "label": "Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "HD+",
+          "FHD+",
+          "QHD+",
+          "4K"
+        ]
+      },
+      "peak_brightness": {
+        "label": "Peak Brightness",
+        "unit": "nits",
+        "filterType": "range"
+      },
+      "processor": {
+        "label": "Processor",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Apple A18 Pro",
+          "Apple A18",
+          "Snapdragon 8 Elite",
+          "Snapdragon 8 Gen 3",
+          "Dimensity 9400",
+          "Google Tensor G4",
+          "Exynos 2500"
+        ]
+      },
+      "ram": {
+        "label": "RAM",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "6",
+          "8",
+          "12",
+          "16",
+          "24"
+        ]
+      },
+      "storage": {
+        "label": "Storage",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "128",
+          "256",
+          "512",
+          "1024"
+        ]
+      },
+      "main_camera": {
+        "label": "Main Camera",
+        "unit": "MP",
+        "filterType": "range"
+      },
+      "front_camera": {
+        "label": "Front Camera",
+        "unit": "MP",
+        "filterType": "range"
+      },
+      "camera_count": {
+        "label": "Rear Cameras",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      "optical_zoom": {
+        "label": "Optical Zoom",
+        "unit": "x",
+        "filterType": "range"
+      },
+      "video_max": {
+        "label": "Max Video",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1080p 60fps",
+          "4K 30fps",
+          "4K 60fps",
+          "4K 120fps",
+          "8K 30fps"
+        ]
+      },
+      "battery_capacity": {
+        "label": "Battery Capacity",
+        "unit": "mAh",
+        "filterType": "range"
+      },
+      "fast_charging": {
+        "label": "Wired Fast Charging",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "wireless_charging": {
+        "label": "Wireless Charging",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "reverse_wireless": {
+        "label": "Reverse Wireless",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "connectivity_5g": {
+        "label": "5G",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "wifi_standard": {
+        "label": "Wi-Fi Standard",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Wi-Fi 5",
+          "Wi-Fi 6",
+          "Wi-Fi 6E",
+          "Wi-Fi 7"
+        ]
+      },
+      "bluetooth": {
+        "label": "Bluetooth",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "5.0",
+          "5.1",
+          "5.2",
+          "5.3",
+          "5.4"
+        ]
+      },
+      "nfc": {
+        "label": "NFC / Tap to Pay",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "esim": {
+        "label": "eSIM Support",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "usb_type": {
+        "label": "Charging Port",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "USB-C",
+          "USB-C (USB 3.2)",
+          "USB-C (Thunderbolt 3)",
+          "Lightning"
+        ]
+      },
+      "satellite": {
+        "label": "Satellite Connectivity",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ip_rating": {
+        "label": "Water Resistance",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "IP67",
+          "IP68",
+          "IP69K"
+        ]
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "g",
+        "filterType": "range"
+      },
+      "os": {
+        "label": "Operating System",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "iOS 18",
+          "Android 15",
+          "Android 14"
+        ]
+      },
+      "sim_slots": {
+        "label": "SIM Slots",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Single SIM",
+          "Dual SIM",
+          "eSIM only"
+        ]
+      }
+    }
+  },
+  "laptops": {
+    "label": "Laptops",
+    "icon": "laptop-outline",
+    "subcategories": [
+      "Ultrabooks",
+      "Gaming Laptops",
+      "Business Laptops",
+      "MacBooks",
+      "2-in-1 Convertibles",
+      "Chromebooks"
+    ],
+    "attributes": {
+      "display_size": {
+        "label": "Screen Size",
+        "unit": "inches",
+        "filterType": "range"
+      },
+      "display_type": {
+        "label": "Display Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "IPS",
+          "OLED",
+          "Mini-LED",
+          "AMOLED",
+          "TN",
+          "VA"
+        ]
+      },
+      "resolution": {
+        "label": "Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1080p FHD",
+          "1440p 2K",
+          "2880x1800",
+          "4K UHD"
+        ]
+      },
+      "refresh_rate": {
+        "label": "Refresh Rate",
+        "unit": "Hz",
+        "filterType": "multiselect",
+        "options": [
+          "60",
+          "90",
+          "120",
+          "144",
+          "165",
+          "240",
+          "360"
+        ]
+      },
+      "touch_screen": {
+        "label": "Touchscreen",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "cpu": {
+        "label": "Processor",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Apple M4",
+          "Apple M4 Pro",
+          "Apple M4 Max",
+          "Intel Core Ultra 5",
+          "Intel Core Ultra 7",
+          "Intel Core Ultra 9",
+          "AMD Ryzen 7 8000",
+          "AMD Ryzen 9 8000",
+          "AMD Ryzen AI 9"
+        ]
+      },
+      "ram": {
+        "label": "RAM",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "8",
+          "16",
+          "24",
+          "32",
+          "48",
+          "64",
+          "96"
+        ]
+      },
+      "storage": {
+        "label": "SSD Storage",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "256",
+          "512",
+          "1024",
+          "2048",
+          "4096"
+        ]
+      },
+      "gpu": {
+        "label": "Graphics Card",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Integrated",
+          "NVIDIA RTX 4050",
+          "NVIDIA RTX 4060",
+          "NVIDIA RTX 4070",
+          "NVIDIA RTX 4080",
+          "NVIDIA RTX 4090",
+          "AMD Radeon RX 7600M",
+          "AMD Radeon RX 7700M",
+          "Apple GPU (Integrated)"
+        ]
+      },
+      "gpu_vram": {
+        "label": "GPU VRAM",
+        "unit": "GB",
+        "filterType": "range"
+      },
+      "battery_capacity": {
+        "label": "Battery Capacity",
+        "unit": "Wh",
+        "filterType": "range"
+      },
+      "battery_life": {
+        "label": "Battery Life",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "fast_charging": {
+        "label": "Fast Charging",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "usb_c_count": {
+        "label": "USB-C Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "usb_a_count": {
+        "label": "USB-A Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "thunderbolt": {
+        "label": "Thunderbolt / USB4",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "hdmi": {
+        "label": "HDMI",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "sd_card": {
+        "label": "SD Card Reader",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "wifi_standard": {
+        "label": "Wi-Fi Standard",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Wi-Fi 5",
+          "Wi-Fi 6",
+          "Wi-Fi 6E",
+          "Wi-Fi 7"
+        ]
+      },
+      "bluetooth": {
+        "label": "Bluetooth",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "5.0",
+          "5.1",
+          "5.2",
+          "5.3",
+          "5.4"
+        ]
+      },
+      "webcam": {
+        "label": "Webcam",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "720p",
+          "1080p",
+          "1440p",
+          "4K",
+          "IR Face Unlock"
+        ]
+      },
+      "os": {
+        "label": "Operating System",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "macOS Sequoia",
+          "Windows 11 Home",
+          "Windows 11 Pro",
+          "Chrome OS",
+          "Linux"
+        ]
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "kg",
+        "filterType": "range"
+      },
+      "keyboard_backlit": {
+        "label": "Backlit Keyboard",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "fingerprint_reader": {
+        "label": "Fingerprint Reader",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "face_unlock": {
+        "label": "Face Unlock (IR)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "build_material": {
+        "label": "Build Material",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Aluminum",
+          "Magnesium Alloy",
+          "Carbon Fiber",
+          "Plastic",
+          "Titanium"
+        ]
+      },
+      "military_grade": {
+        "label": "MIL-SPEC Certified",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "tablets": {
+    "label": "Tablets",
+    "icon": "tablet-portrait-outline",
+    "subcategories": [
+      "iPads",
+      "Android Tablets",
+      "Windows Tablets",
+      "E-ink Tablets"
+    ],
+    "attributes": {
+      "display_size": {
+        "label": "Screen Size",
+        "unit": "inches",
+        "filterType": "range"
+      },
+      "display_type": {
+        "label": "Display Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "IPS LCD",
+          "Liquid Retina",
+          "OLED",
+          "AMOLED",
+          "Mini-LED"
+        ]
+      },
+      "resolution": {
+        "label": "Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1080p",
+          "2K",
+          "2560x1600",
+          "Retina"
+        ]
+      },
+      "refresh_rate": {
+        "label": "Refresh Rate",
+        "unit": "Hz",
+        "filterType": "multiselect",
+        "options": [
+          "60",
+          "90",
+          "120",
+          "144"
+        ]
+      },
+      "processor": {
+        "label": "Processor",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Apple M4",
+          "Apple M2",
+          "Apple A16",
+          "Snapdragon 8 Gen 2",
+          "Snapdragon 8 Gen 3",
+          "MediaTek Dimensity 9000",
+          "Intel Core Ultra"
+        ]
+      },
+      "ram": {
+        "label": "RAM",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "4",
+          "6",
+          "8",
+          "12",
+          "16",
+          "32"
+        ]
+      },
+      "storage": {
+        "label": "Storage",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "64",
+          "128",
+          "256",
+          "512",
+          "1024"
+        ]
+      },
+      "battery_life": {
+        "label": "Battery Life",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "battery_capacity": {
+        "label": "Battery Capacity",
+        "unit": "mAh",
+        "filterType": "range"
+      },
+      "cellular": {
+        "label": "Cellular / LTE / 5G",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "wifi_standard": {
+        "label": "Wi-Fi Standard",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Wi-Fi 5",
+          "Wi-Fi 6",
+          "Wi-Fi 6E",
+          "Wi-Fi 7"
+        ]
+      },
+      "usb_type": {
+        "label": "Charging Port",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "USB-C",
+          "USB-C (Thunderbolt 4)",
+          "Lightning"
+        ]
+      },
+      "stylus_support": {
+        "label": "Stylus Support",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "keyboard_support": {
+        "label": "Keyboard Accessory",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "main_camera": {
+        "label": "Rear Camera",
+        "unit": "MP",
+        "filterType": "range"
+      },
+      "front_camera": {
+        "label": "Front Camera",
+        "unit": "MP",
+        "filterType": "range"
+      },
+      "os": {
+        "label": "Operating System",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "iPadOS 18",
+          "Android 15",
+          "Windows 11"
+        ]
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "g",
+        "filterType": "range"
+      },
+      "ip_rating": {
+        "label": "Water Resistance",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "IP67",
+          "IP68"
+        ]
+      }
+    }
+  },
+  "smart_tvs": {
+    "label": "Smart TVs",
+    "icon": "tv-outline",
+    "subcategories": [
+      "OLED",
+      "QLED",
+      "Mini-LED",
+      "QD-OLED",
+      "LED/LCD"
+    ],
+    "attributes": {
+      "screen_size": {
+        "label": "Screen Size",
+        "unit": "inches",
+        "filterType": "range"
+      },
+      "resolution": {
+        "label": "Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Full HD 1080p",
+          "4K UHD",
+          "8K"
+        ]
+      },
+      "panel_type": {
+        "label": "Panel Technology",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "OLED",
+          "QLED",
+          "Mini-LED",
+          "QD-OLED",
+          "WOLED",
+          "LED LCD",
+          "NanoCell"
+        ]
+      },
+      "refresh_rate": {
+        "label": "Refresh Rate",
+        "unit": "Hz",
+        "filterType": "multiselect",
+        "options": [
+          "60",
+          "120",
+          "144"
+        ]
+      },
+      "hdr_support": {
+        "label": "HDR Formats",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "HDR10",
+          "HDR10+",
+          "Dolby Vision",
+          "HLG",
+          "Dolby Vision IQ"
+        ]
+      },
+      "peak_brightness": {
+        "label": "Peak Brightness",
+        "unit": "nits",
+        "filterType": "range"
+      },
+      "smart_os": {
+        "label": "Smart TV OS",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "webOS",
+          "Tizen",
+          "Google TV",
+          "Roku TV",
+          "Fire TV",
+          "Android TV"
+        ]
+      },
+      "hdmi_ports": {
+        "label": "HDMI Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "hdmi_version": {
+        "label": "HDMI Version",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "HDMI 2.0",
+          "HDMI 2.1"
+        ]
+      },
+      "usb_ports": {
+        "label": "USB Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "bluetooth": {
+        "label": "Bluetooth",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "wifi_standard": {
+        "label": "Wi-Fi Standard",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Wi-Fi 5",
+          "Wi-Fi 6",
+          "Wi-Fi 6E"
+        ]
+      },
+      "ethernet": {
+        "label": "Ethernet",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "speaker_power": {
+        "label": "Speaker Output",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "dolby_atmos": {
+        "label": "Dolby Atmos",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "vrr": {
+        "label": "VRR (Gaming)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "allm": {
+        "label": "ALLM (Auto Low Latency)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "gsync_freesync": {
+        "label": "G-Sync / FreeSync",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "input_lag_4k": {
+        "label": "Input Lag at 4K",
+        "unit": "ms",
+        "filterType": "range"
+      },
+      "voice_assistant": {
+        "label": "Voice Assistant",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Google Assistant",
+          "Amazon Alexa",
+          "ThinQ AI",
+          "Bixby"
+        ]
+      },
+      "apple_airplay": {
+        "label": "Apple AirPlay 2",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "homekit": {
+        "label": "Apple HomeKit",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "monitors": {
+    "label": "Monitors",
+    "icon": "desktop-outline",
+    "subcategories": [
+      "Gaming Monitors",
+      "Professional Monitors",
+      "Ultrawide",
+      "Portable Monitors"
+    ],
+    "attributes": {
+      "screen_size": {
+        "label": "Screen Size",
+        "unit": "inches",
+        "filterType": "range"
+      },
+      "panel_type": {
+        "label": "Panel Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "IPS",
+          "VA",
+          "TN",
+          "OLED",
+          "Mini-LED",
+          "QD-OLED"
+        ]
+      },
+      "resolution": {
+        "label": "Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1080p FHD",
+          "1440p 2K",
+          "4K UHD",
+          "5K",
+          "8K",
+          "Ultrawide 3440x1440",
+          "Super Ultrawide 5120x1440"
+        ]
+      },
+      "refresh_rate": {
+        "label": "Refresh Rate",
+        "unit": "Hz",
+        "filterType": "multiselect",
+        "options": [
+          "60",
+          "75",
+          "120",
+          "144",
+          "165",
+          "240",
+          "360",
+          "500"
+        ]
+      },
+      "response_time": {
+        "label": "Response Time (GtG)",
+        "unit": "ms",
+        "filterType": "range"
+      },
+      "peak_brightness": {
+        "label": "Peak Brightness",
+        "unit": "nits",
+        "filterType": "range"
+      },
+      "hdr": {
+        "label": "HDR Standard",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "HDR400",
+          "HDR600",
+          "HDR1000",
+          "Dolby Vision",
+          "DisplayHDR True Black"
+        ]
+      },
+      "color_gamut_srgb": {
+        "label": "sRGB Coverage",
+        "unit": "%",
+        "filterType": "range"
+      },
+      "color_gamut_dci": {
+        "label": "DCI-P3 Coverage",
+        "unit": "%",
+        "filterType": "range"
+      },
+      "color_depth": {
+        "label": "Color Depth",
+        "unit": "bit",
+        "filterType": "multiselect",
+        "options": [
+          "8-bit",
+          "10-bit",
+          "12-bit"
+        ]
+      },
+      "gsync": {
+        "label": "NVIDIA G-Sync",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "freesync": {
+        "label": "AMD FreeSync",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "displayport": {
+        "label": "DisplayPort",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "DP 1.4",
+          "DP 2.1"
+        ]
+      },
+      "hdmi_version": {
+        "label": "HDMI Version",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "HDMI 1.4",
+          "HDMI 2.0",
+          "HDMI 2.1"
+        ]
+      },
+      "usb_c_power_delivery": {
+        "label": "USB-C Power Delivery",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "usb_hub": {
+        "label": "Built-in USB Hub",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "speakers": {
+        "label": "Built-in Speakers",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "height_adjust": {
+        "label": "Height Adjustable Stand",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "vesa_mount": {
+        "label": "VESA Mount",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "curved": {
+        "label": "Curved Display",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "aspect_ratio": {
+        "label": "Aspect Ratio",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "16:9",
+          "16:10",
+          "21:9",
+          "32:9",
+          "32:10"
+        ]
+      }
+    }
+  },
+  "headphones": {
+    "label": "Headphones",
+    "icon": "headset-outline",
+    "subcategories": [
+      "Over-Ear",
+      "On-Ear"
+    ],
+    "attributes": {
+      "anc": {
+        "label": "Active Noise Cancellation",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "transparency_mode": {
+        "label": "Transparency Mode",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "battery_life": {
+        "label": "Battery Life (ANC on)",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "battery_life_anc_off": {
+        "label": "Battery Life (ANC off)",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "quick_charge": {
+        "label": "Quick Charge (15min)",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "wireless_charging": {
+        "label": "Wireless Charging",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "driver_size": {
+        "label": "Driver Size",
+        "unit": "mm",
+        "filterType": "range"
+      },
+      "frequency_response": {
+        "label": "Frequency Response",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "20Hz-20kHz",
+          "4Hz-40kHz",
+          "6Hz-45kHz"
+        ]
+      },
+      "bluetooth_version": {
+        "label": "Bluetooth",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "5.0",
+          "5.2",
+          "5.3"
+        ]
+      },
+      "multipoint": {
+        "label": "Multipoint Connection",
+        "unit": "devices",
+        "filterType": "range"
+      },
+      "codec_support": {
+        "label": "Audio Codecs",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "SBC",
+          "AAC",
+          "aptX",
+          "aptX HD",
+          "aptX Adaptive",
+          "LDAC",
+          "LC3"
+        ]
+      },
+      "spatial_audio": {
+        "label": "Spatial / 3D Audio",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "lossless": {
+        "label": "Lossless Audio Support",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "wired_option": {
+        "label": "Wired Option (3.5mm)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "mic_quality": {
+        "label": "Microphone Array",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Single Mic",
+          "Dual Mic",
+          "Beamforming Array"
+        ]
+      },
+      "call_quality_certified": {
+        "label": "Teams / Zoom Certified",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "g",
+        "filterType": "range"
+      },
+      "foldable": {
+        "label": "Foldable Design",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ip_rating": {
+        "label": "Water / Sweat Resistance",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "IPX4",
+          "IPX5"
+        ]
+      },
+      "os_integration": {
+        "label": "OS Integration",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "iOS Optimized",
+          "Android Optimized",
+          "Universal"
+        ]
+      }
+    }
+  },
+  "earbuds": {
+    "label": "True Wireless Earbuds",
+    "icon": "musical-notes-outline",
+    "subcategories": [
+      "Sports",
+      "ANC",
+      "Open-Ear",
+      "Budget"
+    ],
+    "attributes": {
+      "anc": {
+        "label": "Active Noise Cancellation",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "transparency_mode": {
+        "label": "Transparency Mode",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "battery_buds": {
+        "label": "Earbud Battery Life",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "battery_case": {
+        "label": "Case Extra Charges",
+        "unit": "x",
+        "filterType": "range"
+      },
+      "battery_total": {
+        "label": "Total Battery Life",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "quick_charge": {
+        "label": "Quick Charge (10min)",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "wireless_charging": {
+        "label": "Wireless Case Charging",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "driver_size": {
+        "label": "Driver Size",
+        "unit": "mm",
+        "filterType": "range"
+      },
+      "driver_type": {
+        "label": "Driver Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Dynamic",
+          "Balanced Armature",
+          "Hybrid",
+          "Planar"
+        ]
+      },
+      "bluetooth_version": {
+        "label": "Bluetooth",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "5.2",
+          "5.3",
+          "5.4",
+          "LE Audio"
+        ]
+      },
+      "multipoint": {
+        "label": "Multipoint Connection",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "codec_support": {
+        "label": "Audio Codecs",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "SBC",
+          "AAC",
+          "aptX",
+          "aptX Adaptive",
+          "LDAC",
+          "LC3+"
+        ]
+      },
+      "spatial_audio": {
+        "label": "Spatial Audio",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ip_rating": {
+        "label": "Water Resistance",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "IPX4",
+          "IPX5",
+          "IPX7",
+          "IP57"
+        ]
+      },
+      "fit_type": {
+        "label": "Fit Style",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "In-Ear (Silicone Tips)",
+          "Open-Ear (Semi-in-ear)",
+          "Over-Ear Hook"
+        ]
+      },
+      "ear_detection": {
+        "label": "Auto Ear Detection",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "head_tracking": {
+        "label": "Head Tracking",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "find_my": {
+        "label": "Find My / Find My Device",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "weight_per_bud": {
+        "label": "Weight per Earbud",
+        "unit": "g",
+        "filterType": "range"
+      },
+      "os_integration": {
+        "label": "Best With",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "iOS",
+          "Android",
+          "Universal"
+        ]
+      }
+    }
+  },
+  "smartwatches": {
+    "label": "Smartwatches",
+    "icon": "watch-outline",
+    "subcategories": [
+      "Fitness-focused",
+      "Luxury / Fashion",
+      "Rugged / Outdoor",
+      "Kids"
+    ],
+    "attributes": {
+      "display_size": {
+        "label": "Display Size",
+        "unit": "mm",
+        "filterType": "range"
+      },
+      "display_type": {
+        "label": "Display Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "AMOLED",
+          "LTPO AMOLED",
+          "MIP (Memory-in-Pixel)",
+          "LCD"
+        ]
+      },
+      "always_on_display": {
+        "label": "Always-On Display",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "battery_life": {
+        "label": "Battery Life",
+        "unit": "days",
+        "filterType": "range"
+      },
+      "heart_rate": {
+        "label": "Heart Rate Monitor",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "spo2": {
+        "label": "Blood Oxygen (SpO2)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ecg": {
+        "label": "ECG / EKG",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "skin_temp": {
+        "label": "Skin Temperature",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "afib_detection": {
+        "label": "AFib Detection",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "sleep_tracking": {
+        "label": "Advanced Sleep Tracking",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "stress_tracking": {
+        "label": "Stress / HRV Tracking",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "gps": {
+        "label": "Built-in GPS",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "gps_systems": {
+        "label": "GPS Systems",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "GPS only",
+          "GPS+GLONASS",
+          "GPS+GLONASS+Galileo+BeiDou+QZSS"
+        ]
+      },
+      "lte_cellular": {
+        "label": "LTE / Cellular",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "nfc_payments": {
+        "label": "NFC Payments (Canada)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "wifi": {
+        "label": "Wi-Fi",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "water_resistance": {
+        "label": "Water Resistance",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "Water-resistant",
+          "5 ATM",
+          "10 ATM",
+          "100m WR",
+          "MIL-SPEC"
+        ]
+      },
+      "os_compatibility": {
+        "label": "Compatible With",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "iOS only",
+          "Android only",
+          "Both iOS & Android"
+        ]
+      },
+      "case_material": {
+        "label": "Case Material",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Aluminum",
+          "Stainless Steel",
+          "Titanium",
+          "Polymer/Plastic",
+          "Ceramic"
+        ]
+      },
+      "band_material": {
+        "label": "Band Material",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Silicone",
+          "Leather",
+          "Metal Milanese",
+          "Fabric/Nylon",
+          "Rubber"
+        ]
+      },
+      "case_size": {
+        "label": "Case Size Options",
+        "unit": "mm",
+        "filterType": "multiselect",
+        "options": [
+          "38-41",
+          "42-45",
+          "46-49"
+        ]
+      },
+      "charging_type": {
+        "label": "Charging Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Magnetic Wireless",
+          "USB-C Magnetic",
+          "Proprietary Pin"
+        ]
+      }
+    }
+  },
+  "smart_rings": {
+    "label": "Smart Rings",
+    "icon": "ellipse-outline",
+    "subcategories": [],
+    "attributes": {
+      "battery_life": {
+        "label": "Battery Life",
+        "unit": "days",
+        "filterType": "range"
+      },
+      "heart_rate": {
+        "label": "Heart Rate Monitor",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "spo2": {
+        "label": "Blood Oxygen (SpO2)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "skin_temp": {
+        "label": "Skin Temperature",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "hrv": {
+        "label": "HRV Tracking",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "sleep_tracking": {
+        "label": "Sleep Tracking",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "stress_tracking": {
+        "label": "Stress Monitoring",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "activity_tracking": {
+        "label": "Activity / Steps",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "nfc_payments": {
+        "label": "NFC Payments (Canada)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "water_resistance": {
+        "label": "Water Resistance",
+        "unit": "ATM",
+        "filterType": "range"
+      },
+      "material": {
+        "label": "Ring Material",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Titanium",
+          "Stainless Steel",
+          "Silicone",
+          "Ceramic",
+          "Carbon Fiber"
+        ]
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "g",
+        "filterType": "range"
+      },
+      "size_range": {
+        "label": "Size Range",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "US 5-13",
+          "US 6-12",
+          "US 6-14"
+        ]
+      },
+      "os_compatibility": {
+        "label": "Compatible With",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "iOS only",
+          "Android only",
+          "Both iOS & Android"
+        ]
+      },
+      "subscription_required": {
+        "label": "Subscription Required",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "fitness_trackers": {
+    "label": "Fitness Trackers / Bands",
+    "icon": "fitness-outline",
+    "subcategories": [],
+    "attributes": {
+      "display_type": {
+        "label": "Display",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "No Screen",
+          "OLED",
+          "AMOLED",
+          "E-ink"
+        ]
+      },
+      "battery_life": {
+        "label": "Battery Life",
+        "unit": "days",
+        "filterType": "range"
+      },
+      "heart_rate": {
+        "label": "Heart Rate",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "spo2": {
+        "label": "SpO2",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "gps": {
+        "label": "Built-in GPS",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "sleep_tracking": {
+        "label": "Sleep Tracking",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "water_resistance": {
+        "label": "Water Resistance",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "Splash-proof",
+          "5 ATM",
+          "50m"
+        ]
+      },
+      "os_compatibility": {
+        "label": "Compatible With",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "iOS only",
+          "Android only",
+          "Both"
+        ]
+      }
+    }
+  },
+  "gaming_consoles": {
+    "label": "Gaming Consoles",
+    "icon": "game-controller-outline",
+    "subcategories": [
+      "Home Consoles",
+      "Handhelds"
+    ],
+    "attributes": {
+      "max_resolution": {
+        "label": "Max Output Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1080p",
+          "4K",
+          "8K"
+        ]
+      },
+      "max_framerate": {
+        "label": "Max Frame Rate",
+        "unit": "fps",
+        "filterType": "multiselect",
+        "options": [
+          "30",
+          "60",
+          "120",
+          "240"
+        ]
+      },
+      "storage": {
+        "label": "Internal Storage",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "512",
+          "1024",
+          "2048"
+        ]
+      },
+      "storage_expandable": {
+        "label": "Expandable Storage",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "disc_drive": {
+        "label": "Disc Drive",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "backwards_compat": {
+        "label": "Backwards Compatibility",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "online_subscription": {
+        "label": "Online Service (CAD/yr)",
+        "unit": "CAD/yr",
+        "filterType": "range"
+      },
+      "game_pass": {
+        "label": "Game Pass / PS Plus",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ray_tracing": {
+        "label": "Ray Tracing",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "hdr": {
+        "label": "HDR Support",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "HDR10",
+          "Dolby Vision",
+          "HDR10+"
+        ]
+      },
+      "wifi_standard": {
+        "label": "Wi-Fi Standard",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Wi-Fi 5",
+          "Wi-Fi 6",
+          "Wi-Fi 6E"
+        ]
+      },
+      "bluetooth": {
+        "label": "Bluetooth",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "usb_ports": {
+        "label": "USB Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "vr_support": {
+        "label": "VR Support",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "routers_wifi": {
+    "label": "Routers & Wi-Fi Systems",
+    "icon": "wifi-outline",
+    "subcategories": [
+      "Single Router",
+      "Mesh Wi-Fi System",
+      "Gaming Routers"
+    ],
+    "attributes": {
+      "wifi_standard": {
+        "label": "Wi-Fi Standard",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Wi-Fi 5 (802.11ac)",
+          "Wi-Fi 6 (802.11ax)",
+          "Wi-Fi 6E",
+          "Wi-Fi 7 (802.11be)"
+        ]
+      },
+      "bands": {
+        "label": "Frequency Bands",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Dual-band",
+          "Tri-band",
+          "Quad-band"
+        ]
+      },
+      "max_speed": {
+        "label": "Max Throughput",
+        "unit": "Gbps",
+        "filterType": "range"
+      },
+      "coverage": {
+        "label": "Coverage Area",
+        "unit": "sq ft",
+        "filterType": "range"
+      },
+      "nodes_included": {
+        "label": "Nodes Included",
+        "unit": null,
+        "filterType": "range"
+      },
+      "wan_port_speed": {
+        "label": "WAN Port Speed",
+        "unit": "Gbps",
+        "filterType": "multiselect",
+        "options": [
+          "1",
+          "2.5",
+          "10"
+        ]
+      },
+      "lan_ports": {
+        "label": "LAN Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "lan_port_speed": {
+        "label": "LAN Port Speed",
+        "unit": "Gbps",
+        "filterType": "multiselect",
+        "options": [
+          "1",
+          "2.5",
+          "10"
+        ]
+      },
+      "mu_mimo": {
+        "label": "MU-MIMO",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ofdma": {
+        "label": "OFDMA",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "wifi_security": {
+        "label": "Security Protocol",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "WPA2",
+          "WPA3",
+          "WPA3 + WPA2"
+        ]
+      },
+      "vpn_server": {
+        "label": "VPN Server",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "parental_controls": {
+        "label": "Parental Controls",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "iot_network": {
+        "label": "IoT Separate Network",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "usb_port": {
+        "label": "USB Port (NAS/Printer)",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "security_cameras": {
+    "label": "Security Cameras",
+    "icon": "videocam-outline",
+    "subcategories": [
+      "Indoor",
+      "Outdoor",
+      "Doorbell Cameras",
+      "Floodlight Cameras"
+    ],
+    "attributes": {
+      "resolution": {
+        "label": "Video Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1080p FHD",
+          "2K QHD",
+          "4K UHD"
+        ]
+      },
+      "fov": {
+        "label": "Field of View",
+        "unit": "°",
+        "filterType": "range"
+      },
+      "night_vision": {
+        "label": "Night Vision Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "IR (Black & White)",
+          "Color Night Vision",
+          "Starlight"
+        ]
+      },
+      "night_vision_range": {
+        "label": "Night Vision Range",
+        "unit": "m",
+        "filterType": "range"
+      },
+      "ai_detection": {
+        "label": "AI Detection",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Person",
+          "Vehicle",
+          "Animal",
+          "Package",
+          "Face Recognition"
+        ]
+      },
+      "power_source": {
+        "label": "Power Source",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Wired",
+          "Battery",
+          "Solar",
+          "PoE"
+        ]
+      },
+      "battery_life": {
+        "label": "Battery Life",
+        "unit": "months",
+        "filterType": "range"
+      },
+      "storage_local": {
+        "label": "Local Storage",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "SD Card",
+          "NAS / NVR",
+          "USB"
+        ]
+      },
+      "storage_cloud": {
+        "label": "Cloud Storage",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "subscription_required": {
+        "label": "Subscription Required",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "two_way_audio": {
+        "label": "Two-Way Audio",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "siren": {
+        "label": "Built-in Siren",
+        "unit": "dB",
+        "filterType": "range"
+      },
+      "ip_rating": {
+        "label": "Weather Resistance",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "IP65",
+          "IP66",
+          "IP67"
+        ]
+      },
+      "connectivity": {
+        "label": "Connectivity",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Wi-Fi 2.4GHz",
+          "Wi-Fi 5GHz",
+          "Wired Ethernet",
+          "PoE"
+        ]
+      },
+      "smart_home": {
+        "label": "Smart Home Integration",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Amazon Alexa",
+          "Google Home",
+          "Apple HomeKit",
+          "SmartThings"
+        ]
+      },
+      "spotlight": {
+        "label": "Built-in Spotlight",
+        "unit": "lumens",
+        "filterType": "range"
+      }
+    }
+  },
+  "robot_vacuums": {
+    "label": "Robot Vacuums",
+    "icon": "disc-outline",
+    "subcategories": [
+      "Vacuum Only",
+      "Vacuum + Mop Combo",
+      "Self-Emptying"
+    ],
+    "attributes": {
+      "suction_power": {
+        "label": "Suction Power",
+        "unit": "Pa",
+        "filterType": "range"
+      },
+      "mopping": {
+        "label": "Mopping Function",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "auto_mop_lift": {
+        "label": "Auto Mop Lift on Carpet",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "self_emptying": {
+        "label": "Auto Self-Emptying Base",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "self_cleaning_mop": {
+        "label": "Auto Mop Self-Cleaning",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "navigation": {
+        "label": "Navigation System",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "LiDAR",
+          "Camera (VSLAM)",
+          "Gyroscope",
+          "Laser + Camera"
+        ]
+      },
+      "mapping": {
+        "label": "Multi-Floor Mapping",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "obstacle_avoidance": {
+        "label": "Obstacle Avoidance",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "Basic",
+          "AI 3D Camera",
+          "Structured Light"
+        ]
+      },
+      "battery_life": {
+        "label": "Battery Life",
+        "unit": "min",
+        "filterType": "range"
+      },
+      "coverage_per_charge": {
+        "label": "Coverage per Charge",
+        "unit": "sq ft",
+        "filterType": "range"
+      },
+      "dustbin_size": {
+        "label": "Dustbin Capacity",
+        "unit": "L",
+        "filterType": "range"
+      },
+      "filter_type": {
+        "label": "Filter Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Standard",
+          "HEPA"
+        ]
+      },
+      "app_control": {
+        "label": "App Control",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "voice_control": {
+        "label": "Voice Control",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Amazon Alexa",
+          "Google Home",
+          "Apple Siri"
+        ]
+      },
+      "max_carpet_height": {
+        "label": "Max Carpet Height",
+        "unit": "mm",
+        "filterType": "range"
+      },
+      "noise_level": {
+        "label": "Noise Level",
+        "unit": "dB",
+        "filterType": "range"
+      }
+    }
+  },
+  "air_purifiers": {
+    "label": "Air Purifiers",
+    "icon": "leaf-outline",
+    "subcategories": [],
+    "attributes": {
+      "coverage_area": {
+        "label": "Coverage Area",
+        "unit": "sq ft",
+        "filterType": "range"
+      },
+      "cadr_smoke": {
+        "label": "CADR (Smoke)",
+        "unit": "CFM",
+        "filterType": "range"
+      },
+      "cadr_dust": {
+        "label": "CADR (Dust)",
+        "unit": "CFM",
+        "filterType": "range"
+      },
+      "cadr_pollen": {
+        "label": "CADR (Pollen)",
+        "unit": "CFM",
+        "filterType": "range"
+      },
+      "filter_type": {
+        "label": "Filter Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Pre-filter",
+          "True HEPA (H13)",
+          "HEPA H14",
+          "Activated Carbon",
+          "UV-C"
+        ]
+      },
+      "filter_lifespan": {
+        "label": "Filter Lifespan",
+        "unit": "months",
+        "filterType": "range"
+      },
+      "air_quality_sensor": {
+        "label": "Air Quality Sensor",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "auto_mode": {
+        "label": "Auto Mode",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "noise_level_low": {
+        "label": "Noise Level (Low)",
+        "unit": "dB",
+        "filterType": "range"
+      },
+      "noise_level_max": {
+        "label": "Noise Level (Max)",
+        "unit": "dB",
+        "filterType": "range"
+      },
+      "fan_speeds": {
+        "label": "Fan Speed Settings",
+        "unit": null,
+        "filterType": "range"
+      },
+      "smart_control": {
+        "label": "App / Voice Control",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "pm25_sensor": {
+        "label": "PM2.5 Sensor",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "voc_sensor": {
+        "label": "VOC / Gas Sensor",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "energy_consumption": {
+        "label": "Max Power Draw",
+        "unit": "W",
+        "filterType": "range"
+      }
+    }
+  },
+  "projectors": {
+    "label": "Projectors",
+    "icon": "film-outline",
+    "subcategories": [
+      "Home Theatre",
+      "Smart Portable",
+      "Ultra-Short Throw (UST)",
+      "Business"
+    ],
+    "attributes": {
+      "resolution": {
+        "label": "Native Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "480p",
+          "720p HD",
+          "1080p FHD",
+          "2K",
+          "4K UHD"
+        ]
+      },
+      "brightness": {
+        "label": "Brightness",
+        "unit": "ANSI lm",
+        "filterType": "range"
+      },
+      "contrast_ratio": {
+        "label": "Contrast Ratio",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1000:1",
+          "3000:1",
+          "100000:1",
+          "1000000:1 (Dynamic)"
+        ]
+      },
+      "light_source": {
+        "label": "Light Source",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Lamp (UHP)",
+          "Laser",
+          "LED",
+          "Laser-LED Hybrid"
+        ]
+      },
+      "light_source_life": {
+        "label": "Light Source Lifespan",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "throw_ratio": {
+        "label": "Throw Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Long Throw",
+          "Short Throw",
+          "Ultra Short Throw (0.25:1 or less)"
+        ]
+      },
+      "max_screen_size": {
+        "label": "Max Screen Size",
+        "unit": "inches",
+        "filterType": "range"
+      },
+      "hdr": {
+        "label": "HDR Support",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "HDR10",
+          "HDR10+",
+          "Dolby Vision"
+        ]
+      },
+      "smart_os": {
+        "label": "Smart OS",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None (Standalone)",
+          "Android TV",
+          "Google TV",
+          "Proprietary"
+        ]
+      },
+      "hdmi_ports": {
+        "label": "HDMI Inputs",
+        "unit": null,
+        "filterType": "range"
+      },
+      "audio_output": {
+        "label": "Built-in Speaker",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "dolby_atmos": {
+        "label": "Dolby Atmos",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "battery": {
+        "label": "Built-in Battery",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "battery_life": {
+        "label": "Battery Life (portable)",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "keystone_correction": {
+        "label": "Auto Keystone Correction",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "autofocus": {
+        "label": "Auto Focus",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "wifi": {
+        "label": "Wi-Fi",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "kg",
+        "filterType": "range"
+      }
+    }
+  },
+  "soundbars": {
+    "label": "Soundbars",
+    "icon": "volume-high-outline",
+    "subcategories": [
+      "2.0",
+      "2.1",
+      "3.1",
+      "5.1",
+      "7.1",
+      "Dolby Atmos"
+    ],
+    "attributes": {
+      "channels": {
+        "label": "Speaker Configuration",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "2.0",
+          "2.1",
+          "3.1",
+          "5.1",
+          "7.1.4",
+          "9.1.4"
+        ]
+      },
+      "total_power": {
+        "label": "Total Output Power",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "dolby_atmos": {
+        "label": "Dolby Atmos",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "dts_x": {
+        "label": "DTS:X",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "upfiring_speakers": {
+        "label": "Up-Firing Speakers",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "subwoofer": {
+        "label": "Subwoofer Included",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "surround_speakers": {
+        "label": "Surround Speakers Incl.",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "hdmi_arc": {
+        "label": "HDMI eARC",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "hdmi_in": {
+        "label": "HDMI In Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "optical_in": {
+        "label": "Optical Input",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "wifi": {
+        "label": "Wi-Fi Streaming",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "bluetooth": {
+        "label": "Bluetooth",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "multiroom": {
+        "label": "Multi-room Audio",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "Sonos",
+          "WiSA",
+          "Google Cast",
+          "Apple AirPlay 2",
+          "Amazon Multi-Room"
+        ]
+      },
+      "voice_assistant": {
+        "label": "Voice Assistant",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "Amazon Alexa",
+          "Google Assistant",
+          "Bixby"
+        ]
+      }
+    }
+  },
+  "portable_speakers": {
+    "label": "Portable Speakers",
+    "icon": "radio-outline",
+    "subcategories": [
+      "Ultra-Compact",
+      "Mid-size",
+      "Party Speakers"
+    ],
+    "attributes": {
+      "battery_life": {
+        "label": "Battery Life",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "max_volume": {
+        "label": "Max Volume",
+        "unit": "dB",
+        "filterType": "range"
+      },
+      "total_power": {
+        "label": "Total Output Power",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "stereo": {
+        "label": "Stereo Sound",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "360_sound": {
+        "label": "360° / Omnidirectional",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ip_rating": {
+        "label": "Water / Dust Resistance",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "IPX4",
+          "IPX5",
+          "IPX7",
+          "IP67",
+          "IP68"
+        ]
+      },
+      "bluetooth_version": {
+        "label": "Bluetooth",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "5.0",
+          "5.1",
+          "5.2",
+          "5.3"
+        ]
+      },
+      "multipoint": {
+        "label": "Multipoint (2 devices)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "stereo_pair": {
+        "label": "Stereo Pair (2 speakers)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "aux_input": {
+        "label": "3.5mm Aux Input",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "charging_port": {
+        "label": "Charging Port",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "USB-C",
+          "Micro-USB",
+          "Proprietary"
+        ]
+      },
+      "passthrough_charging": {
+        "label": "Charge Other Devices",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "buoyant": {
+        "label": "Floats on Water",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "g",
+        "filterType": "range"
+      }
+    }
+  },
+  "e_readers": {
+    "label": "E-Readers",
+    "icon": "book-outline",
+    "subcategories": [],
+    "attributes": {
+      "display_size": {
+        "label": "Screen Size",
+        "unit": "inches",
+        "filterType": "range"
+      },
+      "display_type": {
+        "label": "Display Technology",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "E-ink",
+          "E-ink Carta",
+          "E-ink Carta 1300",
+          "E-ink Kaleido (Color)"
+        ]
+      },
+      "resolution": {
+        "label": "Resolution",
+        "unit": "ppi",
+        "filterType": "range"
+      },
+      "backlight": {
+        "label": "Backlight",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "White",
+          "Warm + Cool Adjustable"
+        ]
+      },
+      "auto_brightness": {
+        "label": "Auto Brightness",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "storage": {
+        "label": "Storage",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "8",
+          "16",
+          "32",
+          "64"
+        ]
+      },
+      "battery_life": {
+        "label": "Battery Life",
+        "unit": "weeks",
+        "filterType": "range"
+      },
+      "waterproof": {
+        "label": "Waterproof Rating",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "IPX7",
+          "IPX8"
+        ]
+      },
+      "cellular": {
+        "label": "Free Cellular (No plan)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "stylus_support": {
+        "label": "Stylus / Handwriting",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "audiobooks": {
+        "label": "Audiobook / Bluetooth",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "format_support": {
+        "label": "Format Support",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "EPUB",
+          "MOBI",
+          "PDF",
+          "AZW3",
+          "DOCX",
+          "CBZ/CBR (Comics)"
+        ]
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "g",
+        "filterType": "range"
+      },
+      "page_turn_buttons": {
+        "label": "Physical Page Turn Buttons",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "power_banks": {
+    "label": "Power Banks",
+    "icon": "battery-charging-outline",
+    "subcategories": [],
+    "attributes": {
+      "capacity": {
+        "label": "Capacity",
+        "unit": "mAh",
+        "filterType": "range"
+      },
+      "max_output_wattage": {
+        "label": "Max Output (W)",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "usb_c_pd": {
+        "label": "USB-C PD (Power Delivery)",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "max_input_speed": {
+        "label": "Max Recharge Speed",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "usb_a_ports": {
+        "label": "USB-A Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "usb_c_ports": {
+        "label": "USB-C Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "wireless_charging": {
+        "label": "Wireless Charging (Out)",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "wireless_charging_in": {
+        "label": "Wireless Recharging (In)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "magsafe": {
+        "label": "MagSafe Compatible",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "laptop_charging": {
+        "label": "Charges Laptops",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "g",
+        "filterType": "range"
+      },
+      "airline_safe": {
+        "label": "Airline Safe (<100Wh)",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "graphics_cards": {
+    "label": "Graphics Cards (GPU)",
+    "icon": "hardware-chip-outline",
+    "subcategories": [
+      "NVIDIA",
+      "AMD",
+      "Intel Arc"
+    ],
+    "attributes": {
+      "vram": {
+        "label": "VRAM",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "4",
+          "8",
+          "12",
+          "16",
+          "20",
+          "24",
+          "48"
+        ]
+      },
+      "vram_type": {
+        "label": "VRAM Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "GDDR6",
+          "GDDR6X",
+          "GDDR7",
+          "HBM3"
+        ]
+      },
+      "vram_bandwidth": {
+        "label": "Memory Bandwidth",
+        "unit": "GB/s",
+        "filterType": "range"
+      },
+      "tdp": {
+        "label": "TDP / Power Draw",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "pcie_slot": {
+        "label": "PCIe Interface",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "PCIe 4.0 x16",
+          "PCIe 5.0 x16"
+        ]
+      },
+      "display_outputs": {
+        "label": "Display Outputs",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "3x DP + 1x HDMI",
+          "3x DP 2.1 + 1x HDMI 2.1"
+        ]
+      },
+      "max_4k_displays": {
+        "label": "Max Displays",
+        "unit": null,
+        "filterType": "range"
+      },
+      "ray_tracing": {
+        "label": "Ray Tracing",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "dlss_fsr": {
+        "label": "AI Upscaling",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "DLSS 3.5",
+          "DLSS 4",
+          "FSR 3.1",
+          "FSR 4",
+          "XeSS 2"
+        ]
+      },
+      "connector_type": {
+        "label": "Power Connector",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "2x 8-pin",
+          "3x 8-pin",
+          "16-pin (ATX 3.0)",
+          "16-pin (12VHPWR)"
+        ]
+      },
+      "slot_width": {
+        "label": "Physical Width",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "2-slot",
+          "2.5-slot",
+          "3-slot",
+          "3.5-slot"
+        ]
+      },
+      "card_length": {
+        "label": "Card Length",
+        "unit": "mm",
+        "filterType": "range"
+      }
+    }
+  },
+  "processors_cpu": {
+    "label": "Processors (CPU)",
+    "icon": "server-outline",
+    "subcategories": [
+      "Intel",
+      "AMD"
+    ],
+    "attributes": {
+      "cores": {
+        "label": "Total Cores",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "6",
+          "8",
+          "10",
+          "12",
+          "16",
+          "24",
+          "32"
+        ]
+      },
+      "performance_cores": {
+        "label": "P-Cores (Performance)",
+        "unit": null,
+        "filterType": "range"
+      },
+      "efficiency_cores": {
+        "label": "E-Cores (Efficiency)",
+        "unit": null,
+        "filterType": "range"
+      },
+      "threads": {
+        "label": "Threads",
+        "unit": null,
+        "filterType": "range"
+      },
+      "base_clock": {
+        "label": "Base Clock",
+        "unit": "GHz",
+        "filterType": "range"
+      },
+      "boost_clock": {
+        "label": "Boost Clock",
+        "unit": "GHz",
+        "filterType": "range"
+      },
+      "tdp": {
+        "label": "Base TDP",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "l3_cache": {
+        "label": "L3 Cache",
+        "unit": "MB",
+        "filterType": "range"
+      },
+      "socket": {
+        "label": "Socket",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "LGA1700",
+          "LGA1851",
+          "AM4",
+          "AM5"
+        ]
+      },
+      "memory_type": {
+        "label": "Supported Memory",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "DDR4",
+          "DDR5",
+          "DDR4 + DDR5"
+        ]
+      },
+      "max_memory_speed": {
+        "label": "Max Memory Speed",
+        "unit": "MT/s",
+        "filterType": "range"
+      },
+      "integrated_graphics": {
+        "label": "Integrated Graphics",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "igpu": {
+        "label": "iGPU Model",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "Intel UHD 770",
+          "Intel Arc (Xe2)",
+          "AMD Radeon 890M",
+          "AMD Radeon 780M"
+        ]
+      },
+      "pcie_version": {
+        "label": "PCIe Version",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "PCIe 4.0",
+          "PCIe 5.0"
+        ]
+      },
+      "includes_cooler": {
+        "label": "Cooler Included",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "storage_ssd": {
+    "label": "SSDs & Storage",
+    "icon": "save-outline",
+    "subcategories": [
+      "Internal M.2 NVMe",
+      "Internal SATA SSD",
+      "External SSD",
+      "External HDD",
+      "USB Flash Drives"
+    ],
+    "attributes": {
+      "capacity": {
+        "label": "Capacity",
+        "unit": "TB",
+        "filterType": "multiselect",
+        "options": [
+          "0.25",
+          "0.5",
+          "1",
+          "2",
+          "4",
+          "8",
+          "16"
+        ]
+      },
+      "interface": {
+        "label": "Interface",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "NVMe PCIe 3.0",
+          "NVMe PCIe 4.0",
+          "NVMe PCIe 5.0",
+          "SATA III",
+          "USB 3.2 Gen 2",
+          "USB4 / Thunderbolt 4",
+          "USB 3.2 Gen 2x2"
+        ]
+      },
+      "form_factor": {
+        "label": "Form Factor",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "M.2 2280",
+          "M.2 2242",
+          "2.5\" SATA",
+          "Portable (External)"
+        ]
+      },
+      "seq_read": {
+        "label": "Sequential Read",
+        "unit": "MB/s",
+        "filterType": "range"
+      },
+      "seq_write": {
+        "label": "Sequential Write",
+        "unit": "MB/s",
+        "filterType": "range"
+      },
+      "random_read_iops": {
+        "label": "Random Read (IOPS)",
+        "unit": "K IOPS",
+        "filterType": "range"
+      },
+      "dram_cache": {
+        "label": "DRAM Cache",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "tbw": {
+        "label": "Endurance (TBW)",
+        "unit": "TB",
+        "filterType": "range"
+      },
+      "warranty": {
+        "label": "Warranty",
+        "unit": "years",
+        "filterType": "range"
+      },
+      "nand_type": {
+        "label": "NAND Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "TLC",
+          "QLC",
+          "MLC",
+          "SLC"
+        ]
+      },
+      "heatsink": {
+        "label": "Heatsink Included",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "hardware_encryption": {
+        "label": "Hardware Encryption",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ruggedized": {
+        "label": "Ruggedized (drop-proof)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ip_rating": {
+        "label": "Water / Dust (external)",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "IPX5",
+          "IP65",
+          "IP68"
+        ]
+      }
+    }
+  },
+  "action_cameras": {
+    "label": "Action Cameras",
+    "icon": "camera-outline",
+    "subcategories": [],
+    "attributes": {
+      "max_video_resolution": {
+        "label": "Max Video Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1080p",
+          "4K 30fps",
+          "4K 60fps",
+          "4K 120fps",
+          "5.3K 60fps",
+          "8K"
+        ]
+      },
+      "max_photo_mp": {
+        "label": "Max Photo Resolution",
+        "unit": "MP",
+        "filterType": "range"
+      },
+      "stabilization": {
+        "label": "Stabilization (EIS)",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "Basic EIS",
+          "HyperSmooth",
+          "RockSteady",
+          "FlowState"
+        ]
+      },
+      "waterproof_depth": {
+        "label": "Waterproof (no case)",
+        "unit": "m",
+        "filterType": "range"
+      },
+      "battery_life_4k": {
+        "label": "Battery Life (4K60)",
+        "unit": "min",
+        "filterType": "range"
+      },
+      "screen": {
+        "label": "Front / Rear Screens",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "No Screen",
+          "Rear Screen Only",
+          "Front + Rear Screens",
+          "Touchscreen"
+        ]
+      },
+      "fov": {
+        "label": "Max Field of View",
+        "unit": "°",
+        "filterType": "range"
+      },
+      "slow_motion": {
+        "label": "Slow Motion",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "240fps 1080p",
+          "480fps 1080p",
+          "240fps 4K",
+          "4x Slow"
+        ]
+      },
+      "live_streaming": {
+        "label": "Live Streaming",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "voice_control": {
+        "label": "Voice Control",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "storage_type": {
+        "label": "Storage Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "microSD",
+          "Internal + microSD",
+          "Internal Only"
+        ]
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "g",
+        "filterType": "range"
+      },
+      "accessories_ecosystem": {
+        "label": "Accessories Available",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Mounts",
+          "Dive Housing",
+          "360° Lens Mod",
+          "Microphone"
+        ]
+      }
+    }
+  },
+  "dashcams": {
+    "label": "Dash Cams",
+    "icon": "car-outline",
+    "subcategories": [
+      "Single Channel",
+      "Front + Rear",
+      "Front + Interior (Cabin)"
+    ],
+    "attributes": {
+      "resolution_front": {
+        "label": "Front Cam Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1080p FHD",
+          "1440p 2K",
+          "4K UHD"
+        ]
+      },
+      "resolution_rear": {
+        "label": "Rear Cam Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "1080p FHD",
+          "1440p 2K"
+        ]
+      },
+      "night_vision": {
+        "label": "Night Vision",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Standard",
+          "Starvis Sensor",
+          "Color Night Vision"
+        ]
+      },
+      "fov_front": {
+        "label": "Front FOV",
+        "unit": "°",
+        "filterType": "range"
+      },
+      "hdr": {
+        "label": "HDR / WDR",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "parking_mode": {
+        "label": "Parking Mode",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "gps": {
+        "label": "Built-in GPS",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "speed_camera_alerts": {
+        "label": "Speed Camera Alerts (CA)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "wifi": {
+        "label": "Wi-Fi App Control",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "adas": {
+        "label": "ADAS (Lane / Collision)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "storage": {
+        "label": "Storage Support",
+        "unit": "GB",
+        "filterType": "range"
+      },
+      "loop_recording": {
+        "label": "Loop Recording",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "capacitor": {
+        "label": "Capacitor (vs Battery)",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "drones": {
+    "label": "Drones",
+    "icon": "airplane-outline",
+    "subcategories": [
+      "Consumer Foldable",
+      "Nano / Mini (SFOC Exempt)",
+      "FPV Racing"
+    ],
+    "attributes": {
+      "camera_resolution": {
+        "label": "Camera Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "4K 30fps",
+          "4K 60fps",
+          "5.1K 50fps",
+          "6K",
+          "8K"
+        ]
+      },
+      "sensor_size": {
+        "label": "Camera Sensor Size",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1/3\"",
+          "1/2\"",
+          "1/1.3\"",
+          "1\" Sony",
+          "4/3\""
+        ]
+      },
+      "stabilization": {
+        "label": "Gimbal Axes",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "2-axis",
+          "3-axis"
+        ]
+      },
+      "flight_time": {
+        "label": "Max Flight Time",
+        "unit": "min",
+        "filterType": "range"
+      },
+      "range": {
+        "label": "Max Transmission Range",
+        "unit": "km",
+        "filterType": "range"
+      },
+      "max_speed": {
+        "label": "Max Speed",
+        "unit": "km/h",
+        "filterType": "range"
+      },
+      "wind_resistance": {
+        "label": "Wind Resistance",
+        "unit": "Beaufort",
+        "filterType": "range"
+      },
+      "obstacle_avoidance": {
+        "label": "Obstacle Avoidance",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "Front Only",
+          "Omnidirectional"
+        ]
+      },
+      "foldable": {
+        "label": "Foldable",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "weight_class": {
+        "label": "Weight (TC Registration)",
+        "unit": "g",
+        "filterType": "multiselect",
+        "options": [
+          "<250g (No SFOC)",
+          "250-1000g",
+          ">1000g"
+        ]
+      },
+      "transport_canada_compliant": {
+        "label": "Transport Canada Ready (CA)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "transmission_system": {
+        "label": "Video Transmission",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "OcuSync 3",
+          "O3+",
+          "O4",
+          "DJI RC 2",
+          "Wi-Fi"
+        ]
+      }
+    }
+  },
+  "vr_headsets": {
+    "label": "VR / AR / XR Headsets",
+    "icon": "glasses-outline",
+    "subcategories": [
+      "Standalone VR",
+      "PC VR",
+      "Mixed Reality",
+      "AR Glasses"
+    ],
+    "attributes": {
+      "resolution_per_eye": {
+        "label": "Resolution per Eye",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1832x1920",
+          "2064x2208",
+          "2304x2304",
+          "3840x3840"
+        ]
+      },
+      "refresh_rate": {
+        "label": "Refresh Rate",
+        "unit": "Hz",
+        "filterType": "multiselect",
+        "options": [
+          "72",
+          "90",
+          "120",
+          "144"
+        ]
+      },
+      "fov": {
+        "label": "Field of View",
+        "unit": "°",
+        "filterType": "range"
+      },
+      "standalone": {
+        "label": "Standalone (no PC needed)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "pc_connection": {
+        "label": "PC Tethered Mode",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "processor": {
+        "label": "Processor",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Snapdragon XR2 Gen 1",
+          "Snapdragon XR2 Gen 2",
+          "Apple M2 / R1",
+          "Apple M4 / R2"
+        ]
+      },
+      "ram": {
+        "label": "RAM",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "6",
+          "8",
+          "12",
+          "16"
+        ]
+      },
+      "storage": {
+        "label": "Storage",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "128",
+          "256",
+          "512",
+          "1024"
+        ]
+      },
+      "battery_life": {
+        "label": "Battery Life",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "hand_tracking": {
+        "label": "Hand Tracking",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "eye_tracking": {
+        "label": "Eye Tracking",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "face_tracking": {
+        "label": "Face Tracking",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "passthrough": {
+        "label": "Colour Passthrough (MR)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "g",
+        "filterType": "range"
+      },
+      "content_platform": {
+        "label": "Content Store",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Meta Quest Store",
+          "Apple Vision Store",
+          "Steam VR",
+          "PlayStation VR2"
+        ]
+      }
+    }
+  },
+  "smart_thermostats": {
+    "label": "Smart Thermostats",
+    "icon": "thermometer-outline",
+    "subcategories": [],
+    "attributes": {
+      "compatibility": {
+        "label": "HVAC Compatibility",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Gas Forced Air",
+          "Electric Baseboard (2-wire)",
+          "Heat Pump",
+          "Radiant Floor",
+          "Multi-stage"
+        ]
+      },
+      "c_wire_required": {
+        "label": "C-Wire Required",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "display_type": {
+        "label": "Display",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "No Screen",
+          "LCD",
+          "Colour Touchscreen",
+          "OLED"
+        ]
+      },
+      "learning": {
+        "label": "Learning / AI Scheduling",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "geofencing": {
+        "label": "Geofencing",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "remote_sensor": {
+        "label": "Remote Sensor Support",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "humidity_control": {
+        "label": "Humidity Sensing",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "voice_control": {
+        "label": "Voice Control",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Amazon Alexa",
+          "Google Home",
+          "Apple Siri"
+        ]
+      },
+      "smart_home": {
+        "label": "Smart Home Protocol",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Matter",
+          "Thread",
+          "Zigbee",
+          "Z-Wave",
+          "Proprietary Wi-Fi"
+        ]
+      },
+      "energy_report": {
+        "label": "Energy Reports",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ecobee_canada": {
+        "label": "Canada Energy Rebate Eligible",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "smart_locks": {
+    "label": "Smart Locks",
+    "icon": "lock-closed-outline",
+    "subcategories": [
+      "Deadbolts",
+      "Lever Locks",
+      "Padlocks"
+    ],
+    "attributes": {
+      "unlock_methods": {
+        "label": "Unlock Methods",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "App",
+          "Keypad Code",
+          "Fingerprint",
+          "Physical Key",
+          "NFC Card",
+          "Apple Watch",
+          "Auto-Unlock (Geofence)"
+        ]
+      },
+      "connectivity": {
+        "label": "Connectivity",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Bluetooth",
+          "Wi-Fi",
+          "Z-Wave",
+          "Zigbee",
+          "Thread/Matter"
+        ]
+      },
+      "hub_required": {
+        "label": "Smart Home Hub Required",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "battery_type": {
+        "label": "Battery",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "4x AA",
+          "Rechargeable USB-C",
+          "9V Backup"
+        ]
+      },
+      "battery_life": {
+        "label": "Battery Life",
+        "unit": "months",
+        "filterType": "range"
+      },
+      "low_battery_alert": {
+        "label": "Low Battery Alert",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "tamper_alarm": {
+        "label": "Tamper Alarm",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "auto_lock": {
+        "label": "Auto-Lock Timer",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "user_codes": {
+        "label": "Max User Codes",
+        "unit": null,
+        "filterType": "range"
+      },
+      "temp_codes": {
+        "label": "Temporary / Scheduled Codes",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "smart_home": {
+        "label": "Smart Home Integration",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Apple HomeKit",
+          "Google Home",
+          "Amazon Alexa",
+          "SmartThings",
+          "Matter"
+        ]
+      },
+      "canadian_door_fit": {
+        "label": "Canadian Standard Door Fit",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "portable_ac": {
+    "label": "Portable Air Conditioners",
+    "icon": "snow-outline",
+    "subcategories": [
+      "Single-hose",
+      "Dual-hose",
+      "Windowless / Evaporative"
+    ],
+    "attributes": {
+      "cooling_capacity": {
+        "label": "Cooling Capacity",
+        "unit": "BTU",
+        "filterType": "multiselect",
+        "options": [
+          "6000",
+          "8000",
+          "10000",
+          "12000",
+          "14000"
+        ]
+      },
+      "room_coverage": {
+        "label": "Recommended Room Size",
+        "unit": "sq ft",
+        "filterType": "range"
+      },
+      "energy_efficiency": {
+        "label": "CEER / EER Rating",
+        "unit": null,
+        "filterType": "range"
+      },
+      "hose_type": {
+        "label": "Hose Configuration",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Single-hose",
+          "Dual-hose",
+          "No Hose (Evaporative)"
+        ]
+      },
+      "modes": {
+        "label": "Modes",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Cool",
+          "Fan",
+          "Dehumidify",
+          "Heat (Heat Pump)"
+        ]
+      },
+      "dehumidifier": {
+        "label": "Dehumidifier Function",
+        "unit": "pints/day",
+        "filterType": "range"
+      },
+      "noise_level": {
+        "label": "Noise Level",
+        "unit": "dB",
+        "filterType": "range"
+      },
+      "self_evaporating": {
+        "label": "Self-Evaporating",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "wifi_control": {
+        "label": "Wi-Fi / App Control",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "energy_star": {
+        "label": "Energy Star Certified",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "kg",
+        "filterType": "range"
+      }
+    }
+  },
+  "smart_displays": {
+    "label": "Smart Displays & Hubs",
+    "icon": "tablet-landscape-outline",
+    "subcategories": [
+      "Amazon Echo Show",
+      "Google Nest Hub",
+      "Facebook Portal"
+    ],
+    "attributes": {
+      "screen_size": {
+        "label": "Screen Size",
+        "unit": "inches",
+        "filterType": "range"
+      },
+      "resolution": {
+        "label": "Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "480p",
+          "720p HD",
+          "1080p FHD",
+          "2K"
+        ]
+      },
+      "assistant": {
+        "label": "Voice Assistant",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Amazon Alexa",
+          "Google Assistant"
+        ]
+      },
+      "camera": {
+        "label": "Built-in Camera",
+        "unit": "MP",
+        "filterType": "range"
+      },
+      "camera_privacy": {
+        "label": "Physical Camera Shutter",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "smart_home_protocol": {
+        "label": "Smart Home Support",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Matter",
+          "Thread",
+          "Zigbee",
+          "Z-Wave",
+          "Wi-Fi"
+        ]
+      },
+      "speaker_power": {
+        "label": "Speaker Output",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "video_calling": {
+        "label": "Video Calling Apps",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Alexa Calling",
+          "Google Duo/Meet",
+          "Zoom",
+          "Ring"
+        ]
+      },
+      "streaming": {
+        "label": "Streaming Services (CA)",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Netflix",
+          "Amazon Prime",
+          "Disney+",
+          "YouTube",
+          "Crave"
+        ]
+      }
+    }
+  },
+  "desktops": {
+    "label": "Desktop Computers",
+    "icon": "desktop-outline",
+    "subcategories": [
+      "Gaming Desktops",
+      "All-in-One",
+      "Mini PCs",
+      "Workstations"
+    ],
+    "attributes": {
+      "cpu": {
+        "label": "Processor",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Intel Core Ultra 5",
+          "Intel Core Ultra 7",
+          "Intel Core Ultra 9",
+          "AMD Ryzen 7 9000",
+          "AMD Ryzen 9 9000"
+        ]
+      },
+      "ram": {
+        "label": "RAM",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "8",
+          "16",
+          "32",
+          "64",
+          "128"
+        ]
+      },
+      "storage": {
+        "label": "Primary Storage",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "512",
+          "1024",
+          "2048",
+          "4096"
+        ]
+      },
+      "gpu": {
+        "label": "Dedicated GPU",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None (Integrated)",
+          "RTX 4060",
+          "RTX 4070",
+          "RTX 4080",
+          "RTX 4090",
+          "RX 7800 XT",
+          "RX 7900 XTX"
+        ]
+      },
+      "form_factor": {
+        "label": "Form Factor",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Tower",
+          "Mini-ITX",
+          "Micro-ATX",
+          "All-in-One",
+          "Mini PC"
+        ]
+      },
+      "psu_wattage": {
+        "label": "PSU Wattage",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "wifi_included": {
+        "label": "Wi-Fi Included",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "bluetooth": {
+        "label": "Bluetooth",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "usb_c_front": {
+        "label": "USB-C Front Panel",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "thunderbolt": {
+        "label": "Thunderbolt",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "os": {
+        "label": "OS Included",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Windows 11 Home",
+          "Windows 11 Pro",
+          "No OS"
+        ]
+      },
+      "drive_bays": {
+        "label": "Storage Bays",
+        "unit": null,
+        "filterType": "range"
+      },
+      "upgradeable": {
+        "label": "User Upgradeable",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "webcams": {
+    "label": "Webcams",
+    "icon": "camera-outline",
+    "subcategories": [
+      "Business / Video Calls",
+      "Streaming",
+      "AI-Enhanced"
+    ],
+    "attributes": {
+      "resolution": {
+        "label": "Max Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "720p 30fps",
+          "1080p 30fps",
+          "1080p 60fps",
+          "1440p",
+          "4K 30fps",
+          "4K 60fps"
+        ]
+      },
+      "fov": {
+        "label": "Field of View",
+        "unit": "°",
+        "filterType": "range"
+      },
+      "autofocus": {
+        "label": "Autofocus",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ai_framing": {
+        "label": "AI Auto-Framing",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "background_blur": {
+        "label": "AI Background Blur",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "hdr": {
+        "label": "HDR / Low-light",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "mic_count": {
+        "label": "Built-in Mics",
+        "unit": null,
+        "filterType": "range"
+      },
+      "noise_cancellation": {
+        "label": "Mic Noise Cancellation",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "connection": {
+        "label": "Connection",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "USB-A",
+          "USB-C",
+          "USB-C + USB-A",
+          "Wireless"
+        ]
+      },
+      "privacy_shutter": {
+        "label": "Physical Privacy Shutter",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "teams_zoom_certified": {
+        "label": "Teams / Zoom Certified",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "tripod_mount": {
+        "label": "Tripod Mount",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "mechanical_keyboards": {
+    "label": "Mechanical Keyboards",
+    "icon": "keypad-outline",
+    "subcategories": [
+      "Full Size (100%)",
+      "TKL (80%)",
+      "75%",
+      "65%",
+      "60%"
+    ],
+    "attributes": {
+      "layout": {
+        "label": "Layout / Size",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Full Size 100%",
+          "TKL 80%",
+          "75%",
+          "65%",
+          "60%",
+          "40%"
+        ]
+      },
+      "switch_type": {
+        "label": "Switch Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Cherry MX Red",
+          "Cherry MX Brown",
+          "Cherry MX Blue",
+          "Gateron Yellow",
+          "Gateron G Pro",
+          "Razer Linear",
+          "Razer Tactile",
+          "Proprietary Linear",
+          "Proprietary Tactile",
+          "Optical"
+        ]
+      },
+      "hot_swappable": {
+        "label": "Hot-Swappable Switches",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "connectivity": {
+        "label": "Connectivity",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Wired USB-C",
+          "Wireless 2.4GHz",
+          "Bluetooth",
+          "Tri-mode (all three)"
+        ]
+      },
+      "battery_life": {
+        "label": "Battery Life (wireless)",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "rgb": {
+        "label": "Per-Key RGB",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "backlight": {
+        "label": "Backlight Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "Single Colour",
+          "RGB",
+          "Per-Key RGB"
+        ]
+      },
+      "build_material": {
+        "label": "Build Material",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Plastic",
+          "Aluminum",
+          "Polycarbonate",
+          "Brass Plate"
+        ]
+      },
+      "num_pad": {
+        "label": "Numpad",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "knob": {
+        "label": "Volume Knob / Dial",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "foam_dampened": {
+        "label": "Sound Dampening Foam",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "gasket_mount": {
+        "label": "Gasket Mount",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "os_compatibility": {
+        "label": "OS Compatible",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Windows",
+          "macOS",
+          "Both"
+        ]
+      }
+    }
+  },
+  "gaming_mice": {
+    "label": "Gaming Mice",
+    "icon": "hand-right-outline",
+    "subcategories": [
+      "Wired",
+      "Wireless",
+      "Ambidextrous",
+      "Ergonomic (Right-Handed)"
+    ],
+    "attributes": {
+      "dpi_max": {
+        "label": "Max DPI",
+        "unit": "DPI",
+        "filterType": "range"
+      },
+      "sensor": {
+        "label": "Sensor",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "PixArt PAW3395",
+          "PixArt PAW3370",
+          "Razer Focus Pro",
+          "HERO 25K",
+          "TrueMove Air"
+        ]
+      },
+      "polling_rate": {
+        "label": "Polling Rate",
+        "unit": "Hz",
+        "filterType": "multiselect",
+        "options": [
+          "125",
+          "500",
+          "1000",
+          "4000",
+          "8000"
+        ]
+      },
+      "connectivity": {
+        "label": "Connectivity",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Wired USB-A",
+          "Wired USB-C",
+          "2.4GHz Wireless",
+          "Bluetooth",
+          "Dual Wireless"
+        ]
+      },
+      "battery_life": {
+        "label": "Battery Life (wireless)",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "charging": {
+        "label": "Charging Method",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "USB-C",
+          "Micro-USB",
+          "Qi Wireless",
+          "Charging Dock",
+          "Charging Mousepad"
+        ]
+      },
+      "weight": {
+        "label": "Weight",
+        "unit": "g",
+        "filterType": "range"
+      },
+      "button_count": {
+        "label": "Programmable Buttons",
+        "unit": null,
+        "filterType": "range"
+      },
+      "rgb": {
+        "label": "RGB Lighting",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "hand_orientation": {
+        "label": "Hand Orientation",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Right-Handed",
+          "Ambidextrous"
+        ]
+      },
+      "grip_style": {
+        "label": "Grip Style Optimized",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Palm",
+          "Claw",
+          "Fingertip",
+          "Universal"
+        ]
+      },
+      "onboard_memory": {
+        "label": "Onboard Memory (profiles)",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "baby_monitors": {
+    "label": "Baby Monitors",
+    "icon": "heart-outline",
+    "subcategories": [
+      "Audio Only",
+      "Video",
+      "Smart / AI"
+    ],
+    "attributes": {
+      "type": {
+        "label": "Monitor Type",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Audio Only",
+          "Video (Dedicated Unit)",
+          "Smart (App-based Wi-Fi)",
+          "Dual (App + Dedicated)"
+        ]
+      },
+      "resolution": {
+        "label": "Camera Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "480p",
+          "720p HD",
+          "1080p FHD",
+          "2K"
+        ]
+      },
+      "night_vision": {
+        "label": "Night Vision",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "pan_tilt": {
+        "label": "Remote Pan / Tilt",
+        "unit": "°",
+        "filterType": "range"
+      },
+      "zoom": {
+        "label": "Digital Zoom",
+        "unit": "x",
+        "filterType": "range"
+      },
+      "two_way_audio": {
+        "label": "Two-Way Audio",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ai_cry_detection": {
+        "label": "AI Cry / Sound Detection",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "breathing_monitor": {
+        "label": "Breathing / Movement Monitor",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "temperature_sensor": {
+        "label": "Room Temperature Sensor",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "parent_unit_battery": {
+        "label": "Parent Unit Battery Life",
+        "unit": "hours",
+        "filterType": "range"
+      },
+      "range": {
+        "label": "Range (dedicated unit)",
+        "unit": "m",
+        "filterType": "range"
+      },
+      "cloud_storage": {
+        "label": "Cloud Storage",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "subscription_required": {
+        "label": "Subscription Required",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "smart_home": {
+        "label": "Smart Home Integration",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Amazon Alexa",
+          "Google Home",
+          "Apple HomeKit"
+        ]
+      }
+    }
+  },
+  "nas_storage": {
+    "label": "NAS (Network Storage)",
+    "icon": "server-outline",
+    "subcategories": [
+      "Home / SOHO",
+      "Business / SMB"
+    ],
+    "attributes": {
+      "drive_bays": {
+        "label": "Drive Bays",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "1",
+          "2",
+          "4",
+          "5",
+          "6",
+          "8",
+          "12"
+        ]
+      },
+      "max_raw_storage": {
+        "label": "Max Raw Storage",
+        "unit": "TB",
+        "filterType": "range"
+      },
+      "cpu": {
+        "label": "Processor",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "ARM Quad-Core",
+          "Intel Celeron",
+          "Intel Core i3",
+          "Intel Core i5",
+          "AMD Ryzen"
+        ]
+      },
+      "ram": {
+        "label": "RAM",
+        "unit": "GB",
+        "filterType": "multiselect",
+        "options": [
+          "2",
+          "4",
+          "8",
+          "16",
+          "32"
+        ]
+      },
+      "ram_expandable": {
+        "label": "RAM Expandable",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "lan_ports": {
+        "label": "LAN Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "lan_speed": {
+        "label": "LAN Speed",
+        "unit": "GbE",
+        "filterType": "multiselect",
+        "options": [
+          "1GbE",
+          "2.5GbE",
+          "10GbE"
+        ]
+      },
+      "link_aggregation": {
+        "label": "Link Aggregation",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "usb_ports": {
+        "label": "USB 3.0+ Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "m2_slots": {
+        "label": "M.2 SSD Cache Slots",
+        "unit": null,
+        "filterType": "range"
+      },
+      "pcie_slot": {
+        "label": "PCIe Expansion Slot",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "raid_support": {
+        "label": "RAID Levels",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "JBOD",
+          "RAID 0",
+          "RAID 1",
+          "RAID 5",
+          "RAID 6",
+          "SHR (Synology)",
+          "EXT4/BTRFS"
+        ]
+      },
+      "os": {
+        "label": "NAS OS",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Synology DSM",
+          "QNAP QTS",
+          "Terramaster TOS",
+          "Unraid",
+          "TrueNAS"
+        ]
+      },
+      "transcoding_4k": {
+        "label": "4K Hardware Transcoding",
+        "unit": null,
+        "filterType": "toggle"
+      }
+    }
+  },
+  "docking_stations": {
+    "label": "Docking Stations & USB Hubs",
+    "icon": "git-merge-outline",
+    "subcategories": [
+      "USB-C Hubs",
+      "Thunderbolt Docks",
+      "Multi-Monitor Docks"
+    ],
+    "attributes": {
+      "connection_type": {
+        "label": "Host Connection",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "USB-C",
+          "Thunderbolt 3",
+          "Thunderbolt 4",
+          "Thunderbolt 5",
+          "USB4"
+        ]
+      },
+      "power_delivery": {
+        "label": "Laptop Power Delivery",
+        "unit": "W",
+        "filterType": "range"
+      },
+      "usb_a_ports": {
+        "label": "USB-A Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "usb_c_ports": {
+        "label": "USB-C Data Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "hdmi_ports": {
+        "label": "HDMI Ports",
+        "unit": null,
+        "filterType": "range"
+      },
+      "displayport": {
+        "label": "DisplayPort Outputs",
+        "unit": null,
+        "filterType": "range"
+      },
+      "max_displays": {
+        "label": "Max External Displays",
+        "unit": null,
+        "filterType": "range"
+      },
+      "max_resolution": {
+        "label": "Max Display Resolution",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "4K 60Hz",
+          "4K 144Hz",
+          "5K",
+          "8K",
+          "Dual 4K"
+        ]
+      },
+      "ethernet": {
+        "label": "Ethernet Speed",
+        "unit": "GbE",
+        "filterType": "multiselect",
+        "options": [
+          "1GbE",
+          "2.5GbE",
+          "5GbE",
+          "10GbE"
+        ]
+      },
+      "sd_card": {
+        "label": "SD Card Reader",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "audio_jack": {
+        "label": "Audio Jack",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "cable_length": {
+        "label": "Cable Length",
+        "unit": "cm",
+        "filterType": "range"
+      }
+    }
+  },
+  "smart_refrigerators": {
+    "label": "Smart Refrigerators",
+    "icon": "snow-outline",
+    "subcategories": [
+      "French Door",
+      "Side-by-Side",
+      "Bottom Freezer",
+      "Counter-Depth"
+    ],
+    "attributes": {
+      "capacity_total": {
+        "label": "Total Capacity",
+        "unit": "cu ft",
+        "filterType": "range"
+      },
+      "capacity_fridge": {
+        "label": "Fridge Capacity",
+        "unit": "cu ft",
+        "filterType": "range"
+      },
+      "capacity_freezer": {
+        "label": "Freezer Capacity",
+        "unit": "cu ft",
+        "filterType": "range"
+      },
+      "configuration": {
+        "label": "Configuration",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "French Door",
+          "Side-by-Side",
+          "Top Freezer",
+          "Bottom Freezer",
+          "Counter-Depth French Door"
+        ]
+      },
+      "smart_display": {
+        "label": "Built-in Display / Screen",
+        "unit": "inches",
+        "filterType": "range"
+      },
+      "wifi": {
+        "label": "Wi-Fi / App Control",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "internal_camera": {
+        "label": "Internal Camera (view remotely)",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "ice_maker": {
+        "label": "Ice Maker",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "None",
+          "In-Door Ice",
+          "Craft / Nugget Ice"
+        ]
+      },
+      "water_dispenser": {
+        "label": "Water Dispenser",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "filtered_water": {
+        "label": "Filtered Water",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "door_in_door": {
+        "label": "Door-in-Door",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "energy_star": {
+        "label": "Energy Star Canada",
+        "unit": null,
+        "filterType": "toggle"
+      },
+      "noise_level": {
+        "label": "Noise Level",
+        "unit": "dB",
+        "filterType": "range"
+      },
+      "smart_home": {
+        "label": "Smart Home Integration",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Amazon Alexa",
+          "Google Home",
+          "SmartThings",
+          "LG ThinQ",
+          "Samsung SmartThings"
+        ]
+      },
+      "finish": {
+        "label": "Finish",
+        "unit": null,
+        "filterType": "multiselect",
+        "options": [
+          "Stainless Steel",
+          "Black Stainless",
+          "White",
+          "Fingerprint-Resistant Steel",
+          "Custom Panel Ready"
+        ]
+      }
+    }
+  }
+}

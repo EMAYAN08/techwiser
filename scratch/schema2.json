@@ -1,0 +1,31 @@
+{
+  "Mobile Devices": {
+    "Smartphones": [
+      "Operating System",
+      "Processor (SoC)",
+      "RAM",
+      "Storage Capacity",
+      "Display Size",
+      "Display Panel (OLED, AMOLED)",
+      "Refresh Rate (Hz)",
+      "Battery Capacity (mAh)",
+      "Charging Speed (W)",
+      "Wireless Charging Support",
+      "Camera System (Main, Ultrawide, Telephoto)",
+      "Network Connectivity (5G, mmWave)",
+      "Durability (IP Rating, Screen Glass type)"
+    ],
+    "Tablets": [
+      "Operating System",
+      "Processor",
+      "RAM",
+      "Storage Capacity",
+      "Display Size",
+      "Display Panel",
+      "Stylus Support",
+      "Keyboard Accessory Compatibility",
+      "Cellular Options (5G/LTE)",
+      "Battery Life (Hours)"
+    ]
+  }
+}
