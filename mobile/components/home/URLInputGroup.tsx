@@ -273,7 +273,17 @@ export function URLInputGroup({ onSwipeStart = () => {}, onSwipeEnd = () => {} }
             }],
           }}
         >
-          <Button variant="ghost" title="+ Add product" onPress={addUrl} style={styles.addButton} />
+          <Pressable
+            onPress={addUrl}
+            style={({ pressed }) => [
+              styles.addBtn,
+              { backgroundColor: 'rgba(210, 153, 34, 0.15)', borderColor: 'rgba(210, 153, 34, 0.4)' },
+              pressed && { opacity: 0.7 }
+            ]}
+          >
+            <Feather name="plus" size={14} color="#d29922" />
+            <Text style={[styles.addBtnText, { color: "#d29922" }]}>Add product</Text>
+          </Pressable>
         </Animated.View>
       )}
     </View>
@@ -305,5 +315,19 @@ const styles = StyleSheet.create({
     top: 0, bottom: 12,
     alignItems: "center", justifyContent: "center", width: 32,
   },
-  addButton: { marginTop: 4 },
+  addBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    marginTop: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    minHeight: 48,
+  },
+  addBtnText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
 });

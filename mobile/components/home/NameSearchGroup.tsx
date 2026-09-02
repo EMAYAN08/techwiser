@@ -150,9 +150,9 @@ export function NameSearchGroup() {
   return (
     <Animated.View style={{ opacity: fadeAnim }}>
       {/* Info pill */}
-      <View style={[styles.infoPill, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Feather name="info" size={12} color={colors.textSecondary} />
-        <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+      <View style={[styles.infoPill, { backgroundColor: 'rgba(210, 153, 34, 0.15)', borderColor: 'rgba(210, 153, 34, 0.4)' }]}>
+        <Feather name="info" size={14} color="#d29922" />
+        <Text style={[styles.infoText, { color: "#d29922" }]}>
           Type a product name - we search across all Canadian retailers
         </Text>
       </View>
