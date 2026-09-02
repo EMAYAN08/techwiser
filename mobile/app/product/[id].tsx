@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, Linking } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Linking, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useComparisonStore } from '../../store/useComparisonStore';
 import { Button } from '../../components/ui/Button';
 import { useThemeColors } from '../../constants/Colors';
@@ -12,6 +13,7 @@ export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { recentComparisons, setUrls } = useComparisonStore();
+  const insets = useSafeAreaInsets();
 
   const product = useMemo(() => {
     for (const comp of recentComparisons) {
@@ -43,9 +45,23 @@ export default function ProductDetailScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: product.name, headerBackTitle: 'Back' }} />
-      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <View style={[styles.retailerBadge, { backgroundColor: product.retailerColor || '#333' }]}>
-          <Text style={styles.retailerText}>{product.retailer}</Text>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border, paddingTop: Math.max(insets.top, 24) }]}>
+        <View style={styles.headerTop}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            style={({ pressed }) => [
+              styles.backBtn,
+              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Feather name="arrow-left" size={20} color={colors.text} />
+          </Pressable>
+          <View style={[styles.retailerBadge, { backgroundColor: product.retailerColor || '#333' }]}>
+            <Text style={styles.retailerText}>{product.retailer}</Text>
+          </View>
         </View>
         <Text style={[styles.brand, { color: colors.textSecondary }]}>{product.brand}</Text>
         <Text style={[styles.productName, { color: colors.text }]}>{product.name}</Text>
@@ -154,7 +170,9 @@ const styles = StyleSheet.create({
   errorText: { color: 'rgba(255,255,255,0.6)', marginTop: 16, marginBottom: 24 },
   
   header: { padding: 24, paddingBottom: 16, borderBottomWidth: 1, zIndex: 10 },
-  retailerBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginBottom: 12 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  retailerBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
   retailerText: { color: '#FFF', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
   brand: { color: 'rgba(255,255,255,0.6)', fontSize: 14, marginBottom: 4 },
   productName: { color: '#FFF', fontSize: 24, fontWeight: '700', letterSpacing: -0.5, marginBottom: 8 },
