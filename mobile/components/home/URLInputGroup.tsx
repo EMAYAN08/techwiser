@@ -227,7 +227,7 @@ export function URLInputGroup({ onSwipeStart = () => {}, onSwipeEnd = () => {} }
         <Text style={[styles.headerLabel, { color: colors.textTertiary }]}>Product URLs</Text>
         <View style={styles.headerRight}>
           {urls.length > 2 && (
-            <Text style={[styles.swipeHint, { color: colors.textTertiary }]}>? swipe to remove</Text>
+            <Text style={[styles.swipeHint, { color: colors.textTertiary }]}>Swipe left to remove</Text>
           )}
           {hasAnyContent && (
             <Animated.View style={{ transform: [{ scale: clearScale }] }}>

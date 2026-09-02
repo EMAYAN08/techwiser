@@ -41,7 +41,7 @@ function normalizeTitle(title: string): string {
 // ---------------------------------------------------------------------------
 
 interface ProductHeaderCardProps {
-  product: { id: string; name: string; retailerColor: string; imageUrl?: string | null; price?: string };
+  product: { id: string; name: string; retailer: string; retailerColor: string; imageUrl?: string | null; price?: string };
   isRecommended: boolean;
   index: number;
   compact: boolean;
@@ -154,7 +154,7 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
             ]}
             numberOfLines={1}
           >
-            {product.retailerColor ? "RETAILER" : "STORE"}
+            {product.retailer || "STORE"}
           </Text>
         </View>
       </Card>
