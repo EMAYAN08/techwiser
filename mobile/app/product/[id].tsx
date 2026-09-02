@@ -76,6 +76,46 @@ export default function ProductDetailScreen() {
           </View>
         )}
 
+                {/* Description */}
+        {product.description && (
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <Feather name="align-left" size={18} color={colors.text} />
+              <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0, marginLeft: 8 }]}>Overview</Text>
+            </View>
+            <Text style={[styles.bodyText, { color: colors.textSecondary }]}>{product.description}</Text>
+          </View>
+        )}
+
+        {/* What's In The Box */}
+        {product.whatsInTheBox && product.whatsInTheBox.length > 0 && (
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <Feather name="box" size={18} color={colors.text} />
+              <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0, marginLeft: 8 }]}>What's in the box</Text>
+            </View>
+            <View style={styles.listContainer}>
+              {product.whatsInTheBox.map((item, i) => (
+                <View key={i} style={styles.listItem}>
+                  <View style={[styles.bullet, { backgroundColor: colors.textSecondary }]} />
+                  <Text style={[styles.bodyText, { color: colors.textSecondary }]}>{item}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* User Insights */}
+        {product.userInsights && (
+          <View style={[styles.card, { backgroundColor: colors.surfaceHighlight, borderColor: colors.warning }]}>
+            <View style={styles.sectionHeader}>
+              <Feather name="users" size={18} color={colors.warning} />
+              <Text style={[styles.sectionTitle, { color: colors.warning, marginBottom: 0, marginLeft: 8 }]}>User Insights & Reviews</Text>
+            </View>
+            <Text style={[styles.bodyText, { color: colors.textSecondary }]}>{product.userInsights}</Text>
+          </View>
+        )}
+
         {/* Specs List */}
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Specifications</Text>
@@ -128,6 +168,11 @@ const styles = StyleSheet.create({
   specLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 14, flex: 1, paddingRight: 16 },
   specValue: { color: '#FFF', fontSize: 14, fontWeight: '500', flex: 1, textAlign: 'right' },
 
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  bodyText: { fontSize: 15, lineHeight: 22 },
+  listContainer: { marginTop: 4 },
+  listItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6, paddingRight: 12 },
+  bullet: { width: 4, height: 4, borderRadius: 2, marginTop: 9, marginRight: 8 },
   footer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: '#0A0A0A',
@@ -137,3 +182,4 @@ const styles = StyleSheet.create({
     borderTopColor: '#2A2A2A',
   }
 });
+

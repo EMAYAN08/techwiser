@@ -13,32 +13,35 @@ export async function generateComparison(
 URL: ${d.url}
 Title: ${d.title}
 RETAILER SOURCE TEXT:
-${d.retailerText.substring(0, 8000)}
+${d.retailerText.substring(0, 10000)}
 ------------------------
 `).join('\n\n');
 
   const systemPrompt = `
-You are an expert and experienced technical advisor. You are given scraped technical data from 2-3 products.
-The data comes from the Retailer website.
+You are an elite, highly experienced consumer electronics reviewer and technical analyst. 
+Your objective is to provide the ultimate product comparison to help users make a confident purchasing decision.
+You are given scraped text data from retailer websites for 2-3 products.
 
-YOUR INSTRUCTIONS:
-1. Identify the single best-fitting subcategory for these products from the provided JSON Taxonomy (e.g. "Smartphones").
-2. Extract EVERY SINGLE technical specification provided. Do not omit any details.
-3. Group these extracted specs exactly according to the \`Attribute_Groups\` listed in the JSON Taxonomy for that subcategory. If a spec doesn't fit any group, place it in an "Other Specifications" group.
-4. Compare the products to determine the winner for each spec (if applicable).
-5. Provide a short AI summary (2-3 sentences) comparing the products overall, factoring in the extracted overviews and product descriptions.
-6. Identify 3-5 key differences.
-7. Extract the exact current price of each product from the retailer text. If not found, use 'N/A'.
+--- YOUR INSTRUCTIONS ---
+1. RAW DATA EXTRACTION: Deeply parse the retailer text. Extract EVERY SINGLE technical specification, the exact current price, the general product description/overview, and the "what's in the box" (included accessories) list. Do not drop any data.
+2. ENRICH & SYNTHESIZE (THINKING PHASE): 
+   - Identify the products being compared.
+   - Using your vast internal knowledge base and reasoning, fill in any critical missing specifications that the retailer omitted (e.g., if the retailer doesn't mention RAM but you know it).
+   - Analyze real-world user feedback, common complaints, durability issues, and praises for these specific products. 
+   - Synthesize a comprehensive "userInsights" summary for each product (e.g., "Users love the battery life but note the camera struggles in low light. Pro tip: buy a case because the back scratches easily.").
+3. CATEGORIZE: Identify the best-fitting subcategory for these products from the provided JSON Taxonomy.
+4. STRUCTURE & COMPARE: Group the extracted specs exactly according to the \`Attribute_Groups\` listed in the Taxonomy. Determine the winner for each spec.
+5. FINAL VERDICT: Provide a short, punchy AI summary (2-3 sentences) comparing the products overall. Identify 3-5 key differences.
 
 --- JSON TAXONOMY ---
 ${schemaJson}
----------------------
 
+--- RESPONSE FORMAT ---
 You must output ONLY valid JSON matching this exact structure:
 {
   "category": "string (the main category)",
   "subcategory": "string (the subcategory)",
-  "aiSummary": "string",
+  "aiSummary": "string (overall comparison summary)",
   "keyDifferences": [
     {
       "label": "string (e.g., 'Battery Endurance')",
@@ -47,15 +50,18 @@ You must output ONLY valid JSON matching this exact structure:
   ],
   "products": [
     {
-      "name": "string",
+      "name": "string (clean product name)",
       "brand": "string",
-      "retailer": "string",
+      "retailer": "string (store name)",
       "url": "string (pass back the URL)",
-      "price": "string",
+      "price": "string (the exact price scraped, e.g. '$999.99' or 'N/A')",
+      "description": "string (a rich 2-3 sentence overview of the product)",
+      "whatsInTheBox": ["item 1", "item 2", "item 3"],
+      "userInsights": "string (a highly helpful summary of real user reviews, common issues, and bonus tips)",
       "badges": ["string", "string"],
-      "aiSummary": "string",
+      "aiSummary": "string (product-specific summary)",
       "rawSpecs": [
-        { "label": "string (e.g. 'Refresh Rate')", "value": "string (e.g. '120Hz' or '-')" }
+        { "label": "string", "value": "string" }
       ]
     }
   ],
@@ -75,7 +81,7 @@ You must output ONLY valid JSON matching this exact structure:
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite',
+      model: 'gemini-3.1-flash',
       contents: fullPrompt,
       config: {
         responseMimeType: 'application/json',
@@ -92,4 +98,3 @@ You must output ONLY valid JSON matching this exact structure:
     throw err;
   }
 }
-

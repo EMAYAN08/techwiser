@@ -19,6 +19,9 @@ export interface Product {
   price?: string;
   url: string;
   imageUrl?: string | null;
+  description?: string;
+  whatsInTheBox?: string[];
+  userInsights?: string;
   specs: Spec[];
   rawSpecs?: Array<{ label: string; value: string }>;
   aiSummary?: string;
@@ -297,3 +300,4 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
     }),
   clearActiveComparison: () => set({ activeComparison: null }),
 }));
+
