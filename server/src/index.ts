@@ -90,6 +90,7 @@ app.post('/api/compare', async (req: Request, res: Response) => {
       "staples": "#CC0000",
       "thesource": "#E4002B",
       "costco": "#005BAA",
+      "walmart": "#0071CE",
     };
 
     comparisonResult.products = comparisonResult.products.map((p: any, i: number) => {

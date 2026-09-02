@@ -61,6 +61,7 @@ export const RETAILER_COLORS: Record<string, string> = {
   "staples": "#CC0000",
   "thesource": "#E4002B",
   "costco": "#005BAA",
+  "walmart": "#0071CE",
 };
 
 export function getRetailerColor(retailerName?: string, fallback: string = "#555555") {
