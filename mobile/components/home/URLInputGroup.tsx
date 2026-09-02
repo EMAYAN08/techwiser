@@ -12,7 +12,7 @@ import { Button } from "../ui/Button";
 
 const SUPPORTED_DOMAINS = [
   "bestbuy.ca", "amazon.ca", "canadacomputers.com",
-  "memoryexpress.com", "newegg.ca", "staples.ca", "thesource.ca",
+  "memoryexpress.com", "newegg.ca", "staples.ca", "thesource.ca", "costco.ca"
 ];
 
 type ValidationState = "idle" | "valid" | "invalid";
