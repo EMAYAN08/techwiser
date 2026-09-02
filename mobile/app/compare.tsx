@@ -501,8 +501,8 @@ export default function CompareScreen() {
     if (!productA) return [] as Array<{ key: string; rows: DetailedSpecRow[] }>;
     
     // 1) Support new backend schema format (groupedSpecs)
-    const specsSource = (activeComparison as any).essentialSpecs || (activeComparison as any).groupedSpecs;
-    if (specsSource) {
+    if ((activeComparison as any).groupedSpecs) {
+      const specsSource = (activeComparison as any).groupedSpecs;
       const gs = specsSource;
       return Object.entries(gs).map(([key, specsArray]: [string, any]) => {
         const rows = specsArray.map((spec: any) => {
@@ -1040,5 +1040,6 @@ const styles = StyleSheet.create({
 
   detailedCta: { marginTop: 24 },
 });
+
 
 

@@ -76,6 +76,7 @@ async def scrape_endpoint(req: ScrapeRequest):
                     
                     payload = {
                         "name": name,
+                        "price": data.get("salePrice") or data.get("regularPrice"),
                         "overview": short_desc,
                         "description": long_desc,
                         "whatsIncluded": whats_in_box,
@@ -105,11 +106,29 @@ async def scrape_endpoint(req: ScrapeRequest):
         # BestBuy React State Check
         if "bestbuy.ca" in req.url or "bestbuy.com" in req.url:
             match = re.search(r'window\.__INITIAL_STATE__\s*=\s*(\{.*?\});', response.text)
+            explicit_price = None
+            price_match = re.search(r'class=["\'][^"\']*priceView-hero-price[^"\']*["\'][^>]*>.*?\$\s*([0-9,.]+)', response.text)
+            if price_match:
+                explicit_price = f"${price_match.group(1)}"
+                
             if match:
                 try:
                     data = json.loads(match.group(1))
                     target_data = data.get("product", data)
+                    
+                    if not explicit_price:
+                        try:
+                            price_val = target_data.get('price', {}).get('currentPrice')
+                            if price_val:
+                                explicit_price = f"${price_val}"
+                        except:
+                            pass
+                            
                     clean_data = prune_json(target_data)
+                    
+                    if explicit_price and isinstance(clean_data, dict):
+                        clean_data["__EXPLICIT_SCRAPED_PRICE__"] = explicit_price
+                        
                     raw_json = json.dumps(clean_data)
                     return {
                         "status": "success",
@@ -122,6 +141,11 @@ async def scrape_endpoint(req: ScrapeRequest):
         # Fallback for generic sites
         soup = BeautifulSoup(response.text, 'html.parser')
         
+        explicit_price = None
+        price_match = re.search(r'class=["\'][^"\']*priceView-hero-price[^"\']*["\'][^>]*>.*?\$\s*([0-9,.]+)', response.text)
+        if price_match:
+            explicit_price = f"${price_match.group(1)}"
+            
         # Kill all script and style elements
         for script in soup(["script", "style", "noscript", "svg"]):
             script.extract()
@@ -131,6 +155,9 @@ async def scrape_endpoint(req: ScrapeRequest):
         # Remove massive whitespace gaps
         text = re.sub(r'\s+', ' ', text)
         
+        if explicit_price:
+            text = f"META PRICE FOUND: {explicit_price}\n\n" + text
+            
         return {
             "status": "success",
             "type": "text",
@@ -140,5 +167,3 @@ async def scrape_endpoint(req: ScrapeRequest):
     except Exception as e:
         print(f"Scrape failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
