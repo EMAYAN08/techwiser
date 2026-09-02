@@ -76,11 +76,12 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
 
   return (
     <Animated.View style={[styles.headerWrapper, { opacity: fade, transform: [{ translateY: slide }] }]}>
-      <Pressable onPress={onPress}>
+      <Pressable onPress={onPress} style={{ flex: 1 }}>
       <Card
         borderRadius={16}
         style={[
           styles.headerCard,
+          { flex: 1 },
           compact && styles.headerCardCompact,
           isRecommended && { borderColor: colors.success, borderWidth: 1 },
         ]}

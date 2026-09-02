@@ -49,7 +49,7 @@ function ComparisonCard({ comparison, index }: { comparison: Comparison; index: 
         style={[styles.cardWrapper, { transform: [{ scale }] }]}
       >
         <Card borderRadius={12} style={styles.card}>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>{comparison.title}</Text>
+          <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{comparison.title}</Text>
           <Text style={[styles.cardDate, { color: colors.textTertiary }]}>{comparison.date}</Text>
         </Card>
       </AnimatedPressable>

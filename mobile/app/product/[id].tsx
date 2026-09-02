@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, Linking } from 'react-native';
 import { View, Text, ScrollView, StyleSheet, Linking, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -46,9 +45,6 @@ export default function ProductDetailScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: product.name, headerBackTitle: 'Back' }} />
-      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <View style={[styles.retailerBadge, { backgroundColor: product.retailerColor || '#333' }]}>
-          <Text style={styles.retailerText}>{product.retailer}</Text>
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border, paddingTop: Math.max(insets.top, 24) }]}>
         <View style={styles.headerTop}>
           <Pressable
@@ -174,7 +170,6 @@ const styles = StyleSheet.create({
   errorText: { color: 'rgba(255,255,255,0.6)', marginTop: 16, marginBottom: 24 },
   
   header: { padding: 24, paddingBottom: 16, borderBottomWidth: 1, zIndex: 10 },
-  retailerBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginBottom: 12 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
   backBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   retailerBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },

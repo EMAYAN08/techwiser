@@ -239,14 +239,10 @@ const MOCK_RESULT_3_PRODUCT: ComparisonResult = {
 // ---------------------------------------------------------------------------
 
 export const useComparisonStore = create<ComparisonStore>((set) => ({
-  urls: [
-    "https://www.bestbuy.ca/en-ca/product/iphone-15-pro/16802913",
-    "https://www.bestbuy.ca/en-ca/product/galaxy-s24-ultra/16803012",
-    "",
-  ],
+  urls: ["", ""],
   isLoading: false,
   loadingMessage: "Analyzing products...",
-  activeComparison: MOCK_RESULT,
+  activeComparison: null,
   recentComparisons: [
     {
       id: "1",
