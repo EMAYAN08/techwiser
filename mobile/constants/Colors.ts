@@ -51,3 +51,25 @@ export function useThemeColors() {
     colors: isDark ? palette.dark : palette.light,
   };
 }
+
+export const RETAILER_COLORS: Record<string, string> = {
+  "bestbuy": "#003B64",
+  "amazon": "#FF9900",
+  "canadacomputers": "#E31837",
+  "memoryexpress": "#005BAA",
+  "newegg": "#E2241B",
+  "staples": "#CC0000",
+  "thesource": "#E4002B",
+  "costco": "#005BAA",
+};
+
+export function getRetailerColor(retailerName?: string, fallback: string = "#555555") {
+  if (!retailerName) return fallback;
+  const normalized = retailerName.toLowerCase().replace(/[^a-z]/g, "");
+  for (const [key, color] of Object.entries(RETAILER_COLORS)) {
+    if (normalized.includes(key)) {
+      return color;
+    }
+  }
+  return fallback;
+}

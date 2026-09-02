@@ -13,7 +13,7 @@ import {
 import { ArrowLeft } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useThemeColors } from "../../constants/Colors";
+import { useThemeColors, getRetailerColor } from "../../constants/Colors";
 import { Typography } from "../../constants/Typography";
 import { getCategoryIcon } from "./CategoryIcon";
 import { normalizeTitle } from "./utils";
@@ -80,7 +80,7 @@ function ProductTile({ product, colors, isPagerItem }: ProductTileProps) {
           <View
             style={[
               styles.tileDot,
-              { backgroundColor: product.retailerColor || colors.textTertiary },
+              { backgroundColor: getRetailerColor(product.retailer) || colors.textTertiary },
             ]}
           />
           <Text

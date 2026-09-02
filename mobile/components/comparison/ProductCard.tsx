@@ -1,8 +1,8 @@
-﻿import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '../ui/Card';
-import { useThemeColors } from '../../constants/Colors';
+import { useThemeColors, getRetailerColor } from '../../constants/Colors';
 
 function AIBadge({ label }: { label: string }) {
   const { colors } = useThemeColors();
@@ -30,13 +30,15 @@ export function ProductCard({ product, index }: { product: any; index: number })
     ]).start();
   }, [index]);
 
+  const color = getRetailerColor(product.retailer);
+
   return (
     <Animated.View style={[{ flex: 1, marginHorizontal: 4 }, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
       <Pressable onPress={() => router.push(`/product/${product.id}`)}>
         <Card borderRadius={12} style={styles.productCard}>
-          <View style={[styles.badge, { borderColor: product.retailerColor }]}>
-            <Text style={[styles.badgeText, { color: product.retailerColor }]}>
-              {product.retailer.toUpperCase()}
+          <View style={[styles.badge, { borderColor: color }]}>
+            <Text style={[styles.badgeText, { color: color }]}>
+              {product.retailer?.toUpperCase()}
             </Text>
           </View>
           <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>

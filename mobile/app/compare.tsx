@@ -16,7 +16,7 @@ import * as Haptics from "expo-haptics";
 import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info } from "lucide-react-native";
 
 import { useComparisonStore } from "../store/useComparisonStore";
-import { useThemeColors } from "../constants/Colors";
+import { useThemeColors, getRetailerColor } from "../constants/Colors";
 import { Typography } from "../constants/Typography";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -142,15 +142,15 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
           style={[
             styles.retailerPill,
             compact && styles.retailerPillCompact,
-            { borderColor: product.retailerColor || colors.border },
+            { borderColor: getRetailerColor(product.retailer) || colors.border },
           ]}
         >
-          <View style={[styles.retailerDot, { backgroundColor: product.retailerColor || colors.textTertiary }]} />
+          <View style={[styles.retailerDot, { backgroundColor: getRetailerColor(product.retailer) || colors.textTertiary }]} />
           <Text
             style={[
               styles.retailerText,
               compact && styles.retailerTextCompact,
-              { color: product.retailerColor || colors.textSecondary },
+              { color: getRetailerColor(product.retailer) || colors.textSecondary },
             ]}
             numberOfLines={1}
           >
@@ -513,7 +513,7 @@ export default function CompareScreen() {
           const values = products.map((p, pIndex) => ({
             productId: p.id,
             productName: p.name,
-            productColor: p.retailerColor,
+            productColor: getRetailerColor(p.retailer),
             displayValue: spec.values && spec.values[pIndex] ? spec.values[pIndex] : "�",
             numericValue: null,
             isWinner: spec.winnerIndex === pIndex,
@@ -537,7 +537,7 @@ export default function CompareScreen() {
           return {
             productId: p.id,
             productName: p.name,
-            productColor: p.retailerColor,
+            productColor: getRetailerColor(p.retailer),
             displayValue: s?.value ?? "�",
             numericValue: typeof s?.numericValue === "number" ? s.numericValue : null,
             isWinner: !!s?.isWinner,
@@ -618,7 +618,7 @@ export default function CompareScreen() {
         <View style={{ marginTop: 20 }}>
           <KeyDifferencesCard
             differences={decoratedDifferences}
-            productColors={products.map((p) => p.retailerColor || colors.primary)}
+            productColors={products.map((p) => getRetailerColor(p.retailer) || colors.primary)}
           />
         </View>
       )}

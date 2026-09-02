@@ -14,7 +14,7 @@ import * as Haptics from "expo-haptics";
 import { ArrowLeft, Trophy } from "lucide-react-native";
 
 import { useComparisonStore, Product } from "../../store/useComparisonStore";
-import { useThemeColors } from "../../constants/Colors";
+import { useThemeColors, getRetailerColor } from "../../constants/Colors";
 import { Typography, Fonts } from "../../constants/Typography";
 
 const ROW_MIN_HEIGHT = 56;
@@ -154,7 +154,7 @@ export function DetailedSpreadsheet() {
                 <Text style={[styles.headerPageName, { color: colors.text }]} numberOfLines={2}>{normalizeTitle(p.name)}</Text>
                 {p.retailer && (
                   <View style={styles.headerPageRetailer}>
-                    <View style={[styles.headerPageDot, { backgroundColor: p.retailerColor || colors.textTertiary }]} />
+                    <View style={[styles.headerPageDot, { backgroundColor: getRetailerColor(p.retailer) || colors.textTertiary }]} />
                     <Text style={[styles.headerPageRetailerText, { color: colors.textSecondary }]} numberOfLines={1}>{p.retailer.toUpperCase()}</Text>
                   </View>
                 )}

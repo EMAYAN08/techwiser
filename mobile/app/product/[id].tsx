@@ -6,7 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useComparisonStore } from '../../store/useComparisonStore';
 import { Button } from '../../components/ui/Button';
-import { useThemeColors } from '../../constants/Colors';
+import { useThemeColors, getRetailerColor } from '../../constants/Colors';
 
 export default function ProductDetailScreen() {
   const { colors } = useThemeColors();
@@ -59,7 +59,7 @@ export default function ProductDetailScreen() {
           >
             <Feather name="arrow-left" size={20} color={colors.text} />
           </Pressable>
-          <View style={[styles.retailerBadge, { backgroundColor: product.retailerColor || '#333' }]}>
+          <View style={[styles.retailerBadge, { backgroundColor: getRetailerColor(product.retailer) || '#333' }]}>
             <Text style={styles.retailerText}>{product.retailer}</Text>
           </View>
         </View>
