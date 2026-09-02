@@ -32,36 +32,58 @@ export async function scrapeUrl(url: string): Promise<{ rawText: string; imageUr
       rawText = "Failed to extract text.";
     }
 
-    if (!imageUrl) {
-      try {
-        const htmlResponse = await fetch(url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
-            'Accept': 'text/html'
-          },
-          signal: AbortSignal.timeout(6000)
-        });
-        const html = await htmlResponse.text();
-        
-        const priceMatch = html.match(/<meta\s+(?:property|name)=["'](?:product:price:amount|price)["']\s+content=["']([^"']+)["']/i);
-        if (priceMatch && priceMatch[1]) {
-          const currencyMatch = html.match(/<meta\s+(?:property|name)=["'](?:product:price:currency|currency)["']\s+content=["']([^"']+)["']/i);
-          const currency = currencyMatch && currencyMatch[1] ? currencyMatch[1] : "$";
-          priceText = currency + priceMatch[1];
-        }
-
-        const ogImageMatch = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i);
-        if (ogImageMatch && ogImageMatch[1]) {
-          imageUrl = ogImageMatch[1];
-        } else {
-          const mdImgMatch = rawText.match(/!\[.*?\]\((https:\/\/[^\)]+(?:jpg|png|webp|jpeg)[^\)]*)\)/i);
-          if (mdImgMatch && mdImgMatch[1]) {
-            imageUrl = mdImgMatch[1];
-          }
-        }
-      } catch (imgError: any) {
-        console.log(`Image fallback warning for ${url}:`, imgError.message);
+    try {
+      const htmlResponse = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
+          'Accept': 'text/html'
+        },
+        signal: AbortSignal.timeout(6000)
+      });
+      const html = await htmlResponse.text();
+      
+      const priceMatch = html.match(/<meta\s+(?:property|name)=["'](?:product:price:amount|price)["']\s+content=["']([^"']+)["']/i);
+      if (priceMatch && priceMatch[1]) {
+        const currencyMatch = html.match(/<meta\s+(?:property|name)=["'](?:product:price:currency|currency)["']\s+content=["']([^"']+)["']/i);
+        const currency = currencyMatch && currencyMatch[1] ? currencyMatch[1] : "$";
+        priceText = currency + priceMatch[1];
       }
+
+      if (!priceText) {
+        const jsonLdMatches = html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+        for (const match of jsonLdMatches) {
+          try {
+            const ld = JSON.parse(match[1]);
+            const items = Array.isArray(ld) ? ld : [ld];
+            for (const item of items) {
+              if (item.offers && item.offers.price) {
+                priceText = "$" + item.offers.price;
+                break;
+              }
+            }
+          } catch (e) {}
+          if (priceText) break;
+        }
+      }
+
+      if (!priceText && url.includes("bestbuy")) {
+        const bbPriceMatch = html.match(/class=["'][^"']*priceView-hero-price[^"']*["'][^>]*>.*?\$([0-9,.]+)/i);
+        if (bbPriceMatch && bbPriceMatch[1]) {
+          priceText = "$" + bbPriceMatch[1];
+        }
+      }
+
+      const ogImageMatch = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i);
+      if (ogImageMatch && ogImageMatch[1]) {
+        imageUrl = ogImageMatch[1];
+      } else if (!imageUrl) {
+        const mdImgMatch = rawText.match(/!\[.*?\]\((https:\/\/[^\)]+(?:jpg|png|webp|jpeg)[^\)]*)\)/i);
+        if (mdImgMatch && mdImgMatch[1]) {
+          imageUrl = mdImgMatch[1];
+        }
+      }
+    } catch (imgError: any) {
+      console.log(`HTML fallback warning for ${url}:`, imgError.message);
     }
 
     let finalTitle = title;

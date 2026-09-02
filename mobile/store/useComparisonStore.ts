@@ -30,6 +30,7 @@ export interface Product {
 
 export interface ComparisonResult {
   groupedSpecs?: any;
+  essentialSpecs?: any;
   id: string;
   products: Product[];
   keyDifferences: Array<{ label: string; values: string[] }>;
@@ -300,4 +301,5 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
     }),
   clearActiveComparison: () => set({ activeComparison: null }),
 }));
+
 

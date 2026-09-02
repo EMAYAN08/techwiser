@@ -27,10 +27,10 @@ You are given scraped text data from retailer websites for 2-3 products.
 2. ENRICH & SYNTHESIZE (THINKING PHASE): 
    - Identify the products being compared.
    - Using your vast internal knowledge base and reasoning, fill in any critical missing specifications that the retailer omitted (e.g., if the retailer doesn't mention RAM but you know it).
-   - Analyze real-world user feedback, common complaints, durability issues, and praises for these specific products. 
+   - Analyze real-world user feedback from reliable sources, common complaints, durability issues, and praises for these specific products. 
    - Synthesize a comprehensive "userInsights" summary for each product (e.g., "Users love the battery life but note the camera struggles in low light. Pro tip: buy a case because the back scratches easily.").
-3. CATEGORIZE: Identify the best-fitting subcategory for these products from the provided JSON Taxonomy.
-4. STRUCTURE & COMPARE: Group the extracted specs exactly according to the \`Attribute_Groups\` listed in the Taxonomy. Determine the winner for each spec.
+3. ADVANCED DEEP DIVE SPECS: For the "groupedSpecs" output, provide an EXHAUSTIVE, MASSIVE list of advanced technical specifications targeting power users. Dig deep into your knowledge base for things like aperture, sensor size, memory bandwidth, dimming zones, specific Wi-Fi bands, cooling systems, build materials, etc. Group them exactly according to the \`Attribute_Groups\` listed in the Taxonomy.
+4. ESSENTIAL SPECS SUMMARY: For the "essentialSpecs" output, provide ONLY the top 5-7 most important, high-level consumer specifications (e.g., Screen Size, Processor, RAM, Battery Life, Storage) that a casual buyer needs to see at a glance.
 5. FINAL VERDICT: Provide a short, punchy AI summary (2-3 sentences) comparing the products overall. Identify 3-5 key differences.
 
 --- JSON TAXONOMY ---
@@ -59,12 +59,18 @@ You must output ONLY valid JSON matching this exact structure:
       "whatsInTheBox": ["item 1", "item 2", "item 3"],
       "userInsights": "string (a highly helpful summary of real user reviews, common issues, and bonus tips)",
       "badges": ["string", "string"],
-      "aiSummary": "string (product-specific summary)",
-      "rawSpecs": [
-        { "label": "string", "value": "string" }
-      ]
+      "aiSummary": "string (product-specific summary)"
     }
   ],
+  "essentialSpecs": {
+    "Key Specifications": [
+      {
+        "label": "Spec Name (e.g., Screen Size)",
+        "values": ["product 1 value", "product 2 value"],
+        "winnerIndex": "number (0 or 1, or -1 for draw)"
+      }
+    ]
+  },
   "groupedSpecs": {
     "Group Name from Taxonomy": [
       {
@@ -81,7 +87,7 @@ You must output ONLY valid JSON matching this exact structure:
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash-lite',
+      model: 'gemini-3.1-flash',
       contents: fullPrompt,
       config: {
         responseMimeType: 'application/json',

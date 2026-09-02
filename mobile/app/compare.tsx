@@ -41,13 +41,14 @@ function normalizeTitle(title: string): string {
 // ---------------------------------------------------------------------------
 
 interface ProductHeaderCardProps {
-  product: { name: string; retailerColor: string; imageUrl?: string | null; price?: string };
+  product: { id: string; name: string; retailerColor: string; imageUrl?: string | null; price?: string };
   isRecommended: boolean;
   index: number;
   compact: boolean;
+  onPress?: () => void;
 }
 
-function ProductHeaderCard({ product, isRecommended, index, compact }: ProductHeaderCardProps) {
+function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: ProductHeaderCardProps) {
   const { colors } = useThemeColors();
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(8)).current;
@@ -75,6 +76,7 @@ function ProductHeaderCard({ product, isRecommended, index, compact }: ProductHe
 
   return (
     <Animated.View style={[styles.headerWrapper, { opacity: fade, transform: [{ translateY: slide }] }]}>
+      <Pressable onPress={onPress}>
       <Card
         borderRadius={16}
         style={[
@@ -152,6 +154,7 @@ function ProductHeaderCard({ product, isRecommended, index, compact }: ProductHe
           </Text>
         </View>
       </Card>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -498,8 +501,9 @@ export default function CompareScreen() {
     if (!productA) return [] as Array<{ key: string; rows: DetailedSpecRow[] }>;
     
     // 1) Support new backend schema format (groupedSpecs)
-    if ((activeComparison as any).groupedSpecs) {
-      const gs = (activeComparison as any).groupedSpecs;
+    const specsSource = (activeComparison as any).essentialSpecs || (activeComparison as any).groupedSpecs;
+    if (specsSource) {
+      const gs = specsSource;
       return Object.entries(gs).map(([key, specsArray]: [string, any]) => {
         const rows = specsArray.map((spec: any) => {
           const values = products.map((p, pIndex) => ({
@@ -679,6 +683,7 @@ export default function CompareScreen() {
             index={i}
             isRecommended={recommendedIndex === i}
             compact={products.length >= 3}
+            onPress={() => router.push('/product/' + p.id)}
           />
         ))}
       </View>
@@ -1035,4 +1040,5 @@ const styles = StyleSheet.create({
 
   detailedCta: { marginTop: 24 },
 });
+
 
