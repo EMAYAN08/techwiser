@@ -107,10 +107,10 @@ export default function ProductDetailScreen() {
 
         {/* User Insights */}
         {product.userInsights && (
-          <View style={[styles.card, { backgroundColor: colors.surfaceHighlight, borderColor: colors.warning }]}>
+          <View style={[styles.card, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary }]}>
             <View style={styles.sectionHeader}>
-              <Feather name="users" size={18} color={colors.warning} />
-              <Text style={[styles.sectionTitle, { color: colors.warning, marginBottom: 0, marginLeft: 8 }]}>User Insights & Reviews</Text>
+              <Feather name="users" size={18} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.primary, marginBottom: 0, marginLeft: 8 }]}>User Insights & Reviews</Text>
             </View>
             <Text style={[styles.bodyText, { color: colors.textSecondary }]}>{product.userInsights}</Text>
           </View>
@@ -182,4 +182,5 @@ const styles = StyleSheet.create({
     borderTopColor: '#2A2A2A',
   }
 });
+
 
