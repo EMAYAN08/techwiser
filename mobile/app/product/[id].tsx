@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -43,17 +43,15 @@ export default function ProductDetailScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: product.name, headerBackTitle: 'Back' }} />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={[styles.retailerBadge, { backgroundColor: product.retailerColor || '#333' }]}>
-            <Text style={styles.retailerText}>{product.retailer}</Text>
-          </View>
-          <Text style={[styles.brand, { color: colors.textSecondary }]}>{product.brand}</Text>
-          <Text style={[styles.productName, { color: colors.text }]}>{product.name}</Text>
-          {product.price && <Text style={[styles.price, { color: colors.success }]}>{product.price}</Text>}
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+        <View style={[styles.retailerBadge, { backgroundColor: product.retailerColor || '#333' }]}>
+          <Text style={styles.retailerText}>{product.retailer}</Text>
         </View>
+        <Text style={[styles.brand, { color: colors.textSecondary }]}>{product.brand}</Text>
+        <Text style={[styles.productName, { color: colors.text }]}>{product.name}</Text>
+        {product.price && <Text style={[styles.price, { color: colors.success }]}>{product.price}</Text>}
+      </View>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
         {/* AI Summary */}
         {product.aiSummary && (
@@ -130,11 +128,20 @@ export default function ProductDetailScreen() {
       </ScrollView>
 
       <View style={[styles.footer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-        <Button
-          title="Compare with another"
-          variant="primary"
-          onPress={handleCompare}
-        />
+        <View style={{ flex: 1 }}>
+          <Button
+            title="View Product"
+            variant="ghost"
+            onPress={() => Linking.openURL(product.url)}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Button
+            title="Compare"
+            variant="primary"
+            onPress={handleCompare}
+          />
+        </View>
       </View>
     </View>
   );
@@ -142,11 +149,11 @@ export default function ProductDetailScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0A0A0A' },
-  content: { padding: 24, paddingBottom: 100 },
+  content: { padding: 24, paddingTop: 16, paddingBottom: 100 },
   center: { flex: 1, backgroundColor: '#0A0A0A', alignItems: 'center', justifyContent: 'center', padding: 24 },
   errorText: { color: 'rgba(255,255,255,0.6)', marginTop: 16, marginBottom: 24 },
   
-  header: { marginBottom: 24 },
+  header: { padding: 24, paddingBottom: 16, borderBottomWidth: 1, zIndex: 10 },
   retailerBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginBottom: 12 },
   retailerText: { color: '#FFF', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
   brand: { color: 'rgba(255,255,255,0.6)', fontSize: 14, marginBottom: 4 },
@@ -175,6 +182,7 @@ const styles = StyleSheet.create({
   bullet: { width: 4, height: 4, borderRadius: 2, marginTop: 9, marginRight: 8 },
   footer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
+    flexDirection: 'row', gap: 12,
     backgroundColor: '#0A0A0A',
     padding: 24,
     paddingTop: 16,
