@@ -563,6 +563,10 @@ function SpecRow({
     inputRange: [0, 1],
     outputRange: [colors.border, colors.primary],
   });
+  const cardRadius = selectedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [14, 0], // Sharp corners when selected!
+  });
   const leftAccentOpacity = selectedValue.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 1],
@@ -591,7 +595,7 @@ function SpecRow({
       <Animated.View
         style={[
           styles.rowCard,
-          { backgroundColor: cardBg, borderColor: cardBorderColor },
+          { backgroundColor: cardBg, borderColor: cardBorderColor, borderRadius: cardRadius },
         ]}
       >
         {/* Left accent border — AI verdict style */}
@@ -629,14 +633,14 @@ function SpecRow({
                 inputRange: [0, 1],
                 outputRange: [
                   isWinner ? colors.successMuted : colors.surface,
-                  colors.primaryMuted,
+                  'transparent',
                 ],
               }),
               borderColor: selectedValue.interpolate({
                 inputRange: [0, 1],
                 outputRange: [
                   isWinner ? colors.success : colors.border,
-                  colors.primary,
+                  'transparent',
                 ],
               }),
             },
@@ -898,3 +902,5 @@ const styles = StyleSheet.create({
   },
   emptyButton: { marginTop: 24, alignSelf: "stretch" },
 });
+
+
