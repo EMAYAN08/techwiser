@@ -13,7 +13,7 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from '../utils/haptics';
-import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info } from "lucide-react-native";
+import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info, Share } from "lucide-react-native";
 
 import { useComparisonStore } from "../store/useComparisonStore";
 import { useThemeColors, getRetailerColor, formatRetailerName } from "../constants/Colors";
@@ -22,6 +22,7 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { getCategoryIcon } from "../components/comparison/CategoryIcon";
 import { type DetailedSpecRow, type DetailedSpecValue } from "../components/comparison/SpecBarRow";
+import { exportComparisonToPDF } from "../utils/exportPDF";
 
 const OVERVIEW_KEY = "Overview";
 
@@ -601,6 +602,12 @@ export default function CompareScreen() {
     router.back();
   };
 
+  const handleExport = async () => {
+    if (!activeComparison) return;
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await exportComparisonToPDF(activeComparison);
+  };
+
   const handleSelectCategory = (cat: string) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedCategory(cat);
@@ -668,7 +675,18 @@ export default function CompareScreen() {
             <ArrowLeft size={20} color={colors.text} strokeWidth={2.25} />
           </Pressable>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Comparison</Text>
-          <View style={styles.headerSpacer} />
+          <Pressable
+            onPress={handleExport}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Export to PDF"
+            style={({ pressed }) => [
+              styles.backBtn,
+              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Share size={18} color={colors.text} strokeWidth={2.25} />
+          </Pressable>
         </View>
 
         {/* STICKY: product cards */}
