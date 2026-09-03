@@ -1,4 +1,4 @@
-﻿import React, { useRef } from "react";
+import React, { useRef } from "react";
 import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from '../../utils/haptics';
@@ -77,14 +77,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#1E1E1E",
     padding: 4,
-    marginBottom: 24,
   },
   tabWrapper: {
     flex: 1,
   },
   tab: {
-    flex: 1,
-    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 8,
