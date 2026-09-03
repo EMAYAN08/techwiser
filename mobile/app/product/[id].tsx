@@ -10,7 +10,7 @@ import { useThemeColors, getRetailerColor } from '../../constants/Colors';
 import { exportProductToPDF } from '../../utils/exportPDF';
 
 export default function ProductDetailScreen() {
-  const { colors } = useThemeColors();
+  const { colors, isDark } = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { recentComparisons, setUrls } = useComparisonStore();
@@ -45,7 +45,7 @@ export default function ProductDetailScreen() {
 
   const handleExport = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await exportProductToPDF(product);
+    await exportProductToPDF(product, isDark);
   };
 
   return (

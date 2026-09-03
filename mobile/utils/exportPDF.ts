@@ -1,7 +1,7 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
-export async function exportComparisonToPDF(comparison: any) {
+export async function exportComparisonToPDF(comparison: any, isDark: boolean = true) {
   const { products, keyDifferences, aiSummary } = comparison;
 
   // Extract groupedSpecs for categories
@@ -9,6 +9,28 @@ export async function exportComparisonToPDF(comparison: any) {
   
   // Create columns based on number of products
   const colWidth = 100 / (products.length + 1);
+
+  const themeVars = isDark ? `
+    --bg: #0A0A0A;
+    --surface: #141414;
+    --border: #2A2A2A;
+    --text: #FFFFFF;
+    --text-sec: rgba(255,255,255,0.6);
+    --ai: #A259FF;
+    --ai-bg: rgba(162, 89, 255, 0.1);
+    --success: #10B981;
+    --success-bg: rgba(16, 185, 129, 0.1);
+  ` : `
+    --bg: #F9FAFB;
+    --surface: #FFFFFF;
+    --border: #E5E7EB;
+    --text: #111827;
+    --text-sec: #4B5563;
+    --ai: #A259FF;
+    --ai-bg: #f4f0ff;
+    --success: #10B981;
+    --success-bg: #e6f4ea;
+  `;
 
   // Generate HTML for Products Header
   const headerHtml = `
@@ -19,7 +41,7 @@ export async function exportComparisonToPDF(comparison: any) {
           ${p.imageUrl ? `<img src="${p.imageUrl}" class="product-image" />` : ''}
           <div class="product-name">${p.name}</div>
           <div class="product-price">${p.price || ''}</div>
-          <div class="retailer">${p.retailer}</div>
+          <div class="retailer-badge">${p.retailer}</div>
         </div>
       `).join('')}
     </div>
@@ -30,16 +52,18 @@ export async function exportComparisonToPDF(comparison: any) {
     <div class="section">
       <h2 class="section-title">Overview</h2>
       <div class="ai-summary">
-        <strong>AI Verdict:</strong> ${aiSummary}
+        <strong>AI Verdict:</strong><br/>${aiSummary}
       </div>
       ${keyDifferences && keyDifferences.length > 0 ? `
-        <div class="differences">
-          <h3>Key Differences</h3>
-          ${keyDifferences.map((diff: any) => `
-            <div class="diff-row">
+        <div class="differences card">
+          <h3 style="margin-top:0; color: var(--text-sec); font-size: 12px; text-transform: uppercase;">Key Differences</h3>
+          ${keyDifferences.map((diff: any, i: number) => `
+            <div class="diff-row" style="${i === keyDifferences.length - 1 ? 'border-bottom: none;' : ''}">
               <div class="diff-label" style="width: ${colWidth}%;">${diff.label}</div>
-              ${diff.values.map((val: string) => `
-                <div class="diff-value" style="width: ${colWidth}%;">${val}</div>
+              ${diff.values.map((val: string, idx: number) => `
+                <div class="diff-value" style="width: ${colWidth}%; ${diff.winnerIndex === idx ? 'color: var(--success); font-weight: bold;' : ''}">
+                  ${val}
+                </div>
               `).join('')}
             </div>
           `).join('')}
@@ -57,16 +81,16 @@ export async function exportComparisonToPDF(comparison: any) {
         
         ${headerHtml}
         
-        <div class="specs-table">
-          ${specs.map((spec: any) => `
-            <div class="spec-row">
+        <div class="specs-table card">
+          ${specs.map((spec: any, i: number) => `
+            <div class="spec-row" style="${i === specs.length - 1 ? 'border-bottom: none;' : ''}">
               <div class="spec-label" style="width: ${colWidth}%;">${spec.label}</div>
-              ${products.map((p: any, i: number) => {
-                const val = spec.values && spec.values[i] ? spec.values[i] : "—";
-                const isWinner = spec.winnerIndex === i;
+              ${products.map((p: any, idx: number) => {
+                const val = spec.values && spec.values[idx] ? spec.values[idx] : "—";
+                const isWinner = spec.winnerIndex === idx;
                 return `
                   <div class="spec-value ${isWinner ? 'winner' : ''}" style="width: ${colWidth}%;">
-                    ${val} ${isWinner ? '<span class="winner-badge">WINNER</span>' : ''}
+                    ${val} ${isWinner ? '<br/><span class="winner-badge">WINNER</span>' : ''}
                   </div>
                 `;
               }).join('')}
@@ -81,20 +105,25 @@ export async function exportComparisonToPDF(comparison: any) {
     <html>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
+          :root {
+            ${themeVars}
+          }
           body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: #111;
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: var(--text);
             margin: 0;
             padding: 40px;
-            background: #fff;
+            background: var(--bg);
           }
           .title {
             text-align: center;
             font-size: 24px;
-            font-weight: bold;
+            font-weight: 700;
             margin-bottom: 30px;
-            color: #000;
+            color: var(--text);
+            letter-spacing: -0.5px;
           }
           .page-break {
             page-break-before: always;
@@ -104,17 +133,17 @@ export async function exportComparisonToPDF(comparison: any) {
           }
           .section-title {
             font-size: 20px;
-            font-weight: bold;
+            font-weight: 700;
             margin-bottom: 20px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 8px;
-            color: #333;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            color: var(--text);
           }
           .product-row {
             display: flex;
             flex-direction: row;
             margin-bottom: 20px;
-            border-bottom: 2px solid #000;
+            border-bottom: 2px solid var(--border);
             padding-bottom: 15px;
           }
           .col {
@@ -129,30 +158,53 @@ export async function exportComparisonToPDF(comparison: any) {
             max-height: 80px;
             object-fit: contain;
             margin-bottom: 10px;
+            background: #fff;
+            border-radius: 8px;
+            padding: 4px;
           }
           .product-name {
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 4px;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--text);
           }
           .product-price {
-            color: #555;
+            color: var(--success);
             font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
           }
-          .retailer {
-            font-size: 11px;
-            color: #888;
+          .retailer-badge {
+            font-size: 9px;
+            color: #fff;
             text-transform: uppercase;
-            margin-top: 4px;
+            font-weight: 700;
+            background: #333;
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 4px;
+          }
+          .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
           }
           .ai-summary {
-            background: #f5f7fa;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #2383E2;
-            margin-bottom: 20px;
-            line-height: 1.5;
+            background: var(--ai-bg);
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--ai);
+            margin-bottom: 24px;
+            line-height: 1.6;
             font-size: 14px;
+            color: var(--text-sec);
+          }
+          .ai-summary strong {
+            color: var(--ai);
+            display: block;
+            margin-bottom: 6px;
+            font-size: 15px;
           }
           .differences {
             margin-top: 20px;
@@ -160,30 +212,31 @@ export async function exportComparisonToPDF(comparison: any) {
           .diff-row, .spec-row {
             display: flex;
             flex-direction: row;
-            border-bottom: 1px solid #eee;
-            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            padding: 14px 0;
           }
           .diff-label, .spec-label {
-            font-weight: bold;
+            font-weight: 600;
             font-size: 13px;
-            color: #555;
+            color: var(--text-sec);
           }
           .diff-value, .spec-value {
             font-size: 13px;
-            line-height: 1.4;
+            line-height: 1.5;
+            color: var(--text);
           }
           .winner {
-            color: #0c8a38;
+            color: var(--success);
             font-weight: 600;
           }
           .winner-badge {
             display: inline-block;
-            background: #e6f4ea;
-            color: #0c8a38;
+            background: var(--success-bg);
+            color: var(--success);
             font-size: 10px;
             padding: 2px 6px;
             border-radius: 4px;
-            margin-top: 4px;
+            margin-top: 6px;
           }
         </style>
       </head>
@@ -208,91 +261,152 @@ export async function exportComparisonToPDF(comparison: any) {
   }
 }
 
-export async function exportProductToPDF(product: any) {
+export async function exportProductToPDF(product: any, isDark: boolean = true) {
   const specsList = product.rawSpecs && product.rawSpecs.length > 0 ? product.rawSpecs : (product.specs || []);
+
+  const themeVars = isDark ? `
+    --bg: #0A0A0A;
+    --surface: #141414;
+    --border: #2A2A2A;
+    --text: #FFFFFF;
+    --text-sec: rgba(255,255,255,0.6);
+    --ai: #A259FF;
+    --ai-bg: rgba(162, 89, 255, 0.1);
+    --success: #10B981;
+    --primary: #2383E2;
+    --primary-bg: rgba(35, 131, 226, 0.1);
+  ` : `
+    --bg: #F9FAFB;
+    --surface: #FFFFFF;
+    --border: #E5E7EB;
+    --text: #111827;
+    --text-sec: #4B5563;
+    --ai: #A259FF;
+    --ai-bg: #f4f0ff;
+    --success: #10B981;
+    --primary: #2383E2;
+    --primary-bg: #f0f7ff;
+  `;
 
   const html = `
     <html>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
+          :root {
+            ${themeVars}
+          }
           body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: #111;
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: var(--text);
             margin: 0;
             padding: 40px;
-            background: #fff;
+            background: var(--bg);
           }
           .title {
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 28px;
+            font-weight: 700;
             margin-bottom: 8px;
-            color: #000;
+            color: var(--text);
+            letter-spacing: -0.5px;
           }
           .brand {
             font-size: 14px;
-            color: #666;
+            color: var(--text-sec);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 4px;
+            font-weight: 600;
           }
           .price-retailer {
-            font-size: 16px;
-            color: #0c8a38;
-            font-weight: bold;
+            font-size: 18px;
+            color: var(--success);
+            font-weight: 700;
             margin-bottom: 30px;
           }
           .retailer-badge {
-            background: #eee;
-            color: #333;
-            font-size: 11px;
-            padding: 2px 6px;
+            background: #333;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
             border-radius: 4px;
-            margin-left: 8px;
+            margin-left: 12px;
             vertical-align: middle;
+            text-transform: uppercase;
           }
-          .section {
-            margin-bottom: 30px;
+          .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
           }
           .section-title {
             font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 12px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 6px;
-            color: #333;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text);
           }
           .ai-summary {
-            background: #f4f0ff;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #9b51e0;
-            margin-bottom: 20px;
-            line-height: 1.5;
+            background: var(--ai-bg);
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--ai);
+            line-height: 1.6;
             font-size: 14px;
+            color: var(--text-sec);
+            border: 1px solid rgba(162, 89, 255, 0.2);
+          }
+          .ai-title {
+            color: var(--ai);
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 8px;
           }
           .spec-row {
             display: flex;
             flex-direction: row;
-            border-bottom: 1px solid #eee;
-            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            padding: 14px 0;
           }
           .spec-label {
-            font-weight: bold;
-            font-size: 13px;
-            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-sec);
             width: 40%;
             padding-right: 20px;
           }
           .spec-value {
-            font-size: 13px;
+            font-size: 14px;
+            font-weight: 500;
             width: 60%;
-            line-height: 1.4;
+            line-height: 1.5;
+            color: var(--text);
+            text-align: right;
           }
           .list-item {
-            margin-bottom: 6px;
-            font-size: 14px;
-            line-height: 1.5;
+            margin-bottom: 8px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-sec);
+          }
+          .insight-box {
+            background: var(--primary-bg);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(35, 131, 226, 0.2);
+            border-left: 4px solid var(--primary);
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-sec);
+          }
+          .insight-title {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 8px;
           }
         </style>
       </head>
@@ -304,41 +418,39 @@ export async function exportProductToPDF(product: any) {
         </div>
         
         ${product.aiSummary ? `
-          <div class="section">
-            <div class="section-title">AI Summary</div>
-            <div class="ai-summary">${product.aiSummary}</div>
+          <div class="ai-summary">
+            <div class="ai-title">AI Summary</div>
+            <div>${product.aiSummary}</div>
           </div>
         ` : ''}
         
         ${product.description ? `
-          <div class="section">
+          <div class="card">
             <div class="section-title">Overview</div>
-            <div style="font-size: 14px; line-height: 1.5;">${product.description}</div>
+            <div style="font-size: 15px; line-height: 1.6; color: var(--text-sec);">${product.description}</div>
           </div>
         ` : ''}
         
         ${product.whatsInTheBox && product.whatsInTheBox.length > 0 ? `
-          <div class="section">
+          <div class="card">
             <div class="section-title">What's in the Box</div>
-            <ul>
+            <ul style="padding-left: 20px; margin: 0;">
               ${product.whatsInTheBox.map((item: string) => `<li class="list-item">${item}</li>`).join('')}
             </ul>
           </div>
         ` : ''}
         
         ${product.userInsights ? `
-          <div class="section">
-            <div class="section-title">User Insights</div>
-            <div style="font-size: 14px; line-height: 1.5; background: #f0f7ff; padding: 15px; border-left: 4px solid #2383E2;">
-              ${product.userInsights}
-            </div>
+          <div class="insight-box" style="margin-bottom: 20px;">
+            <div class="insight-title">User Insights</div>
+            <div>${product.userInsights}</div>
           </div>
         ` : ''}
         
-        <div class="section">
+        <div class="card">
           <div class="section-title">Specifications</div>
-          ${specsList.map((spec: any) => `
-            <div class="spec-row">
+          ${specsList.map((spec: any, i: number) => `
+            <div class="spec-row" style="${i === specsList.length - 1 ? 'border-bottom: none;' : ''}">
               <div class="spec-label">${spec.label}</div>
               <div class="spec-value">${spec.value}</div>
             </div>

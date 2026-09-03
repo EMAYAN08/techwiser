@@ -605,7 +605,7 @@ export default function CompareScreen() {
   const handleExport = async () => {
     if (!activeComparison) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await exportComparisonToPDF(activeComparison);
+    await exportComparisonToPDF(activeComparison, isDark);
   };
 
   const handleSelectCategory = (cat: string) => {
