@@ -9,7 +9,7 @@ import {
 import { Tabs } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Zap, BookOpen, Settings as SettingsIcon, LucideIcon } from "lucide-react-native";
+import { Zap, BookOpen, Settings as SettingsIcon, Tag, LucideIcon } from "lucide-react-native";
 import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from "../../constants/Colors";
 
@@ -26,6 +26,7 @@ interface TabDef {
 const TABS: TabDef[] = [
   { name: "index", label: "Home", Icon: Zap },
   { name: "library", label: "Library", Icon: BookOpen },
+  { name: "price", label: "Price", Icon: Tag },
   { name: "settings", label: "Settings", Icon: SettingsIcon },
 ];
 
@@ -234,6 +235,7 @@ export default function TabLayout() {
     >
       <Tabs.Screen name="index" options={{ title: "Home" }} />
       <Tabs.Screen name="library" options={{ title: "Library" }} />
+      <Tabs.Screen name="price" options={{ title: "Price" }} />
       <Tabs.Screen name="settings" options={{ title: "Settings" }} />
     </Tabs>
   );
