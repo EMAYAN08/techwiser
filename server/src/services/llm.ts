@@ -92,12 +92,31 @@ ${schemaJson}
           required: ["name", "brand", "retailer", "url", "price", "description", "whatsInTheBox", "userInsights", "badges", "aiSummary", "rawSpecs"]
         }
       },
-      groupedSpecs: {
-        type: Type.OBJECT,
-        description: "A map of Group Name to an array of specification objects. Keys should map dynamically to the taxonomy categories or newly created ones.",
+      groupedSpecsList: {
+        type: Type.ARRAY,
+        description: "An array of spec groups. Map specs to the taxonomy categories or create new ones.",
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            groupName: { type: Type.STRING, description: "Name of the spec group" },
+            specs: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  label: { type: Type.STRING },
+                  values: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  winnerIndex: { type: Type.NUMBER, description: "0 for first product, 1 for second, -1 for draw" }
+                },
+                required: ["label", "values", "winnerIndex"]
+              }
+            }
+          },
+          required: ["groupName", "specs"]
+        }
       }
     },
-    required: ["category", "subcategory", "aiSummary", "keyDifferences", "products", "groupedSpecs"]
+    required: ["category", "subcategory", "aiSummary", "keyDifferences", "products", "groupedSpecsList"]
   };
 
   try {
@@ -114,7 +133,17 @@ ${schemaJson}
     if (!content) throw new Error("No content received from Gemini");
     
     let cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(cleanContent);
+    const parsed = JSON.parse(cleanContent);
+    
+    if (parsed.groupedSpecsList) {
+      parsed.groupedSpecs = {};
+      for (const group of parsed.groupedSpecsList) {
+        parsed.groupedSpecs[group.groupName] = group.specs;
+      }
+      delete parsed.groupedSpecsList;
+    }
+    
+    return parsed;
   } catch (err: any) {
     console.error("Gemini LLM Error:", err.message || err);
     throw err;
