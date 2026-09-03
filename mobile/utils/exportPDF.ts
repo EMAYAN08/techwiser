@@ -4,8 +4,35 @@ import * as Sharing from 'expo-sharing';
 export async function exportComparisonToPDF(comparison: any, isDark: boolean = true) {
   const { products, keyDifferences, aiSummary } = comparison;
 
-  // Extract groupedSpecs for categories
-  let groupedSpecs = comparison.groupedSpecs || {};
+  // 1) Support new backend schema format
+  let groupedSpecs = comparison.groupedSpecs;
+
+  // 2) Fallback to old mock format (product.specs)
+  if (!groupedSpecs && products[0]?.specs) {
+    groupedSpecs = {};
+    const productA = products[0];
+    for (let i = 0; i < productA.specs.length; i++) {
+      const lead = productA.specs[i];
+      if (!lead || lead.category === 'Overview') continue;
+      
+      if (!groupedSpecs[lead.category]) {
+        groupedSpecs[lead.category] = [];
+      }
+      
+      const values = products.map((p: any) => p.specs[i]?.value || "—");
+      
+      // Figure out winner from the old format
+      const winnerIndex = products.findIndex((p: any) => p.specs[i]?.isWinner);
+      
+      groupedSpecs[lead.category].push({
+        label: lead.label,
+        values,
+        winnerIndex: winnerIndex >= 0 ? winnerIndex : -1
+      });
+    }
+  }
+
+  groupedSpecs = groupedSpecs || {};
   
   // Create columns based on number of products
   const colWidth = 100 / (products.length + 1);
@@ -109,6 +136,10 @@ export async function exportComparisonToPDF(comparison: any, isDark: boolean = t
         <style>
           :root {
             ${themeVars}
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           body {
             font-family: 'Inter', -apple-system, sans-serif;
@@ -296,6 +327,10 @@ export async function exportProductToPDF(product: any, isDark: boolean = true) {
         <style>
           :root {
             ${themeVars}
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           body {
             font-family: 'Inter', -apple-system, sans-serif;
