@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, Animated, StyleSheet } from "react-native";
 import { useThemeColors } from "../../constants/Colors";
+import { Button } from "../ui/Button";
 
 const MESSAGES = [
   "Fetching product pages...",
@@ -9,7 +10,7 @@ const MESSAGES = [
   "Calculating the winner...",
 ];
 
-export function LoadingOverlay({ visible }: { visible: boolean }) {
+export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCancel?: () => void }) {
   const { colors, isDark } = useThemeColors();
   const [msgIndex, setMsgIndex] = useState(0);
   const msgOpacity = useRef(new Animated.Value(1)).current;
@@ -67,7 +68,13 @@ export function LoadingOverlay({ visible }: { visible: boolean }) {
         <Animated.Text style={[styles.message, { opacity: msgOpacity, color: colors.text }]}>
           {MESSAGES[msgIndex]}
         </Animated.Text>
-        <Text style={[styles.sub, { color: colors.textTertiary }]}>Powered by Gemini AI</Text>
+        <Text style={[styles.sub, { color: colors.textTertiary, marginBottom: 32 }]}>Powered by Gemini AI</Text>
+        
+        {onCancel && (
+          <View style={styles.cancelContainer}>
+            <Button title="Cancel" variant="outline" onPress={onCancel} />
+          </View>
+        )}
       </View>
     </View>
   );
@@ -81,7 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     zIndex: 100,
   },
-  content: { alignItems: "center" },
+  content: { alignItems: "center", width: "100%", paddingHorizontal: 40 },
   dots: { flexDirection: "row", marginBottom: 24 },
   dot: {
     width: 6,
@@ -102,4 +109,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.30)",
     letterSpacing: 0.5,
   },
+  cancelContainer: {
+    width: 140,
+  }
 });

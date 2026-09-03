@@ -38,10 +38,17 @@ export default function Home() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const panelFade = useRef(new Animated.Value(1)).current;
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1, duration: 400, useNativeDriver: true,
     }).start();
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   const handleModeChange = (mode: InputMode) => {
@@ -54,11 +61,21 @@ export default function Home() {
   const validUrls = urls.filter((url: string) => url.trim().length > 0);
   const canCompare = validUrls.length >= 2 && inputMode === "url";
 
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setLoading(false);
+  };
+
   const handleCompare = async () => {
     if (!canCompare || isLoading) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true, "Fetching product pages...");
     
+    abortControllerRef.current = new AbortController();
+
     try {
       const apiUrl = process.env.EXPO_PUBLIC_API_URL || "https://techwiser.onrender.com";
       console.log(`Sending comparison to ${apiUrl}/api/compare`);
@@ -69,6 +86,7 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ urls: validUrls }),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
@@ -90,10 +108,16 @@ export default function Home() {
         result: data,
       });
       setLoading(false);
+      abortControllerRef.current = null;
       router.push("/compare");
     } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log("Comparison request cancelled by user.");
+        return;
+      }
       console.log("Backend fetch failed:", err.message);
       setLoading(false);
+      abortControllerRef.current = null;
       
       let msg = err.message || "Failed to extract specs.";
       if (msg.includes("Network request timed out") || msg.includes("Failed to fetch")) {
@@ -106,7 +130,7 @@ export default function Home() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <LoadingOverlay visible={isLoading} />
+      <LoadingOverlay visible={isLoading} onCancel={handleCancel} />
       
       {/* FIXED TOP SECTION */}
       <View style={{ 
