@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { useComparisonStore, Comparison } from '../../store/useComparisonStore';
 import { useRouter } from 'expo-router';
 import { Card } from '../ui/Card';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from '../../constants/Colors';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);

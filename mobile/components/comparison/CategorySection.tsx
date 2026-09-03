@@ -8,7 +8,7 @@ import {
   UIManager,
   View,
 } from "react-native";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from "../../constants/Colors";
 import { Typography } from "../../constants/Typography";
 import { SpecBarRow, type DetailedSpecRow } from "./SpecBarRow";

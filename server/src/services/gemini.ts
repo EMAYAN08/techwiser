@@ -1,4 +1,4 @@
-﻿import { GoogleGenAI, Type, Schema } from '@google/genai';
+import { GoogleGenAI, Type, Schema } from '@google/genai';
 
 export async function generateComparison(scrapedData: {url: string, rawText: string}[]): Promise<unknown> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -17,7 +17,7 @@ INSTRUCTIONS:
 4. Extract numeric values (e.g., 18 for "18 GB") for comparison if possible.
 5. Provide a 2-3 sentence AI summary comparing them.
 6. Provide exactly 1-2 badges per product (e.g., "Best Overall", "Best Value", "Best Battery").
-7. Extract the retailer name (e.g., "bestbuy", "amazon", "canadacomputers") based on the URL domain.
+7. Extract the retailer name based on the URL domain. Use exact casing from this list: "Best Buy", "Amazon", "Canada Computers", "Memory Express", "Newegg", "Staples", "The Source", "Costco", "Walmart".
 8. Output strictly conforming to the requested JSON schema.
 `;
 

@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, Animated, PanResponder, Pressable,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from "../../constants/Colors";
 import { Feather } from "@expo/vector-icons";
 import { useComparisonStore } from "../../store/useComparisonStore";

@@ -11,9 +11,9 @@ import {
   type ListRenderItemInfo,
 } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../../utils/haptics';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useThemeColors, getRetailerColor } from "../../constants/Colors";
+import { useThemeColors, getRetailerColor, formatRetailerName } from "../../constants/Colors";
 import { Typography } from "../../constants/Typography";
 import { getCategoryIcon } from "./CategoryIcon";
 import { normalizeTitle } from "./utils";
@@ -41,7 +41,7 @@ interface ProductTileProps {
 
 function ProductTile({ product, colors, isPagerItem }: ProductTileProps) {
   const Icon = getCategoryIcon(product.name);
-  const retailer = product.retailer ? product.retailer.toUpperCase() : "";
+  const retailer = product.retailer ? formatRetailerName(product.retailer).toUpperCase() : "";
 
   return (
     <View

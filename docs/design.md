@@ -38,7 +38,7 @@
   - Flat base, but interactive rows. Winning specs receive a subtle green background tint (`rgba(46,160,67,0.1)`) and a sharp 2px green left-border.
 
 ## 5. Animation System
-- **Library:** `react-native-reanimated` v3 (Do not use basic React Native Animated).
+- **Library:** React Native `Animated` API (Avoid `react-native-reanimated` as it causes issues).
 - **Mount Animations:** Fade and slide up (`translateY: 10 -> 0`) over 400ms using smooth spring physics.
 - **Lists:** Staggered entrance for product cards and spec rows (50ms delay per index).
 - **Loading States:** No static spinners. Use elegant, shimmering skeletons that match the exact shape of the incoming data, or a lively pulsating logo for the main AI extraction wait time.

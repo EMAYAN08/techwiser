@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, Linking, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../utils/haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useComparisonStore } from '../../store/useComparisonStore';
 import { Button } from '../../components/ui/Button';

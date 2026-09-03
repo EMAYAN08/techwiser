@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { TextInput, StyleSheet, TextInputProps, View, Pressable, Animated } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Card } from './Card';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from '../../constants/Colors';
 
 type ValidationState = 'idle' | 'valid' | 'invalid';

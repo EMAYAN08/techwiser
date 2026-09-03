@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Animated, Pressable } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../utils/haptics';
 import { useThemeColors } from "../constants/Colors";
 import { Button } from "../components/ui/Button";
 

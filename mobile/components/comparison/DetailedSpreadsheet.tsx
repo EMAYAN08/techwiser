@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../../utils/haptics';
 import { ArrowLeft, Trophy } from "lucide-react-native";
 
 import { useComparisonStore, Product } from "../../store/useComparisonStore";

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View, Text, Animated, Pressable } from "react-native";
 import { useRouter } from "expo-router";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../../utils/haptics';
 import { URLInputGroup } from "../../components/home/URLInputGroup";
 import { RecentComparisons } from "../../components/home/RecentComparisons";
 import { LoadingOverlay } from "../../components/home/LoadingOverlay";

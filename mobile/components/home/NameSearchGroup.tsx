@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, StyleSheet, Pressable, Animated, ScrollView,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../../utils/haptics';
 import { Card } from "../ui/Card";
 import { useThemeColors } from "../../constants/Colors";
 

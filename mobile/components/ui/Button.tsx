@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { StyleSheet, Text, Pressable, PressableProps, Animated, View, StyleProp, ViewStyle } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from '../../constants/Colors';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);

@@ -74,3 +74,28 @@ export function getRetailerColor(retailerName?: string, fallback: string = "#555
   }
   return fallback;
 }
+
+export const RETAILER_NAMES: Record<string, string> = {
+  "bestbuy": "Best Buy",
+  "amazon": "Amazon",
+  "canadacomputers": "Canada Computers",
+  "memoryexpress": "Memory Express",
+  "newegg": "Newegg",
+  "staples": "Staples",
+  "thesource": "The Source",
+  "costco": "Costco",
+  "walmart": "Walmart",
+};
+
+export function formatRetailerName(retailerName?: string): string {
+  if (!retailerName) return "Unknown Retailer";
+  const normalized = retailerName.toLowerCase().replace(/[^a-z]/g, "");
+  for (const [key, cleanName] of Object.entries(RETAILER_NAMES)) {
+    if (normalized.includes(key)) {
+      return cleanName;
+    }
+  }
+  // Fallback to capitalizing whatever they gave us
+  return retailerName.toUpperCase();
+}
+

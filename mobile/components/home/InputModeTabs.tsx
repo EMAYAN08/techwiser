@@ -1,7 +1,7 @@
 ﻿import React, { useRef } from "react";
 import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from "../../constants/Colors";
 
 export type InputMode = "url" | "name" | "upc" | "qr";

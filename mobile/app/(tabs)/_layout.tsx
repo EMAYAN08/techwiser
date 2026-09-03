@@ -10,7 +10,7 @@ import { Tabs } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Zap, BookOpen, Settings as SettingsIcon, LucideIcon } from "lucide-react-native";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from "../../constants/Colors";
 
 // ---------------------------------------------------------------------------
