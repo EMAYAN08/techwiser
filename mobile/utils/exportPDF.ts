@@ -207,3 +207,155 @@ export async function exportComparisonToPDF(comparison: any) {
     console.error("Failed to generate/share PDF", error);
   }
 }
+
+export async function exportProductToPDF(product: any) {
+  const specsList = product.rawSpecs && product.rawSpecs.length > 0 ? product.rawSpecs : (product.specs || []);
+
+  const html = `
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #111;
+            margin: 0;
+            padding: 40px;
+            background: #fff;
+          }
+          .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #000;
+          }
+          .brand {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+          }
+          .price-retailer {
+            font-size: 16px;
+            color: #0c8a38;
+            font-weight: bold;
+            margin-bottom: 30px;
+          }
+          .retailer-badge {
+            background: #eee;
+            color: #333;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+            vertical-align: middle;
+          }
+          .section {
+            margin-bottom: 30px;
+          }
+          .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 6px;
+            color: #333;
+          }
+          .ai-summary {
+            background: #f4f0ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #9b51e0;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            font-size: 14px;
+          }
+          .spec-row {
+            display: flex;
+            flex-direction: row;
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+          }
+          .spec-label {
+            font-weight: bold;
+            font-size: 13px;
+            color: #555;
+            width: 40%;
+            padding-right: 20px;
+          }
+          .spec-value {
+            font-size: 13px;
+            width: 60%;
+            line-height: 1.4;
+          }
+          .list-item {
+            margin-bottom: 6px;
+            font-size: 14px;
+            line-height: 1.5;
+          }
+        </style>
+      </head>
+      <body>
+        ${product.brand ? `<div class="brand">${product.brand}</div>` : ''}
+        <div class="title">${product.name}</div>
+        <div class="price-retailer">
+          ${product.price || ''} <span class="retailer-badge">${product.retailer}</span>
+        </div>
+        
+        ${product.aiSummary ? `
+          <div class="section">
+            <div class="section-title">AI Summary</div>
+            <div class="ai-summary">${product.aiSummary}</div>
+          </div>
+        ` : ''}
+        
+        ${product.description ? `
+          <div class="section">
+            <div class="section-title">Overview</div>
+            <div style="font-size: 14px; line-height: 1.5;">${product.description}</div>
+          </div>
+        ` : ''}
+        
+        ${product.whatsInTheBox && product.whatsInTheBox.length > 0 ? `
+          <div class="section">
+            <div class="section-title">What's in the Box</div>
+            <ul>
+              ${product.whatsInTheBox.map((item: string) => `<li class="list-item">${item}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+        
+        ${product.userInsights ? `
+          <div class="section">
+            <div class="section-title">User Insights</div>
+            <div style="font-size: 14px; line-height: 1.5; background: #f0f7ff; padding: 15px; border-left: 4px solid #2383E2;">
+              ${product.userInsights}
+            </div>
+          </div>
+        ` : ''}
+        
+        <div class="section">
+          <div class="section-title">Specifications</div>
+          ${specsList.map((spec: any) => `
+            <div class="spec-row">
+              <div class="spec-label">${spec.label}</div>
+              <div class="spec-value">${spec.value}</div>
+            </div>
+          `).join('')}
+        </div>
+        
+      </body>
+    </html>
+  `;
+
+  try {
+    const { uri } = await Print.printToFileAsync({ html });
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+    }
+  } catch (error) {
+    console.error("Failed to generate/share PDF", error);
+  }
+}
+

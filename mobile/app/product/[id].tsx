@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useComparisonStore } from '../../store/useComparisonStore';
 import { Button } from '../../components/ui/Button';
 import { useThemeColors, getRetailerColor } from '../../constants/Colors';
+import { exportProductToPDF } from '../../utils/exportPDF';
 
 export default function ProductDetailScreen() {
   const { colors } = useThemeColors();
@@ -42,6 +43,11 @@ export default function ProductDetailScreen() {
     router.navigate('/');
   };
 
+  const handleExport = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await exportProductToPDF(product);
+  };
+
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: product.name, headerBackTitle: 'Back' }} />
@@ -59,8 +65,22 @@ export default function ProductDetailScreen() {
           >
             <Feather name="arrow-left" size={20} color={colors.text} />
           </Pressable>
-          <View style={[styles.retailerBadge, { backgroundColor: getRetailerColor(product.retailer) || '#333' }]}>
-            <Text style={styles.retailerText}>{product.retailer}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={[styles.retailerBadge, { backgroundColor: getRetailerColor(product.retailer) || '#333' }]}>
+              <Text style={styles.retailerText}>{product.retailer}</Text>
+            </View>
+            <Pressable
+              onPress={handleExport}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Export to PDF"
+              style={({ pressed }) => [
+                styles.backBtn,
+                { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
+              ]}
+            >
+              <Feather name="share" size={18} color={colors.text} />
+            </Pressable>
           </View>
         </View>
         <Text style={[styles.brand, { color: colors.textSecondary }]}>{product.brand}</Text>
