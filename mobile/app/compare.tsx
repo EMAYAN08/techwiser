@@ -465,7 +465,7 @@ export default function CompareScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { colors } = useThemeColors();
+  const { colors, isDark } = useThemeColors();
   const { activeComparison } = useComparisonStore();
   const [selectedCategory, setSelectedCategory] = useState<string>(OVERVIEW_KEY);
 
