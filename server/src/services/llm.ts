@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type, Schema } from '@google/genai';
 import { TechCategories } from '../schemas/tech_categories';
 
 export async function generateComparison(
@@ -23,61 +23,82 @@ Your objective is to provide the ultimate product comparison to help users make 
 You are given scraped text data from retailer websites for 2-3 products.
 
 --- YOUR INSTRUCTIONS ---
-1. RAW DATA EXTRACTION: Deeply parse the retailer text. Extract EVERY SINGLE technical specification, the exact current price, the general product description/overview, and the "what's in the box" (included accessories) list. Do not drop any data.
-2. ENRICH & SYNTHESIZE (THINKING PHASE): 
-   - Identify the products being compared.
-   - Using your vast internal knowledge base and reasoning, fill in any critical missing specifications that the retailer omitted (e.g., if the retailer doesn't mention RAM but you know it).
-   - Analyze real-world user feedback from reliable sources, common complaints, durability issues, and praises for these specific products. 
-   - Synthesize a comprehensive "userInsights" summary for each product (e.g., "Users love the battery life but note the camera struggles in low light. Pro tip: buy a case because the back scratches easily.").
-3. CATEGORIZE: Identify the best-fitting subcategory for these products from the provided JSON Taxonomy.
-4. STRUCTURE & COMPARE: Group the extracted specs exactly according to the \`Attribute_Groups\` listed in the Taxonomy. Determine the winner for each spec.
-5. FINAL VERDICT: Provide a short, punchy AI summary (2-3 sentences) comparing the products overall. Identify 3-5 key differences.
+1. RAW DATA EXTRACTION: Deeply parse the retailer text. Extract EVERY SINGLE technical specification, the exact current price, the general product description/overview, and the "what's in the box" (included accessories) list.
+2. ENRICH & SYNTHESIZE (AGENTIC THINKING PHASE):
+   - Using your internal knowledge base and reasoning, infer any critical missing specifications that the scraper missed or the retailer omitted (e.g., if the retailer doesn't mention RAM or refresh rate but you know it).
+   - Analyze real-world user feedback, durability, and praises for these specific products. 
+   - Synthesize a comprehensive "userInsights" summary for each product.
+3. CATEGORIZE & STRUCTURE:
+   - Identify the best-fitting subcategory for these products from the provided JSON Taxonomy.
+   - Group the extracted specs according to the \`Attribute_Groups\` listed in the Taxonomy. 
+   - *CRITICAL*: If a scraped or inferred spec does not fit into the predefined Attribute Groups, dynamically create new sensible spec groups to hold them. DO NOT discard specs.
+   - Determine the winner for each spec (winnerIndex: 0, 1, or -1 for draw).
+4. FINAL VERDICT: Provide a punchy AI summary (2-3 sentences) comparing the products overall and list 3-5 key differences.
 
 --- JSON TAXONOMY ---
 ${schemaJson}
-
---- RESPONSE FORMAT ---
-You must output ONLY valid JSON matching this exact structure:
-{
-  "category": "string (the main category)",
-  "subcategory": "string (the subcategory)",
-  "aiSummary": "string (overall comparison summary)",
-  "keyDifferences": [
-    {
-      "label": "string (e.g., 'Battery Endurance')",
-      "values": ["product 1 value", "product 2 value"]
-    }
-  ],
-  "products": [
-    {
-      "name": "string (clean product name)",
-      "brand": "string",
-      "retailer": "string (store name)",
-      "url": "string (pass back the URL)",
-      "price": "string (the exact price scraped, e.g. '$999.99' or 'N/A')",
-      "description": "string (a rich 2-3 sentence overview of the product)",
-      "whatsInTheBox": ["item 1", "item 2", "item 3"],
-      "userInsights": "string (a highly helpful summary of real user reviews, common issues, and bonus tips)",
-      "badges": ["string", "string"],
-      "aiSummary": "string (product-specific summary)",
-      "rawSpecs": [
-        { "label": "string", "value": "string" }
-      ]
-    }
-  ],
-  "groupedSpecs": {
-    "Group Name from Taxonomy": [
-      {
-        "label": "Spec Name (e.g., Refresh Rate)",
-        "values": ["product 1 value", "product 2 value"],
-        "winnerIndex": "number (0 or 1, or -1 for draw)"
-      }
-    ]
-  }
-}
 `;
 
   const fullPrompt = systemPrompt + "\n\n--- INPUT DATA ---\n" + dataString;
+
+  const responseSchema: Schema = {
+    type: Type.OBJECT,
+    properties: {
+      category: { type: Type.STRING, description: "The main category" },
+      subcategory: { type: Type.STRING, description: "The subcategory" },
+      aiSummary: { type: Type.STRING, description: "Overall comparison summary" },
+      keyDifferences: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            label: { type: Type.STRING, description: "e.g., 'Battery Endurance'" },
+            values: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["label", "values"]
+        }
+      },
+      products: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            name: { type: Type.STRING, description: "Clean product name" },
+            brand: { type: Type.STRING },
+            retailer: { type: Type.STRING, description: "Store name" },
+            url: { type: Type.STRING, description: "Pass back the URL" },
+            price: { type: Type.STRING, description: "The exact price scraped, e.g. '$999.99' or 'N/A'" },
+            description: { type: Type.STRING, description: "A rich 2-3 sentence overview of the product" },
+            whatsInTheBox: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+              description: "Included accessories in the box"
+            },
+            userInsights: { type: Type.STRING, description: "Summary of real user reviews, common issues, and bonus tips" },
+            badges: { type: Type.ARRAY, items: { type: Type.STRING } },
+            aiSummary: { type: Type.STRING, description: "Product-specific summary" },
+            rawSpecs: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  label: { type: Type.STRING },
+                  value: { type: Type.STRING }
+                },
+                required: ["label", "value"]
+              }
+            }
+          },
+          required: ["name", "brand", "retailer", "url", "price", "description", "whatsInTheBox", "userInsights", "badges", "aiSummary", "rawSpecs"]
+        }
+      },
+      groupedSpecs: {
+        type: Type.OBJECT,
+        description: "A map of Group Name to an array of specification objects. Keys should map dynamically to the taxonomy categories or newly created ones.",
+      }
+    },
+    required: ["category", "subcategory", "aiSummary", "keyDifferences", "products", "groupedSpecs"]
+  };
 
   try {
     const response = await ai.models.generateContent({
@@ -85,6 +106,7 @@ You must output ONLY valid JSON matching this exact structure:
       contents: fullPrompt,
       config: {
         responseMimeType: 'application/json',
+        responseSchema: responseSchema,
       }
     });
 

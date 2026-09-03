@@ -164,6 +164,53 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
 }
 
 // ---------------------------------------------------------------------------
+// Product Insights card
+// ---------------------------------------------------------------------------
+
+function ProductInsightsCard({ product }: { product: any }) {
+  const { colors } = useThemeColors();
+  const hasContent = product.description || product.userInsights || (product.whatsInTheBox && product.whatsInTheBox.length > 0);
+  if (!hasContent) return null;
+
+  return (
+    <Card borderRadius={16} style={{ padding: 18, marginBottom: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 8 }}>
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: getRetailerColor(product.retailer) || colors.primary }} />
+        <Text style={{ ...Typography.caption, fontSize: 13, fontWeight: "700", color: colors.text }}>
+          {product.name}
+        </Text>
+      </View>
+      
+      {product.description && (
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{ ...Typography.caption, fontSize: 11, fontWeight: "700", color: colors.textSecondary, marginBottom: 6, letterSpacing: 0.5 }}>DESCRIPTION</Text>
+          <Text style={{ ...Typography.body, fontSize: 14, color: colors.text, lineHeight: 20 }}>{product.description}</Text>
+        </View>
+      )}
+
+      {product.userInsights && (
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{ ...Typography.caption, fontSize: 11, fontWeight: "700", color: colors.textSecondary, marginBottom: 6, letterSpacing: 0.5 }}>USER INSIGHTS</Text>
+          <Text style={{ ...Typography.body, fontSize: 14, color: colors.text, lineHeight: 20 }}>{product.userInsights}</Text>
+        </View>
+      )}
+
+      {product.whatsInTheBox && product.whatsInTheBox.length > 0 && (
+        <View>
+          <Text style={{ ...Typography.caption, fontSize: 11, fontWeight: "700", color: colors.textSecondary, marginBottom: 6, letterSpacing: 0.5 }}>WHAT'S IN THE BOX</Text>
+          {product.whatsInTheBox.map((item: string, idx: number) => (
+            <View key={idx} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 6 }}>
+              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: colors.textTertiary, marginTop: 8, marginRight: 8 }} />
+              <Text style={{ ...Typography.body, fontSize: 14, color: colors.text, flex: 1, lineHeight: 20 }}>{item}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // AI verdict card
 // ---------------------------------------------------------------------------
 
@@ -622,6 +669,16 @@ export default function CompareScreen() {
           />
         </View>
       )}
+
+      {products.some(p => p.description || p.userInsights || (p.whatsInTheBox && p.whatsInTheBox.length > 0)) && (
+        <View style={{ marginTop: 20 }}>
+          <Text style={[styles.diffHeading, { color: colors.textTertiary, marginBottom: 8 }]}>PRODUCT DETAILS & INSIGHTS</Text>
+          {products.map(p => (
+            <ProductInsightsCard key={p.id} product={p} />
+          ))}
+        </View>
+      )}
+
       <View style={styles.detailedCta}>
         <Button title="View Detailed Comparison" variant="primary" onPress={handleViewDetailed} />
       </View>

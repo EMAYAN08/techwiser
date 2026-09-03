@@ -4,9 +4,15 @@ from curl_cffi import requests as curl_requests
 from bs4 import BeautifulSoup
 import json
 import re
+from typing import Optional
+
+try:
+    from playwright.async_api import async_playwright
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
 
 app = FastAPI(title="SpecMatch Scraper API")
-
 
 class ScrapeRequest(BaseModel):
     url: str
@@ -15,155 +21,173 @@ class ScrapeRequest(BaseModel):
 async def health_check():
     return {"status": "ok", "service": "SpecMatch Scraper API"}
 
-def prune_json(obj, depth=0):
-    if depth > 10:
-        return None
+def extract_json_ld(soup):
+    for script in soup.find_all("script", type="application/ld+json"):
+        if script.string:
+            try:
+                data = json.loads(script.string)
+                if isinstance(data, list):
+                    for item in data:
+                        if item.get("@type") == "Product":
+                            return item
+                elif isinstance(data, dict):
+                    if data.get("@type") == "Product":
+                        return data
+                    elif "@graph" in data:
+                        for item in data["@graph"]:
+                            if item.get("@type") == "Product":
+                                return item
+            except:
+                pass
+    return None
+
+def extract_meta_tags(soup):
+    meta = {}
+    og_image = soup.find("meta", property="og:image")
+    if og_image: meta["imageUrl"] = og_image.get("content")
+    og_desc = soup.find("meta", property="og:description")
+    if og_desc: meta["description"] = og_desc.get("content")
+    og_title = soup.find("meta", property="og:title")
+    if og_title: meta["name"] = og_title.get("content")
+    price = soup.find("meta", property="product:price:amount")
+    if price: meta["price"] = price.get("content")
+    return meta
+
+def extract_inline_state(html):
+    next_match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html)
+    if next_match:
+        try: return json.loads(next_match.group(1))
+        except: pass
+    init_match = re.search(r'window\.__INITIAL_STATE__\s*=\s*(\{.*?\});', html)
+    if init_match:
+        try: return json.loads(init_match.group(1))
+        except: pass
+    return None
+
+def parse_html_content(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    result = {
+        "name": "", "price": "", "imageUrl": "", "description": "",
+        "overview": "", "whatsIncluded": "", "specs": [], "raw_text": "",
+        "inline_state_found": False
+    }
     
-    if isinstance(obj, dict):
-        pruned = {}
-        for k, v in obj.items():
-            k_lower = k.lower()
-            if k_lower in ["ads", "reviews", "bazaarvoice", "analytics", "related", "recommendations", "footer", "header", "menu"]:
-                continue
-            if k_lower in ["specs", "specifications", "features", "details", "product"]:
-                pruned[k] = v
-            else:
-                child = prune_json(v, depth + 1)
-                if child:
-                    pruned[k] = child
-        return pruned if pruned else None
-        
-    elif isinstance(obj, list):
-        pruned = [prune_json(i, depth + 1) for i in obj]
-        pruned = [i for i in pruned if i]
-        return pruned if pruned else None
-        
-    else:
-        return obj
+    ld = extract_json_ld(soup)
+    if ld:
+        result["name"] = ld.get("name", "")
+        result["description"] = ld.get("description", "")
+        if ld.get("image"):
+            if isinstance(ld["image"], list) and len(ld["image"]) > 0:
+                result["imageUrl"] = ld["image"][0]
+            elif isinstance(ld["image"], str):
+                result["imageUrl"] = ld["image"]
+        offers = ld.get("offers", {})
+        if isinstance(offers, dict) and "price" in offers:
+            result["price"] = str(offers["price"])
+        elif isinstance(offers, list) and len(offers) > 0 and "price" in offers[0]:
+            result["price"] = str(offers[0]["price"])
+            
+    meta = extract_meta_tags(soup)
+    if not result["name"]: result["name"] = meta.get("name", "")
+    if not result["description"]: result["description"] = meta.get("description", "")
+    if not result["imageUrl"]: result["imageUrl"] = meta.get("imageUrl", "")
+    if not result["price"]: result["price"] = meta.get("price", "")
+    
+    state = extract_inline_state(html)
+    if state: result["inline_state_found"] = True
+    
+    for script in soup(["script", "style", "noscript", "svg"]):
+        script.extract()
+    text = soup.get_text(separator=" ", strip=True)
+    result["raw_text"] = re.sub(r'\s+', ' ', text)
+    
+    return result
+
+async def layer2_scrape(url: str):
+    if not HAS_PLAYWRIGHT: return None
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+            page = await context.new_page()
+            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            await page.wait_for_timeout(3000)
+            html = await page.content()
+            await browser.close()
+            return html
+    except Exception as e:
+        print(f"Layer 2 failed: {e}")
+        return None
 
 @app.post("/scrape")
 @app.post("/scrape/")
 async def scrape_endpoint(req: ScrapeRequest):
     try:
-        print(f"Scraping URL (TLS Impersonation): {req.url}")
+        print(f"Scraping URL (Layer 1): {req.url}")
         
-        # Use curl_cffi with Safari impersonation to bypass Akamai
-        
-        # BestBuy Canada API Bypass
+        # BestBuy API Bypass
         if "bestbuy.ca" in req.url:
             sku_match = re.search(r'/(\d+)(?:\?|$)', req.url)
             if sku_match:
                 sku = sku_match.group(1)
                 api_url = f"https://www.bestbuy.ca/api/v2/json/product/{sku}"
-                print(f"Bypassing Akamai via BestBuy API: {api_url}")
                 api_resp = curl_requests.get(api_url, impersonate="safari17_0", timeout=15)
                 if api_resp.status_code == 200:
                     data = api_resp.json()
-                    specs = data.get("specs", [])
-                    name = data.get("name", "")
-                    
-                    # Extract rich descriptions and included items
-                    short_desc = data.get("shortDescription", "")
                     long_desc = data.get("longDescription", "")
-                    whats_in_box = data.get("whatsInTheBox", "")
-                    
                     if long_desc:
                         long_desc = BeautifulSoup(long_desc, "html.parser").get_text(separator=" ", strip=True)
-                    if short_desc:
-                        short_desc = BeautifulSoup(short_desc, "html.parser").get_text(separator=" ", strip=True)
-                        
-                    image_url = data.get("highResImage") or data.get("thumbnailImage") or ""
-                    
                     payload = {
-                        "name": name,
+                        "name": data.get("name", ""),
                         "price": data.get("salePrice") or data.get("regularPrice"),
-                        "overview": short_desc,
+                        "overview": BeautifulSoup(data.get("shortDescription", ""), "html.parser").get_text(separator=" ", strip=True) if data.get("shortDescription") else "",
                         "description": long_desc,
-                        "whatsIncluded": whats_in_box,
-                        "specs": specs
+                        "whatsIncluded": data.get("whatsInTheBox", ""),
+                        "specs": data.get("specs", [])
                     }
-                    
                     return {
                         "status": "success",
-                        "type": "json",
-                        "data": json.dumps(payload)[:20000],
-                        "imageUrl": image_url
+                        "data": json.dumps(payload)[:30000],
+                        "imageUrl": data.get("highResImage") or data.get("thumbnailImage") or ""
                     }
-                    
-        # Fallback to standard request for other sites
-        response = curl_requests.get(req.url, impersonate="safari17_0", timeout=15)
 
-        print(f"Response status: {response.status_code}, Length: {len(response.text)}")
+        response = curl_requests.get(req.url, impersonate="safari17_0", timeout=15)
+        html = response.text
         
-        if "Access Denied" in response.text or "Just a moment" in response.text:
-            print("BLOCKED BY AKAMAI")
-            return {
-                "status": "error",
-                "message": "Blocked by anti-bot firewall despite TLS spoofing.",
-                "text": "Access Denied"
-            }
-            
-        # BestBuy React State Check
-        if "bestbuy.ca" in req.url or "bestbuy.com" in req.url:
-            match = re.search(r'window\.__INITIAL_STATE__\s*=\s*(\{.*?\});', response.text)
-            explicit_price = None
-            price_match = re.search(r'class=["\'][^"\']*priceView-hero-price[^"\']*["\'][^>]*>.*?\$\s*([0-9,.]+)', response.text)
-            if price_match:
-                explicit_price = f"${price_match.group(1)}"
+        is_blocked = "Access Denied" in html or "Just a moment" in html or response.status_code in [403, 429]
+        
+        if is_blocked:
+            print("Layer 1 Blocked. Falling back to Layer 2.")
+            html_l2 = await layer2_scrape(req.url)
+            if html_l2: html = html_l2
                 
-            if match:
-                try:
-                    data = json.loads(match.group(1))
-                    target_data = data.get("product", data)
-                    
-                    if not explicit_price:
-                        try:
-                            price_val = target_data.get('price', {}).get('currentPrice')
-                            if price_val:
-                                explicit_price = f"${price_val}"
-                        except:
-                            pass
-                            
-                    clean_data = prune_json(target_data)
-                    
-                    if explicit_price and isinstance(clean_data, dict):
-                        clean_data["__EXPLICIT_SCRAPED_PRICE__"] = explicit_price
-                        
-                    raw_json = json.dumps(clean_data)
-                    return {
-                        "status": "success",
-                        "type": "json",
-                        "data": raw_json[:20000]
-                    }
-                except json.JSONDecodeError:
-                    pass
-                    
-        # Fallback for generic sites
-        soup = BeautifulSoup(response.text, 'html.parser')
+        parsed = parse_html_content(html)
         
-        explicit_price = None
-        price_match = re.search(r'class=["\'][^"\']*priceView-hero-price[^"\']*["\'][^>]*>.*?\$\s*([0-9,.]+)', response.text)
-        if price_match:
-            explicit_price = f"${price_match.group(1)}"
-            
-        # Kill all script and style elements
-        for script in soup(["script", "style", "noscript", "svg"]):
-            script.extract()
-            
-        text = soup.get_text(separator=" ", strip=True)
+        if not is_blocked and (not parsed["name"] and not parsed["price"] and not parsed.get("inline_state_found")):
+            print("Layer 1 yielded poor data. Falling back to Layer 2.")
+            html_l2 = await layer2_scrape(req.url)
+            if html_l2:
+                html = html_l2
+                parsed = parse_html_content(html)
+                
+        payload = {
+            "name": parsed["name"],
+            "price": parsed["price"],
+            "overview": parsed["overview"],
+            "description": parsed["description"],
+            "whatsIncluded": parsed["whatsIncluded"],
+            "specs": parsed["specs"],
+            "raw_text": parsed["raw_text"]
+        }
         
-        # Remove massive whitespace gaps
-        text = re.sub(r'\s+', ' ', text)
-        
-        if explicit_price:
-            text = f"META PRICE FOUND: {explicit_price}\n\n" + text
-            
         return {
             "status": "success",
-            "type": "text",
-            "data": text[:20000] 
+            "data": json.dumps(payload)[:30000],
+            "imageUrl": parsed["imageUrl"]
         }
         
     except Exception as e:
         print(f"Scrape failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "error", "message": str(e)}
