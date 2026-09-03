@@ -16,7 +16,7 @@ import * as Haptics from '../utils/haptics';
 import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info } from "lucide-react-native";
 
 import { useComparisonStore } from "../store/useComparisonStore";
-import { useThemeColors, getRetailerColor } from "../constants/Colors";
+import { useThemeColors, getRetailerColor, formatRetailerName } from "../constants/Colors";
 import { Typography } from "../constants/Typography";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -154,7 +154,7 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
             ]}
             numberOfLines={1}
           >
-            {product.retailer || "STORE"}
+            {product.retailer ? formatRetailerName(product.retailer) : "STORE"}
           </Text>
         </View>
       </Card>
