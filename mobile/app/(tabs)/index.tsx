@@ -143,7 +143,7 @@ export default function Home() {
         <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.text }]}>
           Workspace
         </Animated.Text>
-        <Text style={[styles.subheader, { color: colors.textTertiary }]}>Compare any 2-4 Canadian tech products</Text>
+        <Text style={[styles.subheader, { color: colors.textTertiary }]}>Compare any 2-4 tech products at once</Text>
 
         <InputModeTabs activeMode={inputMode} onModeChange={handleModeChange} />
       </View>
