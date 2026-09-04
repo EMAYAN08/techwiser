@@ -796,9 +796,9 @@ export default function CompareScreen() {
           <Pressable 
             key={index} 
             onPress={() => {
-              if (alt.url) {
-                Linking.openURL(alt.url);
-              }
+              const searchQuery = encodeURIComponent(alt.name + " canada");
+              const safeUrl = `https://www.google.ca/search?tbm=shop&q=${searchQuery}`;
+              Linking.openURL(safeUrl);
               void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             }}
           >
