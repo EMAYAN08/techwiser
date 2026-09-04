@@ -120,8 +120,10 @@ ${schemaJson}
   };
 
   try {
+    const modelName = 'gemini-2.5-flash';
+    console.log(`[LLM Service] Calling model: ${modelName} for operation: generateComparison`);
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite',
+      model: modelName,
       contents: fullPrompt,
       config: {
         responseMimeType: 'application/json',
@@ -189,8 +191,10 @@ Then, provide a brief insight for each product's specific value (1-2 sentences),
   };
 
   try {
+    const modelName = 'gemini-2.5-flash';
+    console.log(`[LLM Service] Calling model: ${modelName} for operation: explainSpec`);
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite',
+      model: modelName,
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -249,8 +253,10 @@ For each alternative, use your search capabilities to find a valid product purch
   };
 
   try {
+    const modelName = 'gemini-2.5-flash';
+    console.log(`[LLM Service] Calling model: ${modelName} for operation: findAlternatives`);
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite',
+      model: modelName,
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
