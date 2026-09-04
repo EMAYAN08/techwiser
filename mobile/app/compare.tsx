@@ -25,7 +25,7 @@ import { Card } from "../components/ui/Card";
 import { getCategoryIcon } from "../components/comparison/CategoryIcon";
 import { type DetailedSpecRow, type DetailedSpecValue } from "../components/comparison/SpecBarRow";
 import { exportComparisonToPDF } from "../utils/exportPDF";
-import { explainSpec, type SpecExplanationResponse } from "../services/api";
+import { explainSpec, fetchAlternatives, type SpecExplanationResponse } from "../services/api";
 
 const OVERVIEW_KEY = "Overview";
 
@@ -531,9 +531,9 @@ export default function CompareScreen() {
       const data = await explainSpec(productNames, label, values);
       console.log(`[Frontend] Successfully fetched spec explanation for: ${label}`);
       setSelectedSpecDetail(prev => prev ? { ...prev, loading: false, data } : null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`[Frontend] Error fetching spec explanation for ${label}:`, error);
-      setSelectedSpecDetail(prev => prev ? { ...prev, loading: false, error: error.message } : null);
+      setSelectedSpecDetail(prev => prev ? { ...prev, loading: false, error: error instanceof Error ? error.message : "Unknown error" } : null);
     }
   };
 
@@ -656,7 +656,7 @@ export default function CompareScreen() {
   }, [keyDifferences, productA, products, activeComparison]);
 
   const categoryList = useMemo(
-    () => [OVERVIEW_KEY, ...categories.map((c) => c.key)],
+    () => [OVERVIEW_KEY, ...categories.map((c) => c.key), "Alternatives"],
     [categories]
   );
 
@@ -676,9 +676,18 @@ export default function CompareScreen() {
     await exportComparisonToPDF(activeComparison, isDark);
   };
 
+  const [alternativesData, setAlternativesData] = useState<{ loading: boolean; data?: any; error?: string } | null>(null);
+
   const handleSelectCategory = (cat: string) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedCategory(cat);
+
+    if (cat === "Alternatives" && !alternativesData && activeComparison) {
+      setAlternativesData({ loading: true });
+      fetchAlternatives(activeComparison.products)
+        .then((data) => setAlternativesData({ loading: false, data }))
+        .catch((error: unknown) => setAlternativesData({ loading: false, error: error instanceof Error ? error.message : "Unknown error" }));
+    }
   };
 
   const handleViewDetailed = () => {
@@ -724,6 +733,74 @@ export default function CompareScreen() {
         headerGap={headerGap}
         onSpecPress={handleSpecPress}
       />
+    );
+  };
+
+  const renderAlternatives = () => {
+    if (!alternativesData) return null;
+
+    if (alternativesData.loading) {
+      return (
+        <View style={{ alignItems: "center", marginTop: 40, gap: 12 }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ color: colors.textSecondary }}>
+            Techvisor is searching for better alternatives...
+          </Text>
+        </View>
+      );
+    }
+
+    if (alternativesData.error) {
+      return (
+        <View style={{ alignItems: "center", marginTop: 40 }}>
+          <AnimatedErrorIcon color={colors.error} />
+          <Text style={{ color: colors.error, marginBottom: 16, textAlign: "center" }}>
+            {alternativesData.error}
+          </Text>
+          <Button
+            title="Retry"
+            variant="ghost"
+            onPress={() => {
+              setAlternativesData(null);
+              handleSelectCategory("Alternatives");
+            }}
+          />
+        </View>
+      );
+    }
+
+    const { alternatives } = alternativesData.data || { alternatives: [] };
+
+    if (alternatives.length === 0) {
+      return (
+        <View style={{ alignItems: "center", marginTop: 40, padding: 20 }}>
+          <Trophy size={48} color={colors.success} strokeWidth={1.5} style={{ marginBottom: 16 }} />
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: "bold", textAlign: "center", marginBottom: 8 }}>
+            You picked well!
+          </Text>
+          <Text style={{ color: colors.textSecondary, textAlign: "center", lineHeight: 22 }}>
+            Techvisor couldn't find any strictly better alternatives in this price range.
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={{ gap: 16 }}>
+        {alternatives.map((alt: { name: string; estimatedPrice: string; reasonWhyBetter: string }, index: number) => (
+          <Card key={index} borderRadius={16} style={{ padding: 16 }}>
+            <Text style={{ color: colors.text, fontSize: 18, fontWeight: "bold", marginBottom: 4 }}>
+              {alt.name}
+            </Text>
+            <Text style={{ color: colors.primary, fontSize: 16, fontWeight: "600", marginBottom: 8 }}>
+              {alt.estimatedPrice}
+            </Text>
+            <Text style={{ color: colors.textSecondary, lineHeight: 20 }}>
+              {alt.reasonWhyBetter}
+            </Text>
+          </Card>
+        ))}
+      </View>
     );
   };
 
@@ -826,6 +903,8 @@ export default function CompareScreen() {
         >
           {selectedCategory === OVERVIEW_KEY
             ? renderOverview()
+            : selectedCategory === "Alternatives"
+            ? renderAlternatives()
             : renderCategory(selectedCategory)}
         </ScrollView>
         

@@ -4,7 +4,7 @@ dotenv.config();
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { scrapeUrl } from './services/scraper';
-import { generateComparison, explainSpec } from './services/llm';
+import { generateComparison, explainSpec, findAlternatives } from './services/llm';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -170,6 +170,23 @@ app.post('/api/explain-spec', async (req: Request, res: Response) => {
   } catch (error: unknown) {
     console.error('Unexpected error in /api/explain-spec:', error);
     res.status(500).json({ error: 'An unexpected error occurred while explaining spec.' });
+  }
+});
+
+app.post('/api/alternatives', async (req: Request, res: Response) => {
+  try {
+    const { products } = req.body;
+    
+    if (!products || !Array.isArray(products)) {
+      res.status(400).json({ error: 'Invalid payload. Required: products (array).' });
+      return;
+    }
+
+    const alternatives = await findAlternatives(products);
+    res.json(alternatives);
+  } catch (error: unknown) {
+    console.error('Unexpected error in /api/alternatives:', error);
+    res.status(500).json({ error: 'An unexpected error occurred while finding alternatives.' });
   }
 });
 

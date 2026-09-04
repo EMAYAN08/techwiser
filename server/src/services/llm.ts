@@ -209,3 +209,59 @@ Then, provide a brief insight for each product's specific value (1-2 sentences),
     throw err;
   }
 }
+
+export async function findAlternatives(
+  products: any[]
+): Promise<any> {
+  console.log(`[LLM Service] findAlternatives invoked for ${products.length} products`);
+  
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const prompt = `
+You are a highly knowledgeable tech advisor.
+The user is comparing the following products:
+${JSON.stringify(products, null, 2)}
+
+If the provided products are already the absolute best in their class, return an empty array for alternatives.
+If there are strictly better alternatives (in value, performance, or recency) in the same price range, suggest up to 3 alternative products.
+`;
+
+  const responseSchema: Schema = {
+    type: Type.OBJECT,
+    properties: {
+      alternatives: {
+        type: Type.ARRAY,
+        description: "An array of 0 to 3 alternatives. Empty array if the compared products are already the best.",
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            name: { type: Type.STRING, description: "Name of the alternative product" },
+            estimatedPrice: { type: Type.STRING, description: "Estimated price, e.g. '$999'" },
+            reasonWhyBetter: { type: Type.STRING, description: "1-2 sentences explaining exactly why this is a better choice than the ones being compared." }
+          },
+          required: ["name", "estimatedPrice", "reasonWhyBetter"]
+        }
+      }
+    },
+    required: ["alternatives"]
+  };
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: responseSchema,
+      }
+    });
+
+    const content = response.text;
+    if (!content) throw new Error("No content received from Gemini");
+    
+    const cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleanContent);
+  } catch (err: any) {
+    console.error(`[LLM Service] findAlternatives Error:`, err.message || err);
+    throw err;
+  }
+}
