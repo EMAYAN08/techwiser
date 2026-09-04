@@ -10,6 +10,7 @@ import {
   Animated,
   AccessibilityInfo,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -787,18 +788,41 @@ export default function CompareScreen() {
 
     return (
       <View style={{ gap: 16 }}>
-        {alternatives.map((alt: { name: string; estimatedPrice: string; reasonWhyBetter: string }, index: number) => (
-          <Card key={index} borderRadius={16} style={{ padding: 16 }}>
-            <Text style={{ color: colors.text, fontSize: 18, fontWeight: "bold", marginBottom: 4 }}>
-              {alt.name}
-            </Text>
-            <Text style={{ color: colors.primary, fontSize: 16, fontWeight: "600", marginBottom: 8 }}>
-              {alt.estimatedPrice}
-            </Text>
-            <Text style={{ color: colors.textSecondary, lineHeight: 20 }}>
-              {alt.reasonWhyBetter}
-            </Text>
-          </Card>
+        {alternatives.map((alt: { name: string; estimatedPrice: string; reasonWhyBetter: string; url?: string; imageUrl?: string }, index: number) => (
+          <Pressable 
+            key={index} 
+            onPress={() => {
+              if (alt.url) {
+                Linking.openURL(alt.url);
+              }
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }}
+          >
+            <Card borderRadius={16} style={{ padding: 16, flexDirection: 'row', gap: 16 }}>
+              {alt.imageUrl ? (
+                <Image 
+                  source={{ uri: alt.imageUrl }} 
+                  style={{ width: 80, height: 80, borderRadius: 8, backgroundColor: colors.surfaceHover || '#333' }} 
+                  resizeMode="contain" 
+                />
+              ) : (
+                <View style={{ width: 80, height: 80, borderRadius: 8, backgroundColor: colors.surfaceHover || '#333', alignItems: 'center', justifyContent: 'center' }}>
+                  <PackageOpen size={32} color={colors.textTertiary} />
+                </View>
+              )}
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.text, fontSize: 17, fontWeight: "bold", marginBottom: 4 }}>
+                  {alt.name}
+                </Text>
+                <Text style={{ color: colors.primary, fontSize: 15, fontWeight: "600", marginBottom: 8 }}>
+                  {alt.estimatedPrice}
+                </Text>
+                <Text style={{ color: colors.textSecondary, lineHeight: 20, fontSize: 14 }}>
+                  {alt.reasonWhyBetter}
+                </Text>
+              </View>
+            </Card>
+          </Pressable>
         ))}
       </View>
     );

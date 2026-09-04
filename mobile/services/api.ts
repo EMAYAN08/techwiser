@@ -41,6 +41,8 @@ export interface AlternativeProduct {
   name: string;
   estimatedPrice: string;
   reasonWhyBetter: string;
+  url: string;
+  imageUrl: string;
 }
 
 export interface AlternativesResponse {

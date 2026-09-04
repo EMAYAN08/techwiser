@@ -223,6 +223,7 @@ ${JSON.stringify(products, null, 2)}
 
 If the provided products are already the absolute best in their class, return an empty array for alternatives.
 If there are strictly better alternatives (in value, performance, or recency) in the same price range, suggest up to 3 alternative products.
+For each alternative, use your search capabilities to find a valid product purchase URL (preferably from Best Buy Canada or Amazon Canada) and a valid product image URL.
 `;
 
   const responseSchema: Schema = {
@@ -236,9 +237,11 @@ If there are strictly better alternatives (in value, performance, or recency) in
           properties: {
             name: { type: Type.STRING, description: "Name of the alternative product" },
             estimatedPrice: { type: Type.STRING, description: "Estimated price, e.g. '$999'" },
-            reasonWhyBetter: { type: Type.STRING, description: "1-2 sentences explaining exactly why this is a better choice than the ones being compared." }
+            reasonWhyBetter: { type: Type.STRING, description: "1-2 sentences explaining exactly why this is a better choice." },
+            url: { type: Type.STRING, description: "Actual valid product link to Best Buy CA or Amazon CA" },
+            imageUrl: { type: Type.STRING, description: "Actual valid image URL for the product (.jpg/.png)" }
           },
-          required: ["name", "estimatedPrice", "reasonWhyBetter"]
+          required: ["name", "estimatedPrice", "reasonWhyBetter", "url", "imageUrl"]
         }
       }
     },
@@ -247,11 +250,12 @@ If there are strictly better alternatives (in value, performance, or recency) in
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite',
+      model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
         responseSchema: responseSchema,
+        tools: [{ googleSearch: {} }]
       }
     });
 
