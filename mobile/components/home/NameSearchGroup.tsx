@@ -168,28 +168,31 @@ export function NameSearchGroup() {
         />
       ))}
 
-      {names.length < 4 && (
-        <Pressable
-          onPress={addName}
-          style={({ pressed }) => [
-            styles.addBtn,
-            { backgroundColor: colors.primaryMuted, borderColor: colors.primary + '40' },
-            pressed && { opacity: 0.7 }
-          ]}
-        >
-          <Feather name="plus" size={14} color={colors.primary} />
-          <Text style={[styles.addBtnText, { color: colors.primary }]}>Add product</Text>
-        </Pressable>
-      )}
-
-      {/* Search button */}
-      <View style={{ marginBottom: 16 }}>
-        <Button
-          title="Compare"
-          variant="primary"
-          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
-          disabled={names.filter((n) => n.trim()).length < 2}
-        />
+      <View style={{ flexDirection: "row", gap: 12, marginBottom: 16, alignItems: "center" }}>
+        {names.length < 4 && (
+          <View style={{ flex: 1 }}>
+            <Pressable
+              onPress={addName}
+              style={({ pressed }) => [
+                styles.addBtn,
+                { backgroundColor: colors.primaryMuted, borderColor: colors.primary + '40' },
+                pressed && { opacity: 0.7 }
+              ]}
+            >
+              <Feather name="plus" size={14} color={colors.primary} />
+              <Text style={[styles.addBtnText, { color: colors.primary }]}>Add product</Text>
+            </Pressable>
+          </View>
+        )}
+        <View style={{ flex: 1 }}>
+          <Button
+            title="Compare"
+            variant="primary"
+            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
+            disabled={names.filter((n) => n.trim()).length < 2}
+            style={{ width: '100%' }}
+          />
+        </View>
       </View>
 
       {/* Coming soon note */}
@@ -281,12 +284,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingVertical: 12,
-    marginTop: 4,
-    marginBottom: 16,
     borderRadius: 8,
     borderWidth: 1,
-    minHeight: 48,
+    height: 48,
   },
   addBtnText: {
     fontSize: 15,

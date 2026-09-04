@@ -172,9 +172,18 @@ function SwipeableRow({
 interface URLInputGroupProps {
   onSwipeStart?: () => void;
   onSwipeEnd?: () => void;
+  onCompare?: () => void;
+  isLoading?: boolean;
+  canCompare?: boolean;
 }
 
-export function URLInputGroup({ onSwipeStart = () => {}, onSwipeEnd = () => {} }: URLInputGroupProps) {
+export function URLInputGroup({ 
+  onSwipeStart = () => {}, 
+  onSwipeEnd = () => {},
+  onCompare = () => {},
+  isLoading = false,
+  canCompare = false,
+}: URLInputGroupProps) {
   const { colors } = useThemeColors();
   const { urls, updateUrl, addUrl, removeUrl, setUrls } = useComparisonStore();
   const animValues    = useRef(urls.map(() => new Animated.Value(0))).current;
@@ -265,28 +274,40 @@ export function URLInputGroup({ onSwipeStart = () => {}, onSwipeEnd = () => {} }
         </Animated.View>
       ))}
 
-      {urls.length < 4 && (
-        <Animated.View
-          style={{
-            opacity: animValues[urls.length],
-            transform: [{
-              translateY: animValues[urls.length].interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
-            }],
-          }}
-        >
-          <Pressable
-            onPress={addUrl}
-            style={({ pressed }) => [
-              styles.addBtn,
-              { backgroundColor: 'rgba(210, 153, 34, 0.15)', borderColor: 'rgba(210, 153, 34, 0.4)' },
-              pressed && { opacity: 0.7 }
-            ]}
+      <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
+        {urls.length < 4 && (
+          <Animated.View
+            style={{
+              flex: 1,
+              opacity: animValues[urls.length],
+              transform: [{
+                translateY: animValues[urls.length].interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
+              }],
+            }}
           >
-            <Feather name="plus" size={14} color="#d29922" />
-            <Text style={[styles.addBtnText, { color: "#d29922" }]}>Add product</Text>
-          </Pressable>
-        </Animated.View>
-      )}
+            <Pressable
+              onPress={addUrl}
+              style={({ pressed }) => [
+                styles.addBtn,
+                { backgroundColor: colors.primaryMuted, borderColor: colors.primary + '40' },
+                pressed && { opacity: 0.7 }
+              ]}
+            >
+              <Feather name="plus" size={14} color={colors.primary} />
+              <Text style={[styles.addBtnText, { color: colors.primary }]}>Add product</Text>
+            </Pressable>
+          </Animated.View>
+        )}
+        <View style={{ flex: 1 }}>
+          <Button
+            title={isLoading ? "Comparing..." : "Compare"}
+            variant="primary"
+            onPress={onCompare}
+            disabled={!canCompare || isLoading}
+            style={{ width: '100%' }}
+          />
+        </View>
+      </View>
     </View>
   );
 }
@@ -321,11 +342,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingVertical: 12,
-    marginTop: 4,
     borderRadius: 8,
     borderWidth: 1,
-    minHeight: 48,
+    height: 48,
   },
   addBtnText: {
     fontSize: 15,
