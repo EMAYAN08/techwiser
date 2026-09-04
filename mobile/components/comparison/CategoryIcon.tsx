@@ -65,6 +65,7 @@ export function getCategoryIcon(category: string): IconComponent {
   if (c.includes("release") || c.includes("launch") || c.includes("date") || c.includes("year")) return Calendar;
   if (c.includes("overview") || c.includes("summary") || c.includes("general")) return Activity;
   if (c.includes("server") || c.includes("nas") || c.includes("host")) return Server;
+  if (c.includes("other") || c.includes("misc") || c.includes("feature") || c.includes("additional")) return Layers;
 
   return Box;
 }
