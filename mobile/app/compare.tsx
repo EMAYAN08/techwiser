@@ -226,30 +226,31 @@ function KeyDifferencesCard({
           <View style={styles.diffValuesRow}>
             {diff.values.map((val, idx) => {
               const win = diff.winnerIndex === idx;
-              const isDraw = diff.winnerIndex === null;
-              const accentColor = productColors[idx] ?? colors.primary;
               return (
                 <View
                   key={idx}
                   style={[
                     styles.diffCol,
-                    idx === diff.values.length - 1 && styles.diffColLast,
-                    { borderTopColor: win ? accentColor : "transparent" },
+                    { 
+                      backgroundColor: win ? colors.successMuted : colors.surface,
+                      borderColor: win ? colors.success : colors.border,
+                    },
                   ]}
                 >
+                  {win && (
+                    <View style={[styles.valueCardTrophyWrap, { backgroundColor: colors.success }]}>
+                      <Trophy size={9} color={colors.background} strokeWidth={2.5} />
+                    </View>
+                  )}
                   <Text
                     style={[
                       styles.diffValue,
-                      {
-                        color: isDraw || win ? colors.text : colors.textSecondary,
-                      },
-                      win && styles.diffValueWinner,
+                      { color: win ? colors.success : colors.text },
                     ]}
-                    numberOfLines={2}
+                    numberOfLines={3}
                   >
                     {val || "—"}
                   </Text>
-                  {win && <Text style={[styles.diffWinnerTag, { color: accentColor }]}>WINNER</Text>}
                 </View>
               );
             })}
@@ -975,22 +976,19 @@ const styles = StyleSheet.create({
   diffCol: {
     flex: 1,
     minWidth: 0,
-    borderTopWidth: 2,
-    paddingTop: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    minHeight: 48,
+    justifyContent: "center",
+    position: "relative",
   },
-  diffColLast: { alignItems: "flex-end" },
   diffValue: {
     ...Typography.body,
-    fontSize: 15,
-    fontWeight: "500",
-    lineHeight: 20,
-  },
-  diffValueWinner: { fontWeight: "700" },
-  diffWinnerTag: {
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    marginTop: 4,
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 18,
   },
 
   // Empty / fallback
