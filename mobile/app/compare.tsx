@@ -14,7 +14,7 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from '../utils/haptics';
-import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info, Share, X } from "lucide-react-native";
+import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info, Share, X, TriangleAlert } from "lucide-react-native";
 import { BlurView } from "expo-blur";
 
 import { useComparisonStore } from "../store/useComparisonStore";
@@ -28,6 +28,23 @@ import { exportComparisonToPDF } from "../utils/exportPDF";
 import { explainSpec, type SpecExplanationResponse } from "../services/api";
 
 const OVERVIEW_KEY = "Overview";
+
+function AnimatedErrorIcon({ color }: { color: string }) {
+  const pulse = useRef(new Animated.Value(0.4)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0.4, duration: 800, useNativeDriver: true })
+      ])
+    ).start();
+  }, [pulse]);
+  return (
+    <Animated.View style={{ opacity: pulse, marginBottom: 16 }}>
+      <TriangleAlert size={48} color={color} strokeWidth={1.5} />
+    </Animated.View>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -487,6 +504,7 @@ export default function CompareScreen() {
     label: string;
     values: string[];
     loading: boolean;
+    title?: string;
     data?: SpecExplanationResponse;
     error?: string;
   } | null>(null);
@@ -494,12 +512,27 @@ export default function CompareScreen() {
   const handleSpecPress = async (label: string, values: string[]) => {
     if (!activeComparison) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedSpecDetail({ label, values, loading: true });
+    
+    const FRIENDLY_TITLES = [
+      "Techvisor Says:",
+      "Geek Speak Translation:",
+      "Nerd Alert:",
+      "The Breakdown:",
+      "Simply Put:",
+      "Jargon Buster:"
+    ];
+    const randomTitle = FRIENDLY_TITLES[Math.floor(Math.random() * FRIENDLY_TITLES.length)];
+
+    console.log(`[Frontend] Fetching spec explanation for: ${label}`);
+    setSelectedSpecDetail({ label, values, loading: true, title: randomTitle });
+    
     try {
       const productNames = activeComparison.products.map(p => p.name);
       const data = await explainSpec(productNames, label, values);
+      console.log(`[Frontend] Successfully fetched spec explanation for: ${label}`);
       setSelectedSpecDetail(prev => prev ? { ...prev, loading: false, data } : null);
     } catch (error: any) {
+      console.error(`[Frontend] Error fetching spec explanation for ${label}:`, error);
       setSelectedSpecDetail(prev => prev ? { ...prev, loading: false, error: error.message } : null);
     }
   };
@@ -812,8 +845,10 @@ export default function CompareScreen() {
               </Pressable>
               <View style={styles.aiOverlayHeader}>
                 <View style={styles.aiOverlayTitleWrap}>
-                  <Sparkles size={16} color={colors.ai} strokeWidth={2.25} />
-                  <Text style={[styles.aiOverlayTitle, { color: colors.ai }]}>AI Explanation: {selectedSpecDetail.label}</Text>
+                  <Sparkles size={16} color={colors.ai} strokeWidth={2.25} style={{ marginTop: 2 }} />
+                  <Text style={[styles.aiOverlayTitle, { color: colors.ai }]}>
+                    {selectedSpecDetail.title || "Techvisor Says:"} {selectedSpecDetail.label}
+                  </Text>
                 </View>
               </View>
 
@@ -824,7 +859,10 @@ export default function CompareScreen() {
                 </View>
               ) : selectedSpecDetail.error ? (
                 <View style={styles.aiOverlayError}>
-                  <Text style={{ color: colors.error }}>{selectedSpecDetail.error}</Text>
+                  <AnimatedErrorIcon color={colors.error} />
+                  <Text style={{ color: colors.error, textAlign: 'center' }}>
+                    Failed to fetch explanation. Please try again.
+                  </Text>
                 </View>
               ) : selectedSpecDetail.data ? (
                 <ScrollView showsVerticalScrollIndicator={false}>
@@ -1179,13 +1217,15 @@ const styles = StyleSheet.create({
   },
   aiOverlayTitleWrap: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 8,
+    flexShrink: 1,
   },
   aiOverlayTitle: {
     ...Typography.headline,
     fontSize: 18,
     fontWeight: "700",
+    flexShrink: 1,
   },
   closeBtn: {
     position: 'absolute',

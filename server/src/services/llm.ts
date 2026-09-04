@@ -155,6 +155,9 @@ export async function explainSpec(
   specLabel: string,
   specValues: string[]
 ): Promise<any> {
+  console.log(`[LLM Service] explainSpec invoked for: "${specLabel}"`);
+  console.log(`[LLM Service] Products: ${productNames.join(", ")}`);
+  
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const prompt = `
 You are a technical analyst. Explain the technical specification "${specLabel}" in simple terms.
@@ -199,9 +202,10 @@ Then, provide a brief insight for each product's specific value (1-2 sentences),
     if (!content) throw new Error("No content received from Gemini");
     
     const cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    console.log(`[LLM Service] explainSpec completed successfully for: "${specLabel}"`);
     return JSON.parse(cleanContent);
   } catch (err: any) {
-    console.error("Gemini explainSpec Error:", err.message || err);
+    console.error(`[LLM Service] explainSpec Error for "${specLabel}":`, err.message || err);
     throw err;
   }
 }
