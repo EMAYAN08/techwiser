@@ -121,7 +121,7 @@ ${schemaJson}
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash-lite',
+      model: 'gemini-3.1-flash-lite',
       contents: fullPrompt,
       config: {
         responseMimeType: 'application/json',
@@ -187,7 +187,7 @@ Then, provide a brief insight for each product's specific value (1-2 sentences),
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash-lite',
+      model: 'gemini-3.1-flash-lite',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
