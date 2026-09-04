@@ -227,6 +227,7 @@ ${JSON.stringify(products, null, 2)}
 
 If the provided products are already the absolute best in their class, return an empty array for alternatives.
 If there are strictly better alternatives (in value, performance, or recency) in the same price range, suggest up to 3 alternative products.
+IMPORTANT: You MUST provide the exact, specific product name including the common model number/generation (e.g., "Sony WH-1000XM5" instead of "Sony Headphones", or "ASUS ROG Zephyrus G14 (2024)" instead of "ASUS Laptop"). This exact string will be used to search Google Shopping, so it must be highly specific.
 Try to provide an official product image URL if you know one. If you don't know an image URL, omit it.
 `;
 
@@ -239,7 +240,7 @@ Try to provide an official product image URL if you know one. If you don't know 
         items: {
           type: Type.OBJECT,
           properties: {
-            name: { type: Type.STRING, description: "Name of the alternative product" },
+            name: { type: Type.STRING, description: "Highly specific name of the alternative product, MUST include exact model number/generation." },
             estimatedPrice: { type: Type.STRING, description: "Estimated price, e.g. '$999'" },
             reasonWhyBetter: { type: Type.STRING, description: "1-2 sentences explaining exactly why this is a better choice." },
             imageUrl: { type: Type.STRING, description: "Actual valid image URL for the product (.jpg/.png)" }
@@ -252,7 +253,7 @@ Try to provide an official product image URL if you know one. If you don't know 
   };
 
   try {
-    const modelName = 'gemini-3.5-flash-lite';
+    const modelName = 'gemini-3.1-flash-lite';
     console.log(`[LLM Service] Calling model: ${modelName} for operation: findAlternatives`);
     const response = await ai.models.generateContent({
       model: modelName,
