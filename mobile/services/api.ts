@@ -26,7 +26,12 @@ export async function explainSpec(
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to explain spec: ${response.statusText}`);
+    let errMsg = response.statusText;
+    try {
+      const errJson = await response.json();
+      if (errJson.error) errMsg = errJson.error;
+    } catch (e) {}
+    throw new Error(errMsg || 'Unknown error occurred');
   }
 
   return response.json();
