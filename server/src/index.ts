@@ -4,7 +4,7 @@ dotenv.config();
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { scrapeUrl } from './services/scraper';
-import { generateComparison } from './services/llm';
+import { generateComparison, explainSpec } from './services/llm';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -156,9 +156,23 @@ app.post('/api/test-scrape', async (req: Request, res: Response) => {
   }
 });
 
+app.post('/api/explain-spec', async (req: Request, res: Response) => {
+  try {
+    const { productNames, specLabel, specValues } = req.body;
+    
+    if (!productNames || !Array.isArray(productNames) || !specLabel || !specValues || !Array.isArray(specValues)) {
+      res.status(400).json({ error: 'Invalid payload. Required: productNames (array), specLabel (string), specValues (array).' });
+      return;
+    }
+
+    const explanation = await explainSpec(productNames, specLabel, specValues);
+    res.json(explanation);
+  } catch (error: unknown) {
+    console.error('Unexpected error in /api/explain-spec:', error);
+    res.status(500).json({ error: 'An unexpected error occurred while explaining spec.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-
-

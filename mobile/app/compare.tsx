@@ -9,11 +9,13 @@ import {
   Image,
   Animated,
   AccessibilityInfo,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from '../utils/haptics';
-import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info, Share } from "lucide-react-native";
+import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info, Share, X } from "lucide-react-native";
+import { BlurView } from "expo-blur";
 
 import { useComparisonStore } from "../store/useComparisonStore";
 import { useThemeColors, getRetailerColor, formatRetailerName } from "../constants/Colors";
@@ -23,6 +25,7 @@ import { Card } from "../components/ui/Card";
 import { getCategoryIcon } from "../components/comparison/CategoryIcon";
 import { type DetailedSpecRow, type DetailedSpecValue } from "../components/comparison/SpecBarRow";
 import { exportComparisonToPDF } from "../utils/exportPDF";
+import { explainSpec, type SpecExplanationResponse } from "../services/api";
 
 const OVERVIEW_KEY = "Overview";
 
@@ -311,6 +314,7 @@ interface CategoryBodyProps {
   colors: ReturnType<typeof useThemeColors>["colors"];
   valueColumnWidth: number;
   headerGap: number;
+  onSpecPress: (label: string, values: string[]) => void;
 }
 
 function CategoryBody({
@@ -318,6 +322,7 @@ function CategoryBody({
   colors,
   valueColumnWidth,
   headerGap,
+  onSpecPress,
 }: CategoryBodyProps) {
   if (category.rows.length === 0) {
     return (
@@ -363,7 +368,10 @@ function CategoryBody({
             >
               {row.label}
             </Text>
-            <View style={[styles.specValuesRow, { gap: headerGap }]}>
+            <Pressable 
+              style={[styles.specValuesRow, { gap: headerGap }]}
+              onPress={() => onSpecPress(row.label, row.values.map(v => v.displayValue))}
+            >
               {row.values.map((v) => (
                 <ValueCard
                   key={v.productId}
@@ -372,7 +380,7 @@ function CategoryBody({
                   width={valueColumnWidth}
                 />
               ))}
-            </View>
+            </Pressable>
           </View>
         );
       })}
@@ -465,10 +473,31 @@ function EmptyState({ onBack }: { onBack: () => void }) {
 export default function CompareScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const { colors, isDark } = useThemeColors();
   const { activeComparison } = useComparisonStore();
   const [selectedCategory, setSelectedCategory] = useState<string>(OVERVIEW_KEY);
+  
+  const [selectedSpecDetail, setSelectedSpecDetail] = useState<{
+    label: string;
+    values: string[];
+    loading: boolean;
+    data?: SpecExplanationResponse;
+    error?: string;
+  } | null>(null);
+
+  const handleSpecPress = async (label: string, values: string[]) => {
+    if (!activeComparison) return;
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedSpecDetail({ label, values, loading: true });
+    try {
+      const productNames = activeComparison.products.map(p => p.name);
+      const data = await explainSpec(productNames, label, values);
+      setSelectedSpecDetail(prev => prev ? { ...prev, loading: false, data } : null);
+    } catch (error: any) {
+      setSelectedSpecDetail(prev => prev ? { ...prev, loading: false, error: error.message } : null);
+    }
+  };
 
   // Responsive horizontal padding — between 16 and 24.
   const screenPadding = useMemo(
@@ -654,6 +683,7 @@ export default function CompareScreen() {
         colors={colors}
         valueColumnWidth={valueColumnWidth}
         headerGap={headerGap}
+        onSpecPress={handleSpecPress}
       />
     );
   };
@@ -743,21 +773,75 @@ export default function CompareScreen() {
       </View>
 
       {/* SCROLLING: body */}
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingHorizontal: screenPadding,
-            paddingTop: 24,
-            paddingBottom: insets.bottom + 32,
-          },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        {selectedCategory === OVERVIEW_KEY
-          ? renderOverview()
-          : renderCategory(selectedCategory)}
-      </ScrollView>
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingHorizontal: screenPadding,
+              paddingTop: 24,
+              paddingBottom: insets.bottom + 32,
+            },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {selectedCategory === OVERVIEW_KEY
+            ? renderOverview()
+            : renderCategory(selectedCategory)}
+        </ScrollView>
+        
+        {selectedSpecDetail && (
+          <BlurView
+            intensity={isDark ? 30 : 60}
+            tint={isDark ? "dark" : "light"}
+            style={[StyleSheet.absoluteFill, { zIndex: 5, padding: screenPadding, paddingBottom: insets.bottom + 24 }]}
+          >
+            <View style={[styles.aiOverlayCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.aiOverlayHeader}>
+                <View style={styles.aiOverlayTitleWrap}>
+                  <Sparkles size={16} color={colors.ai} strokeWidth={2.25} />
+                  <Text style={[styles.aiOverlayTitle, { color: colors.ai }]}>AI Explanation: {selectedSpecDetail.label}</Text>
+                </View>
+                <Pressable
+                  onPress={() => setSelectedSpecDetail(null)}
+                  hitSlop={12}
+                  style={styles.closeBtn}
+                >
+                  <X size={20} color={colors.textSecondary} />
+                </Pressable>
+              </View>
+
+              {selectedSpecDetail.loading ? (
+                <View style={styles.aiOverlayLoading}>
+                  <ActivityIndicator size="large" color={colors.ai} />
+                  <Text style={[styles.aiOverlayLoadingText, { color: colors.textSecondary }]}>Analyzing spec...</Text>
+                </View>
+              ) : selectedSpecDetail.error ? (
+                <View style={styles.aiOverlayError}>
+                  <Text style={{ color: colors.error }}>{selectedSpecDetail.error}</Text>
+                </View>
+              ) : selectedSpecDetail.data ? (
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <Text style={[styles.aiOverlayConcept, { color: colors.text }]}>
+                    {selectedSpecDetail.data.concept}
+                  </Text>
+                  <View style={styles.aiOverlayBreakdowns}>
+                    {selectedSpecDetail.data.breakdowns.map((b, idx) => (
+                      <View key={idx} style={[styles.aiOverlayBreakdownItem, { borderTopColor: colors.border }]}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                          <Text style={[styles.aiOverlayProductName, { color: colors.text }]}>{b.productName}</Text>
+                          <Text style={[styles.aiOverlayValue, { color: colors.textTertiary }]}> • {b.value}</Text>
+                        </View>
+                        <Text style={[styles.aiOverlayInsight, { color: colors.textSecondary }]}>{b.insight}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+              ) : null}
+            </View>
+          </BlurView>
+        )}
+      </View>
     </View>
   );
 }
@@ -1068,7 +1152,80 @@ const styles = StyleSheet.create({
   },
 
   detailedCta: { marginTop: 24 },
+
+  // AI Overlay
+  aiOverlayCard: {
+    flex: 1,
+    marginTop: 'auto',
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 10,
+    maxHeight: '80%',
+  },
+  aiOverlayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  aiOverlayTitleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  aiOverlayTitle: {
+    ...Typography.headline,
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  aiOverlayLoading: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    gap: 12,
+  },
+  aiOverlayLoadingText: {
+    ...Typography.body,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  aiOverlayError: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  aiOverlayConcept: {
+    ...Typography.body,
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  aiOverlayBreakdowns: {
+    gap: 16,
+    paddingBottom: 20,
+  },
+  aiOverlayBreakdownItem: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 16,
+  },
+  aiOverlayProductName: {
+    ...Typography.body,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  aiOverlayValue: {
+    ...Typography.body,
+    fontSize: 14,
+  },
+  aiOverlayInsight: {
+    ...Typography.body,
+    fontSize: 14,
+    lineHeight: 20,
+  },
 });
-
-
-

@@ -72,7 +72,7 @@ export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCanc
         
         {onCancel && (
           <View style={styles.cancelContainer}>
-            <Button title="Cancel" variant="outline" onPress={onCancel} />
+            <Button title="Cancel" variant="ghost" onPress={onCancel} />
           </View>
         )}
       </View>

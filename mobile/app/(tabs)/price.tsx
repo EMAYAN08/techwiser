@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     maxHeight: 400,
   },
   comingSoon: {
-    ...Typography.title,
+    ...Typography.headline,
     marginBottom: 12,
   },
   description: {

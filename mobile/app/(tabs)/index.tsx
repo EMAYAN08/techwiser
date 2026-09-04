@@ -159,12 +159,12 @@ export default function Home() {
         <Animated.View style={{ opacity: panelFade }}>
           {inputMode === "url" && (
             <>
-              <URLInputGroup onSwipeStart={() => setScrollEnabled(false)} onSwipeEnd={() => setScrollEnabled(true)} />
-              <Button
-                title={isLoading ? "Comparing..." : "Compare"}
-                variant="primary"
-                onPress={handleCompare}
-                disabled={!canCompare || isLoading}
+              <URLInputGroup 
+                onSwipeStart={() => setScrollEnabled(false)} 
+                onSwipeEnd={() => setScrollEnabled(true)} 
+                onCompare={handleCompare}
+                isLoading={isLoading}
+                canCompare={canCompare}
               />
             </>
           )}

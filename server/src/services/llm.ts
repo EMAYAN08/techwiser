@@ -149,3 +149,59 @@ ${schemaJson}
     throw err;
   }
 }
+
+export async function explainSpec(
+  productNames: string[],
+  specLabel: string,
+  specValues: string[]
+): Promise<any> {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const prompt = `
+You are a technical analyst. Explain the technical specification "${specLabel}" in simple terms.
+Here are the products and their values:
+${productNames.map((name, i) => `- ${name}: ${specValues[i] || 'N/A'}`).join('\n')}
+
+Provide a brief, 1-2 sentence concept explanation of what this spec means for a typical user.
+Then, provide a brief insight for each product's specific value (1-2 sentences), explaining what this specific value means and what kind of user it is best for.
+`;
+
+  const responseSchema: Schema = {
+    type: Type.OBJECT,
+    properties: {
+      concept: { type: Type.STRING, description: "A brief, 1-2 sentence explanation of what this spec means for a typical user." },
+      breakdowns: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            productName: { type: Type.STRING },
+            value: { type: Type.STRING },
+            insight: { type: Type.STRING, description: "1-2 sentence explanation of what this specific value means and what kind of user it is best for." }
+          },
+          required: ["productName", "value", "insight"]
+        }
+      }
+    },
+    required: ["concept", "breakdowns"]
+  };
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash-lite',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: responseSchema,
+      }
+    });
+
+    const content = response.text;
+    if (!content) throw new Error("No content received from Gemini");
+    
+    const cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleanContent);
+  } catch (err: any) {
+    console.error("Gemini explainSpec Error:", err.message || err);
+    throw err;
+  }
+}
