@@ -225,7 +225,7 @@ export function URLInputGroup({ onSwipeStart = () => {}, onSwipeEnd = () => {} }
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.headerLabel, { color: colors.textTertiary }]}>Product URLs</Text>
+        <Text style={[styles.headerLabel, { color: colors.textTertiary }]}>PRODUCT URLs</Text>
         <View style={styles.headerRight}>
           {urls.length > 2 && (
             <Text style={[styles.swipeHint, { color: colors.textTertiary }]}>Swipe left to remove</Text>
@@ -292,14 +292,14 @@ export function URLInputGroup({ onSwipeStart = () => {}, onSwipeEnd = () => {} }
 }
 
 const styles = StyleSheet.create({
-  container: { marginVertical: 16 },
+  container: { marginBottom: 16, marginTop: 4 },
   header: {
     flexDirection: "row", alignItems: "center",
     justifyContent: "space-between", marginBottom: 10,
   },
   headerLabel: {
     fontSize: 12, fontWeight: "600",
-    color: "rgba(255,255,255,0.35)", letterSpacing: 0.8, textTransform: "uppercase",
+    color: "rgba(255,255,255,0.35)", letterSpacing: 0.8,
   },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
   swipeHint: { fontSize: 11, color: "rgba(255,255,255,0.20)" },

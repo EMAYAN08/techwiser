@@ -136,7 +136,7 @@ export default function Home() {
       <View style={{ 
         paddingHorizontal: 24, 
         paddingTop: 64, 
-        paddingBottom: 16, 
+        paddingBottom: 8, 
         zIndex: 10, 
         backgroundColor: colors.background
       }}>
@@ -151,7 +151,7 @@ export default function Home() {
       {/* SCROLLABLE CONTENT */}
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 4, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
         scrollEnabled={scrollEnabled}
         showsVerticalScrollIndicator={false}
