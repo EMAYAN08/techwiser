@@ -4,7 +4,7 @@ import {
   Cpu, Battery, Camera, Ruler, Microchip, Volume2, Wifi, Star, Box,
   Cable, Fingerprint, AppWindow, Palette, ShieldCheck, Tag, Calendar, Gamepad2, Mouse,
   Printer, Router, WashingMachine, Microwave, Speaker, Plug, Power, HardDrive, Disc, Activity,
-  Fan, Plane, Thermometer, Zap, Layers, Server, Type, Shuffle
+  Fan, Plane, Thermometer, Zap, Layers, Server, Type, Shuffle, Sparkles
 } from "lucide-react-native";
 
 type IconComponent = React.ComponentType<{
@@ -65,7 +65,7 @@ export function getCategoryIcon(category: string): IconComponent {
   if (c.includes("release") || c.includes("launch") || c.includes("date") || c.includes("year")) return Calendar;
   if (c.includes("overview") || c.includes("summary") || c.includes("general")) return Activity;
   if (c.includes("server") || c.includes("nas") || c.includes("host")) return Server;
-  if (c.includes("alternative")) return Shuffle;
+  if (c.includes("alternative")) return Sparkles;
   if (c.includes("other") || c.includes("misc") || c.includes("feature") || c.includes("additional")) return Layers;
 
   return Box;
