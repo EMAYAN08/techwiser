@@ -204,9 +204,11 @@ interface KeyDifference {
 function KeyDifferencesCard({
   differences,
   productColors,
+  onSpecPress,
 }: {
   differences: KeyDifference[];
   productColors: string[];
+  onSpecPress: (label: string, values: string[]) => void;
 }) {
   const { colors } = useThemeColors();
   if (differences.length === 0) return null;
@@ -226,7 +228,10 @@ function KeyDifferencesCard({
           ]}
         >
           <Text style={[styles.diffLabel, { color: colors.textSecondary }]}>{diff.label}</Text>
-          <View style={styles.diffValuesRow}>
+          <Pressable 
+            style={styles.diffValuesRow}
+            onPress={() => onSpecPress(diff.label, diff.values)}
+          >
             {diff.values.map((val, idx) => {
               const win = diff.winnerIndex === idx;
               return (
@@ -257,7 +262,7 @@ function KeyDifferencesCard({
                 </View>
               );
             })}
-          </View>
+          </Pressable>
         </View>
       ))}
     </Card>
@@ -656,6 +661,7 @@ export default function CompareScreen() {
           <KeyDifferencesCard
             differences={decoratedDifferences}
             productColors={products.map((p) => getRetailerColor(p.retailer) || colors.primary)}
+            onSpecPress={handleSpecPress}
           />
         </View>
       )}
@@ -797,18 +803,18 @@ export default function CompareScreen() {
             style={[StyleSheet.absoluteFill, { zIndex: 5, padding: screenPadding, paddingBottom: insets.bottom + 24 }]}
           >
             <View style={[styles.aiOverlayCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Pressable
+                onPress={() => setSelectedSpecDetail(null)}
+                hitSlop={12}
+                style={styles.closeBtn}
+              >
+                <X size={20} color={colors.textSecondary} />
+              </Pressable>
               <View style={styles.aiOverlayHeader}>
                 <View style={styles.aiOverlayTitleWrap}>
                   <Sparkles size={16} color={colors.ai} strokeWidth={2.25} />
                   <Text style={[styles.aiOverlayTitle, { color: colors.ai }]}>AI Explanation: {selectedSpecDetail.label}</Text>
                 </View>
-                <Pressable
-                  onPress={() => setSelectedSpecDetail(null)}
-                  hitSlop={12}
-                  style={styles.closeBtn}
-                >
-                  <X size={20} color={colors.textSecondary} />
-                </Pressable>
               </View>
 
               {selectedSpecDetail.loading ? (
@@ -1156,7 +1162,6 @@ const styles = StyleSheet.create({
   // AI Overlay
   aiOverlayCard: {
     flex: 1,
-    marginTop: 'auto',
     borderRadius: 24,
     borderWidth: 1,
     padding: 24,
@@ -1165,13 +1170,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 15,
     elevation: 10,
-    maxHeight: '80%',
   },
   aiOverlayHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
+    paddingRight: 32, // space for close btn
   },
   aiOverlayTitleWrap: {
     flexDirection: 'row',
@@ -1184,7 +1188,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   closeBtn: {
-    padding: 4,
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    padding: 8,
+    zIndex: 10,
   },
   aiOverlayLoading: {
     paddingVertical: 40,
