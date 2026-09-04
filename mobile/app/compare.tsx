@@ -762,8 +762,12 @@ export default function CompareScreen() {
             title="Retry"
             variant="ghost"
             onPress={() => {
-              setAlternativesData(null);
-              handleSelectCategory("Alternatives");
+              if (activeComparison) {
+                setAlternativesData({ loading: true });
+                fetchAlternatives(activeComparison.products)
+                  .then((data) => setAlternativesData({ loading: false, data }))
+                  .catch((error: unknown) => setAlternativesData({ loading: false, error: error instanceof Error ? error.message : "Unknown error" }));
+              }
             }}
           />
         </View>

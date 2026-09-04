@@ -227,7 +227,7 @@ ${JSON.stringify(products, null, 2)}
 
 If the provided products are already the absolute best in their class, return an empty array for alternatives.
 If there are strictly better alternatives (in value, performance, or recency) in the same price range, suggest up to 3 alternative products.
-For each alternative, use your search capabilities to find a valid product purchase URL (preferably from Best Buy Canada or Amazon Canada) and a valid product image URL.
+For each alternative, formulate a valid search URL for Best Buy Canada (e.g. https://www.bestbuy.ca/en-ca/search?search-text=[ProductName]) or Amazon Canada. Also try to provide an official product image URL. If you don't know an image URL, omit it.
 `;
 
   const responseSchema: Schema = {
@@ -245,7 +245,7 @@ For each alternative, use your search capabilities to find a valid product purch
             url: { type: Type.STRING, description: "Actual valid product link to Best Buy CA or Amazon CA" },
             imageUrl: { type: Type.STRING, description: "Actual valid image URL for the product (.jpg/.png)" }
           },
-          required: ["name", "estimatedPrice", "reasonWhyBetter", "url", "imageUrl"]
+          required: ["name", "estimatedPrice", "reasonWhyBetter", "url"]
         }
       }
     },
@@ -261,7 +261,6 @@ For each alternative, use your search capabilities to find a valid product purch
       config: {
         responseMimeType: 'application/json',
         responseSchema: responseSchema,
-        tools: [{ googleSearch: {} }]
       }
     });
 
