@@ -15,6 +15,8 @@ type IconComponent = React.ComponentType<{
 
 export function getCategoryIcon(category: string): IconComponent {
   const c = category.toLowerCase();
+  
+  if (c.includes("alternative")) return Sparkles;
 
   // Core devices
   if (c.includes("phone") || c.includes("smartphone") || c.includes("mobile")) return Smartphone;
@@ -65,7 +67,6 @@ export function getCategoryIcon(category: string): IconComponent {
   if (c.includes("release") || c.includes("launch") || c.includes("date") || c.includes("year")) return Calendar;
   if (c.includes("overview") || c.includes("summary") || c.includes("general")) return Activity;
   if (c.includes("server") || c.includes("nas") || c.includes("host")) return Server;
-  if (c.includes("alternative")) return Sparkles;
   if (c.includes("other") || c.includes("misc") || c.includes("feature") || c.includes("additional")) return Layers;
 
   return Box;
