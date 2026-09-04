@@ -253,7 +253,7 @@ For each alternative, use your search capabilities to find a valid product purch
   };
 
   try {
-    const modelName = 'gemini-3.1-flash-lite';
+    const modelName = 'gemini-3.5-flash-lite';
     console.log(`[LLM Service] Calling model: ${modelName} for operation: findAlternatives`);
     const response = await ai.models.generateContent({
       model: modelName,
