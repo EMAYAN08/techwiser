@@ -144,7 +144,11 @@ function SwipeableRow({
         <Animated.View style={[styles.deleteIcon, { opacity: iconOpacity, transform: [{ scale: iconScale }] }]}>
           <Feather name="trash-2" size={17} color={colors.error} />
         </Animated.View>
-        <Animated.View style={{ transform: [{ translateX }] }} {...panResponder.panHandlers}>
+        <Animated.View
+          style={{ transform: [{ translateX }] }}
+          {...panResponder.panHandlers}
+          {...({ dataSet: { tabSwipeIgnore: "true" } } as object)}
+        >
           <Input
             placeholder={`Product ${index + 1} URL`}
             value={url}

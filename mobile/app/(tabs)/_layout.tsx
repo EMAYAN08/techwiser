@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { Tabs, usePathname } from "expo-router";
+import { Tabs, usePathname, useRouter } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
@@ -17,9 +17,17 @@ import { Zap, BookOpen, Settings as SettingsIcon, Tag, LucideIcon } from "lucide
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { radii, size } from "../../constants/Layout";
+import {
+  adjacentTab,
+  createTabSwipeResponder,
+  pathForTab,
+  tabNameFromPath,
+  useWebTabSwipe,
+  type TabRouteName,
+} from "../../utils/tabSwipe";
 
 interface TabDef {
-  name: string;
+  name: TabRouteName;
   label: string;
   Icon: LucideIcon;
 }
@@ -32,8 +40,7 @@ const TABS: TabDef[] = [
 ];
 
 function isTabPath(path: string) {
-  const p = (path || "/").replace(/\/$/, "") || "/";
-  return p === "/" || p === "/library" || p === "/price" || p === "/settings";
+  return tabNameFromPath(path) !== null;
 }
 
 function useActivePath() {
@@ -132,7 +139,11 @@ function TabItem({
   );
 }
 
-function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+function CustomTabBar({
+  state,
+  navigation,
+  barHandlers,
+}: BottomTabBarProps & { barHandlers: ReturnType<typeof createTabSwipeResponder>["panHandlers"] }) {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useThemeColors();
   const path = useActivePath();
@@ -191,7 +202,10 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         },
       ]}
     >
-      <View style={[styles.glass, { borderColor: colors.tabBarBorder }]}>
+      <View
+        style={[styles.glass, { borderColor: colors.tabBarBorder }]}
+        {...(Platform.OS === "web" ? {} : barHandlers)}
+      >
         <BlurView
           intensity={isDark ? 42 : 55}
           tint={isDark ? "dark" : "light"}
@@ -237,28 +251,83 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 }
 
 export default function TabLayout() {
+  const router = useRouter();
+  const path = useActivePath();
+  const pathRef = useRef(path);
+  const routerRef = useRef(router);
+  pathRef.current = path;
+  routerRef.current = router;
+
+  const onSwipe = useRef((direction: 1 | -1) => {
+    const current = tabNameFromPath(pathRef.current);
+    if (!current) return;
+    const next = adjacentTab(current, direction);
+    if (!next) return;
+    void Haptics.selectionAsync();
+    routerRef.current.navigate(pathForTab(next));
+  }).current;
+
+  const screenSwipe = useRef(
+    createTabSwipeResponder({
+      getPath: () => pathRef.current,
+      onSwipe,
+      capture: false,
+      slop: 20,
+    })
+  ).current;
+
+  const barSwipe = useRef(
+    createTabSwipeResponder({
+      getPath: () => pathRef.current,
+      onSwipe,
+      capture: true,
+      slop: 12,
+    })
+  ).current;
+
+  useWebTabSwipe({
+    getPath: () => pathRef.current,
+    onSwipe,
+  });
+
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: { display: "none" },
-      }}
-      screenListeners={{
-        tabPress: () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        },
-      }}
-      tabBar={(props: BottomTabBarProps) => <CustomTabBar {...props} />}
+    <View
+      style={
+        Platform.OS === "web"
+          ? ([styles.shell, { touchAction: "pan-y" }] as unknown as object)
+          : styles.shell
+      }
+      {...(Platform.OS === "web" ? {} : screenSwipe.panHandlers)}
     >
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="library" options={{ title: "Library" }} />
-      <Tabs.Screen name="price" options={{ title: "Price" }} />
-      <Tabs.Screen name="settings" options={{ title: "Settings" }} />
-    </Tabs>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: { display: "none" },
+          animation: "shift",
+          lazy: false,
+        }}
+        screenListeners={{
+          tabPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          },
+        }}
+        tabBar={(props: BottomTabBarProps) => (
+          <CustomTabBar {...props} barHandlers={barSwipe.panHandlers} />
+        )}
+      >
+        <Tabs.Screen name="index" options={{ title: "Home" }} />
+        <Tabs.Screen name="library" options={{ title: "Library" }} />
+        <Tabs.Screen name="price" options={{ title: "Price" }} />
+        <Tabs.Screen name="settings" options={{ title: "Settings" }} />
+      </Tabs>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  shell: {
+    flex: 1,
+  },
   wrap: {
     position: "absolute",
     left: 12,
