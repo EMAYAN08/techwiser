@@ -235,6 +235,72 @@ const MOCK_RESULT_3_PRODUCT: ComparisonResult = {
   createdAt: new Date().toISOString(),
 };
 
+function slimProduct(p: {
+  id: string;
+  name: string;
+  brand: string;
+  retailer: string;
+  price: string;
+  url: string;
+}): Product {
+  return {
+    ...p,
+    retailerColor: "#8C8C86",
+    imageUrl: null,
+    specs: [],
+    badges: [],
+  };
+}
+
+const MOCK_LIBRARY_MIX: ComparisonResult = {
+  id: "mock-library-mix",
+  products: [
+    slimProduct({
+      id: "p4",
+      name: 'Apple MacBook Pro 14" M3 Pro',
+      brand: "Apple",
+      retailer: "amazon",
+      price: "$2,399 CAD",
+      url: "https://www.amazon.ca/macbook-pro-14",
+    }),
+    slimProduct({
+      id: "p5",
+      name: 'LG OLED C3 65" 4K TV',
+      brand: "LG",
+      retailer: "costco",
+      price: "$1,899 CAD",
+      url: "https://www.costco.ca/lg-oled-c3",
+    }),
+    slimProduct({
+      id: "p6",
+      name: "Dell XPS Desktop 8960",
+      brand: "Dell",
+      retailer: "canadacomputers",
+      price: "$1,649 CAD",
+      url: "https://www.canadacomputers.com/dell-xps-desktop",
+    }),
+    slimProduct({
+      id: "p7",
+      name: 'Apple iPad Pro 12.9" M2',
+      brand: "Apple",
+      retailer: "walmart",
+      price: "$1,449 CAD",
+      url: "https://www.walmart.ca/ipad-pro",
+    }),
+    slimProduct({
+      id: "p8",
+      name: "Samsung Bespoke 28 cu. ft. Fridge",
+      brand: "Samsung",
+      retailer: "staples",
+      price: "$2,199 CAD",
+      url: "https://www.staples.ca/samsung-fridge",
+    }),
+  ],
+  keyDifferences: [],
+  aiSummary: "",
+  createdAt: new Date().toISOString(),
+};
+
 // ---------------------------------------------------------------------------
 // Store
 // ---------------------------------------------------------------------------
@@ -265,6 +331,13 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
         "https://www.bestbuy.ca/en-ca/product/pixel-8-pro/16789012",
       ],
       result: MOCK_RESULT_3_PRODUCT,
+    },
+    {
+      id: "3",
+      title: "Laptops, TVs, and home",
+      date: "Last week",
+      urls: [],
+      result: MOCK_LIBRARY_MIX,
     },
   ],
   updateUrl: (index, url) =>

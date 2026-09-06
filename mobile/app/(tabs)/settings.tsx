@@ -157,6 +157,12 @@ export default function SettingsScreen() {
             icon="info"
             trailing={<Text style={[styles.trailing, { color: colors.stone }]}>{version}</Text>}
           />
+          <View style={[styles.divider, { backgroundColor: colors.line }]} />
+          <Row
+            label="Icons by Icons8"
+            icon="image"
+            onPress={() => Linking.openURL("https://icons8.com")}
+          />
         </View>
       </ScrollView>
     </View>
