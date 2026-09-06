@@ -1,20 +1,25 @@
-import { Typography } from '../../constants/Typography';
+import { type } from "../../constants/Typography";
 import React, { useEffect, useRef } from "react";
-import {
-  View, Text, StyleSheet, Animated, PanResponder, Pressable,
-} from "react-native";
+import { View, Text, StyleSheet, Animated, PanResponder, Pressable } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import * as Haptics from '../../utils/haptics';
+import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { Feather } from "@expo/vector-icons";
 import { useComparisonStore } from "../../store/useComparisonStore";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
+import { radii, size } from "../../constants/Layout";
 
 const SUPPORTED_DOMAINS = [
-  "bestbuy.ca", "amazon.ca", "canadacomputers.com",
-  "memoryexpress.com", "newegg.ca", "staples.ca", "thesource.ca", "costco.ca",
-  "walmart.ca"
+  "bestbuy.ca",
+  "amazon.ca",
+  "canadacomputers.com",
+  "memoryexpress.com",
+  "newegg.ca",
+  "staples.ca",
+  "thesource.ca",
+  "costco.ca",
+  "walmart.ca",
 ];
 
 type ValidationState = "idle" | "valid" | "invalid";
@@ -25,13 +30,13 @@ function validateUrl(url: string): ValidationState {
     const parsed = new URL(url.trim());
     if (!["http:", "https:"].includes(parsed.protocol)) return "invalid";
     const host = parsed.hostname.replace(/^www\./, "");
-    return SUPPORTED_DOMAINS.some(
-      (d) => host === d || host.endsWith("." + d)
-    ) ? "valid" : "invalid";
-  } catch { return "invalid"; }
+    return SUPPORTED_DOMAINS.some((d) => host === d || host.endsWith("." + d)) ? "valid" : "invalid";
+  } catch {
+    return "invalid";
+  }
 }
 
-const THRESHOLD   = 90;
+const THRESHOLD = 90;
 const ICON_REVEAL = 48;
 
 interface SwipeableRowProps {
@@ -48,18 +53,23 @@ interface SwipeableRowProps {
 
 function SwipeableRow({
   colors,
-  index, url, canDelete,
-  onPaste, onUpdate, onDelete,
-  onSwipeStart, onSwipeEnd,
+  index,
+  url,
+  canDelete,
+  onPaste,
+  onUpdate,
+  onDelete,
+  onSwipeStart,
+  onSwipeEnd,
 }: SwipeableRowProps) {
-  const translateX  = useRef(new Animated.Value(0)).current;
-  const rowHeight   = useRef(new Animated.Value(62)).current;
-  const rowOpacity  = useRef(new Animated.Value(1)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+  const rowHeight = useRef(new Animated.Value(68)).current;
+  const rowOpacity = useRef(new Animated.Value(1)).current;
   const iconOpacity = useRef(new Animated.Value(0)).current;
-  const iconScale   = useRef(new Animated.Value(0.5)).current;
-  const hapticFired   = useRef(false);
-  const deleting      = useRef(false);
-  const swiping       = useRef(false);
+  const iconScale = useRef(new Animated.Value(0.5)).current;
+  const hapticFired = useRef(false);
+  const deleting = useRef(false);
+  const swiping = useRef(false);
   const canDeleteRef = useRef(canDelete);
   canDeleteRef.current = canDelete;
 
@@ -67,11 +77,10 @@ function SwipeableRow({
     onSwipeEnd();
     swiping.current = false;
     hapticFired.current = false;
-    // All three use native driver — no mixing issue
     Animated.parallel([
-      Animated.spring(translateX,  { toValue: 0,   useNativeDriver: true, tension: 160, friction: 10 }),
-      Animated.timing(iconOpacity, { toValue: 0,   duration: 180, useNativeDriver: true }),
-      Animated.timing(iconScale,   { toValue: 0.5, duration: 180, useNativeDriver: true }),
+      Animated.spring(translateX, { toValue: 0, useNativeDriver: true, tension: 160, friction: 10 }),
+      Animated.timing(iconOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
+      Animated.timing(iconScale, { toValue: 0.5, duration: 180, useNativeDriver: true }),
     ]).start();
   };
 
@@ -80,80 +89,61 @@ function SwipeableRow({
     deleting.current = true;
     onSwipeEnd();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // native driver: slide + fade (height cannot use native driver)
     Animated.parallel([
       Animated.timing(translateX, { toValue: -360, duration: 220, useNativeDriver: true }),
-      Animated.timing(rowOpacity, { toValue: 0,    duration: 180, useNativeDriver: true }),
+      Animated.timing(rowOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
     ]).start(() => {
-      // JS driver: collapse height after slide completes
-      Animated.timing(rowHeight, { toValue: 0, duration: 180, useNativeDriver: false }).start(
-        () => onDelete()
-      );
+      Animated.timing(rowHeight, { toValue: 0, duration: 180, useNativeDriver: false }).start(() => onDelete());
     });
   };
 
-  const panResponder = useRef(PanResponder.create({
-    // Dont claim on tap - only on clear horizontal move
-    onStartShouldSetPanResponder: () => false,
-    onStartShouldSetPanResponderCapture: () => false,
-
-    // Capture phase - fires BEFORE the ScrollView sees it
-    onMoveShouldSetPanResponderCapture: (_, g) => {
-      if (!canDeleteRef.current) return false;
-      const isHorizontal = Math.abs(g.dx) > Math.abs(g.dy) * 1.2;
-      const isLeftSwipe  = g.dx < -8;
-      return isHorizontal && isLeftSwipe;
-    },
-
-    onPanResponderGrant: () => {
-      // Lock the scroll immediately when we claim the gesture
-      if (!swiping.current) {
-        swiping.current = true;
-        onSwipeStart();
-      }
-    },
-
-    // Never surrender the gesture to ScrollView or anything else
-    onPanResponderTerminationRequest: () => false,
-
-    onPanResponderMove: (_, g) => {
-      const dx = Math.max(-THRESHOLD - 20, Math.min(0, g.dx));
-      translateX.setValue(dx);
-
-      const progress = Math.min(1, Math.abs(dx) / ICON_REVEAL);
-      iconOpacity.setValue(progress);
-      iconScale.setValue(0.5 + 0.5 * progress);
-
-      if (Math.abs(dx) >= THRESHOLD && !hapticFired.current) {
-        hapticFired.current = true;
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      } else if (Math.abs(dx) < THRESHOLD - 15) {
-        hapticFired.current = false;
-      }
-    },
-
-    onPanResponderRelease: (_, g) => {
-      if (g.dx <= -THRESHOLD || g.vx < -0.5) {
-        commitDelete();
-      } else {
-        snapBack();
-      }
-    },
-
-    onPanResponderTerminate: () => snapBack(),
-  })).current;
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponderCapture: (_, g) => {
+        if (!canDeleteRef.current) return false;
+        const isHorizontal = Math.abs(g.dx) > Math.abs(g.dy) * 1.2;
+        const isLeftSwipe = g.dx < -8;
+        return isHorizontal && isLeftSwipe;
+      },
+      onPanResponderGrant: () => {
+        if (!swiping.current) {
+          swiping.current = true;
+          onSwipeStart();
+        }
+      },
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderMove: (_, g) => {
+        const dx = Math.max(-THRESHOLD - 20, Math.min(0, g.dx));
+        translateX.setValue(dx);
+        const progress = Math.min(1, Math.abs(dx) / ICON_REVEAL);
+        iconOpacity.setValue(progress);
+        iconScale.setValue(0.5 + 0.5 * progress);
+        if (Math.abs(dx) >= THRESHOLD && !hapticFired.current) {
+          hapticFired.current = true;
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        } else if (Math.abs(dx) < THRESHOLD - 15) {
+          hapticFired.current = false;
+        }
+      },
+      onPanResponderRelease: (_, g) => {
+        if (g.dx <= -THRESHOLD || g.vx < -0.5) {
+          commitDelete();
+        } else {
+          snapBack();
+        }
+      },
+      onPanResponderTerminate: () => snapBack(),
+    })
+  ).current;
 
   return (
-    // Outer: JS driver only (height collapse) — never touched by native driver
     <Animated.View style={[styles.rowWrap, { height: rowHeight }]}>
-      {/* Inner: native driver (opacity fade) — separate node from height */}
       <Animated.View style={{ opacity: rowOpacity, flex: 1 }}>
-        {/* Tiny red icon revealed behind the input */}
         <Animated.View style={[styles.deleteIcon, { opacity: iconOpacity, transform: [{ scale: iconScale }] }]}>
           <Feather name="trash-2" size={17} color={colors.error} />
         </Animated.View>
-
-        {/* Input slides left — native driver */}
         <Animated.View style={{ transform: [{ translateX }] }} {...panResponder.panHandlers}>
           <Input
             placeholder={`Product ${index + 1} URL`}
@@ -169,7 +159,6 @@ function SwipeableRow({
   );
 }
 
-// -- Group ---------------------------------------------------------------------
 interface URLInputGroupProps {
   onSwipeStart?: () => void;
   onSwipeEnd?: () => void;
@@ -178,8 +167,8 @@ interface URLInputGroupProps {
   canCompare?: boolean;
 }
 
-export function URLInputGroup({ 
-  onSwipeStart = () => {}, 
+export function URLInputGroup({
+  onSwipeStart = () => {},
   onSwipeEnd = () => {},
   onCompare = () => {},
   isLoading = false,
@@ -187,8 +176,8 @@ export function URLInputGroup({
 }: URLInputGroupProps) {
   const { colors } = useThemeColors();
   const { urls, updateUrl, addUrl, removeUrl, setUrls } = useComparisonStore();
-  const animValues    = useRef(urls.map(() => new Animated.Value(0))).current;
-  const clearScale    = useRef(new Animated.Value(1)).current;
+  const animValues = useRef(urls.map(() => new Animated.Value(0))).current;
+  const clearScale = useRef(new Animated.Value(1)).current;
 
   while (animValues.length < urls.length + 1) {
     animValues.push(new Animated.Value(0));
@@ -204,7 +193,7 @@ export function URLInputGroup({
         : []),
     ];
     Animated.parallel(anims).start();
-  }, [urls.length]);
+  }, [urls.length, animValues]);
 
   const handlePaste = async (index: number) => {
     try {
@@ -235,19 +224,23 @@ export function URLInputGroup({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.headerLabel, { color: colors.textTertiary }]}>PRODUCT URLs</Text>
+        <Text style={[styles.headerLabel, { color: colors.stone }]}>Product URLs</Text>
         <View style={styles.headerRight}>
-          {urls.length > 2 && (
-            <Text style={[styles.swipeHint, { color: colors.textTertiary }]}>Swipe left to remove</Text>
-          )}
-          {hasAnyContent && (
+          {urls.length > 2 ? (
+            <Text style={[styles.swipeHint, { color: colors.stone }]}>Swipe left to remove</Text>
+          ) : null}
+          {hasAnyContent ? (
             <Animated.View style={{ transform: [{ scale: clearScale }] }}>
-              <Pressable onPress={handleClearAll} style={[styles.clearAllBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} hitSlop={8}>
-                <Feather name="trash-2" size={12} color={colors.textSecondary} />
-                <Text style={[styles.clearAllText, { color: colors.textSecondary }]}>Clear all</Text>
+              <Pressable
+                onPress={handleClearAll}
+                style={[styles.clearAllBtn, { backgroundColor: colors.fog }]}
+                hitSlop={8}
+              >
+                <Feather name="trash-2" size={12} color={colors.body} />
+                <Text style={[styles.clearAllText, { color: colors.body }]}>Clear all</Text>
               </Pressable>
             </Animated.View>
-          )}
+          ) : null}
         </View>
       </View>
 
@@ -256,9 +249,11 @@ export function URLInputGroup({
           key={index}
           style={{
             opacity: animValues[index],
-            transform: [{
-              translateY: animValues[index].interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
-            }],
+            transform: [
+              {
+                translateY: animValues[index].interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
+              },
+            ],
           }}
         >
           <SwipeableRow
@@ -276,36 +271,34 @@ export function URLInputGroup({
       ))}
 
       <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-        {urls.length < 4 && (
+        {urls.length < 4 ? (
           <Animated.View
             style={{
               flex: 1,
               opacity: animValues[urls.length],
-              transform: [{
-                translateY: animValues[urls.length].interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
-              }],
+              transform: [
+                {
+                  translateY: animValues[urls.length].interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
+                },
+              ],
             }}
           >
             <Pressable
               onPress={addUrl}
-              style={({ pressed }) => [
-                styles.addBtn,
-                { backgroundColor: colors.primaryMuted, borderColor: colors.primary + '40' },
-                pressed && { opacity: 0.7 }
-              ]}
+              style={({ pressed }) => [styles.addBtn, { borderColor: colors.ink, opacity: pressed ? 0.72 : 1 }]}
             >
-              <Feather name="plus" size={14} color={colors.primary} />
-              <Text style={[styles.addBtnText, { color: colors.primary }]}>Add product</Text>
+              <Feather name="plus" size={16} color={colors.ink} />
+              <Text style={[styles.addBtnText, { color: colors.ink }]}>Add product</Text>
             </Pressable>
           </Animated.View>
-        )}
+        ) : null}
         <View style={{ flex: 1 }}>
           <Button
             title={isLoading ? "Comparing..." : "Compare"}
             variant="primary"
             onPress={onCompare}
             disabled={!canCompare || isLoading}
-            style={{ width: '100%' }}
+            style={{ width: "100%" }}
           />
         </View>
       </View>
@@ -316,40 +309,47 @@ export function URLInputGroup({
 const styles = StyleSheet.create({
   container: { marginBottom: 16, marginTop: 4 },
   header: {
-    flexDirection: "row", alignItems: "center",
-    justifyContent: "space-between", marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
   },
   headerLabel: {
-    ...Typography.eyebrow,
-    fontSize: 12,
-    color: "rgba(255,255,255,0.35)", letterSpacing: 0.8,
+    ...type.eyebrow,
   },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
-  swipeHint: { fontSize: 11, color: "rgba(255,255,255,0.20)" },
+  swipeHint: { ...type.caption, fontSize: 11 },
   clearAllBtn: {
-    flexDirection: "row", alignItems: "center", gap: 5,
-    paddingVertical: 4, paddingHorizontal: 8,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 6, borderWidth: 1, borderColor: "#2A2A2A",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: radii.pill,
   },
-  clearAllText: { ...Typography.caption, fontSize: 12, color: "rgba(255,255,255,0.35)" },
+  clearAllText: { ...type.caption, fontSize: 12 },
   rowWrap: { justifyContent: "center", overflow: "hidden" },
   deleteIcon: {
-    position: "absolute", right: 14,
-    top: 0, bottom: 12,
-    alignItems: "center", justifyContent: "center", width: 32,
+    position: "absolute",
+    right: 14,
+    top: 0,
+    bottom: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    width: 32,
+    pointerEvents: "none",
   },
   addBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    height: 48,
+    borderRadius: radii.pill,
+    borderWidth: 1.5,
+    height: size.button,
   },
   addBtnText: {
-    ...Typography.button,
+    ...type.button,
     fontSize: 15,
   },
 });
