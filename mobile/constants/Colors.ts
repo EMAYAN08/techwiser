@@ -35,7 +35,7 @@ export const palette = {
     successMuted: paletteTokens.spotifyWashLight,
     error: "#EB5757",
     errorMuted: "rgba(235, 87, 87, 0.1)",
-    ai: paletteTokens.ink,
+    ai: paletteTokens.spotify,
     aiMuted: paletteTokens.fog,
     // Exact theme.ts match
     bg: paletteTokens.paper,
@@ -74,7 +74,7 @@ export const palette = {
     successMuted: "rgba(29,185,84,0.12)",
     error: "#EB5757",
     errorMuted: "rgba(235, 87, 87, 0.1)",
-    ai: paletteTokens.paper,
+    ai: paletteTokens.spotify,
     aiMuted: paletteTokens.fogDark,
     // Exact theme.ts match
     bg: paletteTokens.ink,
