@@ -16,14 +16,14 @@ export const fonts = {
 
 export const type = {
   screenTitle: {
-    fontFamily: fonts.displayBold,
+    fontFamily: fonts.displaySemibold,
     fontSize: 30,
     lineHeight: 42,
     letterSpacing: -0.8,
     ...fontFix,
   } as TextStyle,
   productHero: {
-    fontFamily: fonts.displayBold,
+    fontFamily: fonts.displaySemibold,
     fontSize: 32,
     lineHeight: 36,
     letterSpacing: -0.6,
