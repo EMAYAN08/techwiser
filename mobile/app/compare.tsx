@@ -14,15 +14,18 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as Haptics from '../utils/haptics';
+import * as Haptics from "../utils/haptics";
 import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info, Share, X, AlertTriangle } from "lucide-react-native";
 import { BlurView } from "expo-blur";
 
 import { useComparisonStore } from "../store/useComparisonStore";
-import { useThemeColors, getRetailerColor, formatRetailerName } from "../constants/Colors";
-import { Typography } from "../constants/Typography";
+import { useThemeColors, getRetailerColor, paletteTokens } from "../constants/Colors";
+import { type } from "../constants/Typography";
+import { radii } from "../constants/Layout";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
+import { NavCircle } from "../components/ui/NavCircle";
+import { RetailerPill } from "../components/ui/RetailerPill";
 import { getCategoryIcon } from "../components/comparison/CategoryIcon";
 import { type DetailedSpecRow, type DetailedSpecValue } from "../components/comparison/SpecBarRow";
 import { exportComparisonToPDF } from "../utils/exportPDF";
@@ -36,7 +39,7 @@ function AnimatedErrorIcon({ color }: { color: string }) {
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1, duration: 800, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0.4, duration: 800, useNativeDriver: true })
+        Animated.timing(pulse, { toValue: 0.4, duration: 800, useNativeDriver: true }),
       ])
     ).start();
   }, [pulse]);
@@ -47,20 +50,12 @@ function AnimatedErrorIcon({ color }: { color: string }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function normalizeTitle(title: string): string {
   const cleaned = title.replace(/5G|Unlocked|Smartphone|Dual SIM/gi, "").trim();
   const words = cleaned.split(/\s+/).filter(Boolean);
   if (words.length > 3) return words.slice(0, 3).join(" ");
   return cleaned;
 }
-
-// ---------------------------------------------------------------------------
-// Product header card (sticky, two-up)
-// ---------------------------------------------------------------------------
 
 interface ProductHeaderCardProps {
   product: { id: string; name: string; retailer: string; retailerColor: string; imageUrl?: string | null; price?: string };
@@ -99,129 +94,88 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
   return (
     <Animated.View style={[styles.headerWrapper, { opacity: fade, transform: [{ translateY: slide }] }]}>
       <Pressable onPress={onPress} style={{ flexGrow: 1 }}>
-      <Card
-        borderRadius={16}
-        style={[
-          styles.headerCard,
-          { flexGrow: 1 },
-          compact && styles.headerCardCompact,
-          isRecommended && { borderColor: colors.success, borderWidth: 1 },
-        ]}
-      >
-        <View style={styles.infoWrap}>
-          <Info size={14} color={colors.textTertiary} strokeWidth={2.5} />
-        </View>
-        {isRecommended && (
-          <View style={[styles.crownWrap, { backgroundColor: colors.successMuted }]}>
-            <Crown size={12} color={colors.success} strokeWidth={2.5} />
+        <Card
+          borderRadius={radii.card}
+          style={[
+            styles.headerCard,
+            { flexGrow: 1 },
+            compact && styles.headerCardCompact,
+            isRecommended && { borderColor: colors.spotify, borderWidth: 2 },
+          ]}
+        >
+          <View style={styles.infoWrap}>
+            <Info size={14} color={colors.stone} strokeWidth={2.5} />
           </View>
-        )}
-
-        <View
-          style={[
-            styles.headerImageWrap,
-            compact && styles.headerImageWrapCompact,
-            { backgroundColor: colors.surfaceHighlight, borderColor: colors.border },
-          ]}
-        >
-          {product.imageUrl ? (
-            <Image
-              source={{ uri: product.imageUrl }}
-              style={[styles.headerImage, compact && styles.headerImageCompact]}
-              resizeMode="contain"
-            />
-          ) : (
-            <Icon size={compact ? 20 : 28} color={colors.textSecondary} strokeWidth={1.75} />
+          {isRecommended && (
+            <View style={[styles.crownWrap, { backgroundColor: colors.spotifyWash }]}>
+              <Crown size={12} color={colors.spotify} strokeWidth={2.5} />
+            </View>
           )}
-        </View>
 
-        <Text
-          style={[
-            styles.headerName,
-            compact && styles.headerNameCompact,
-            { color: colors.text },
-          ]}
-          numberOfLines={compact ? 3 : 2}
-          ellipsizeMode="tail"
-        >
-          {normalizeTitle(product.name)}
-        </Text>
-
-        {product.price && product.price !== "N/A" && (
-          <Text
+          <View
             style={[
-              styles.productPrice,
-              compact && styles.productPriceCompact,
-              { color: colors.text }
+              styles.headerImageWrap,
+              compact && styles.headerImageWrapCompact,
+              { backgroundColor: colors.fog },
             ]}
-            numberOfLines={1}
           >
-            {product.price}
-          </Text>
-        )}
+            {product.imageUrl ? (
+              <Image
+                source={{ uri: product.imageUrl }}
+                style={[styles.headerImage, compact && styles.headerImageCompact]}
+                resizeMode="contain"
+              />
+            ) : (
+              <Icon size={compact ? 20 : 28} color={colors.stone} strokeWidth={1.75} />
+            )}
+          </View>
 
-        <View
-          style={[
-            styles.retailerPill,
-            compact && styles.retailerPillCompact,
-            { borderColor: getRetailerColor(product.retailer) || colors.border },
-          ]}
-        >
-          <View style={[styles.retailerDot, { backgroundColor: getRetailerColor(product.retailer) || colors.textTertiary }]} />
           <Text
-            style={[
-              styles.retailerText,
-              compact && styles.retailerTextCompact,
-              { color: getRetailerColor(product.retailer) || colors.textSecondary },
-            ]}
-            numberOfLines={1}
+            style={[styles.headerName, compact && styles.headerNameCompact, { color: colors.ink }]}
+            numberOfLines={compact ? 3 : 2}
+            ellipsizeMode="tail"
           >
-            {product.retailer ? formatRetailerName(product.retailer) : "STORE"}
+            {normalizeTitle(product.name)}
           </Text>
-        </View>
-      </Card>
+
+          {product.price && product.price !== "N/A" && (
+            <Text
+              style={[styles.productPrice, compact && styles.productPriceCompact, { color: colors.stone }]}
+              numberOfLines={1}
+            >
+              {product.price}
+            </Text>
+          )}
+
+          <RetailerPill retailer={product.retailer} />
+        </Card>
       </Pressable>
     </Animated.View>
   );
 }
 
-// ---------------------------------------------------------------------------
-// AI verdict card
-// ---------------------------------------------------------------------------
-
 function AIVerdictCard({ summary }: { summary: string }) {
   const { colors } = useThemeColors();
   return (
-    <View
-      style={[
-        styles.aiCard,
-        { backgroundColor: colors.aiMuted, borderLeftColor: colors.ai },
-      ]}
-    >
+    <View style={[styles.aiCard, { backgroundColor: colors.verdictBg }]}>
       <View style={styles.aiHeader}>
-        <View style={[styles.aiIconWrap, { backgroundColor: colors.ai + "22" }]}>
-          <Sparkles size={12} color={colors.ai} strokeWidth={2.25} />
-        </View>
-        <Text style={[styles.aiLabel, { color: colors.ai }]}>AI VERDICT</Text>
+        <Sparkles size={14} color={colors.spotify} strokeWidth={2.25} />
+        <Text style={[styles.aiLabel, { color: colors.spotify }]}>AI VERDICT</Text>
       </View>
-      <Text style={[styles.aiBody, { color: colors.text }]}>{summary}</Text>
+      <Text style={[styles.aiBody, { color: colors.verdictFg }]}>{summary}</Text>
     </View>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Key differences card
-// ---------------------------------------------------------------------------
 
 interface KeyDifference {
   label: string;
   values: string[];
   winnerIndex: number | null;
+  isDraw?: boolean;
 }
 
 function KeyDifferencesCard({
   differences,
-  productColors,
   onSpecPress,
 }: {
   differences: KeyDifference[];
@@ -232,8 +186,8 @@ function KeyDifferencesCard({
   if (differences.length === 0) return null;
 
   return (
-    <Card borderRadius={16} style={styles.diffCard}>
-      <Text style={[styles.diffHeading, { color: colors.textTertiary }]}>KEY DIFFERENCES</Text>
+    <Card borderRadius={radii.card} style={styles.diffCard}>
+      <Text style={[styles.diffHeading, { color: colors.stone }]}>KEY DIFFERENCES</Text>
       {differences.map((diff, i) => (
         <View
           key={`${diff.label}-${i}`}
@@ -241,40 +195,32 @@ function KeyDifferencesCard({
             styles.diffRow,
             i < differences.length - 1 && {
               borderBottomWidth: StyleSheet.hairlineWidth,
-              borderBottomColor: colors.border,
+              borderBottomColor: colors.line,
             },
           ]}
         >
-          <Text style={[styles.diffLabel, { color: colors.textSecondary }]}>{diff.label}</Text>
-          <Pressable 
-            style={styles.diffValuesRow}
-            onPress={() => onSpecPress(diff.label, diff.values)}
-          >
+          <Text style={[styles.diffLabel, { color: colors.body }]}>{diff.label}</Text>
+          <Pressable style={styles.diffValuesRow} onPress={() => onSpecPress(diff.label, diff.values)}>
             {diff.values.map((val, idx) => {
-              const win = diff.winnerIndex === idx;
+              const win = diff.isDraw || diff.winnerIndex === idx;
               return (
                 <View
                   key={idx}
                   style={[
                     styles.diffCol,
-                    { 
-                      backgroundColor: win ? colors.successMuted : colors.surface,
-                      borderColor: win ? colors.success : colors.border,
+                    {
+                      backgroundColor: win ? colors.spotifyWash : colors.fog,
+                      borderColor: win ? colors.spotify : "transparent",
+                      borderWidth: win ? 1.5 : 0,
                     },
                   ]}
                 >
                   {win && (
-                    <View style={[styles.valueCardTrophyWrap, { backgroundColor: colors.success }]}>
-                      <Trophy size={9} color={colors.background} strokeWidth={2.5} />
+                    <View style={[styles.valueCardTrophyWrap, { backgroundColor: colors.spotify }]}>
+                      <Trophy size={9} color={colors.spotifyInk} strokeWidth={2.5} />
                     </View>
                   )}
-                  <Text
-                    style={[
-                      styles.diffValue,
-                      { color: win ? colors.success : colors.text },
-                    ]}
-                    numberOfLines={3}
-                  >
+                  <Text style={[styles.diffValue, { color: win ? colors.ink : colors.stone }]} numberOfLines={3}>
                     {val || "—"}
                   </Text>
                 </View>
@@ -287,11 +233,6 @@ function KeyDifferencesCard({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Category body (label on its own line, values stacked beneath in columns
-// that align vertically with the sticky product cards above)
-// ---------------------------------------------------------------------------
-
 interface ValueCardProps {
   value: DetailedSpecValue;
   colors: ReturnType<typeof useThemeColors>["colors"];
@@ -299,29 +240,26 @@ interface ValueCardProps {
 }
 
 function ValueCard({ value, colors, width }: ValueCardProps) {
-  const isWinner = value.isWinner && !value.isDraw;
+  const isWinner = value.isWinner || value.isDraw;
   return (
     <View
       style={[
         styles.valueCard,
         {
           width,
-          backgroundColor: isWinner ? colors.successMuted : colors.surface,
-          borderColor: isWinner ? colors.success : colors.border,
+          backgroundColor: isWinner ? colors.spotifyWash : colors.fog,
+          borderColor: isWinner ? colors.spotify : "transparent",
         },
       ]}
       accessible={false}
     >
       {isWinner && (
-        <View style={[styles.valueCardTrophyWrap, { backgroundColor: colors.success }]}>
-          <Trophy size={9} color={colors.background} strokeWidth={2.5} />
+        <View style={[styles.valueCardTrophyWrap, { backgroundColor: colors.spotify }]}>
+          <Trophy size={9} color={colors.spotifyInk} strokeWidth={2.5} />
         </View>
       )}
       <Text
-        style={[
-          styles.valueCardText,
-          { color: isWinner ? colors.success : colors.text },
-        ]}
+        style={[styles.valueCardText, { color: isWinner ? colors.ink : colors.stone }]}
         numberOfLines={2}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
@@ -350,7 +288,7 @@ function CategoryBody({
   if (category.rows.length === 0) {
     return (
       <View style={styles.emptyCategory}>
-        <Text style={[styles.emptyCategoryText, { color: colors.textSecondary }]}>
+        <Text style={[styles.emptyCategoryText, { color: colors.body }]}>
           No specs available in this category.
         </Text>
       </View>
@@ -371,37 +309,17 @@ function CategoryBody({
             .join(". ");
 
         return (
-          <View
-            key={row.label}
-            accessible
-            accessibilityRole="text"
-            accessibilityLabel={rowA11y}
-          >
-            {i > 0 && (
-              <View
-                style={[styles.specDivider, { backgroundColor: colors.border }]}
-              />
-            )}
-            <Text
-              style={[
-                styles.specLabel,
-                { color: colors.textSecondary },
-              ]}
-              numberOfLines={2}
-            >
+          <View key={row.label} accessible accessibilityRole="text" accessibilityLabel={rowA11y}>
+            {i > 0 && <View style={[styles.specDivider, { backgroundColor: colors.line }]} />}
+            <Text style={[styles.specLabel, { color: colors.stone }]} numberOfLines={2}>
               {row.label}
             </Text>
-            <Pressable 
+            <Pressable
               style={[styles.specValuesRow, { gap: headerGap }]}
-              onPress={() => onSpecPress(row.label, row.values.map(v => v.displayValue))}
+              onPress={() => onSpecPress(row.label, row.values.map((v) => v.displayValue))}
             >
               {row.values.map((v) => (
-                <ValueCard
-                  key={v.productId}
-                  value={v}
-                  colors={colors}
-                  width={valueColumnWidth}
-                />
+                <ValueCard key={v.productId} value={v} colors={colors} width={valueColumnWidth} />
               ))}
             </Pressable>
           </View>
@@ -410,10 +328,6 @@ function CategoryBody({
     </View>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Category pill
-// ---------------------------------------------------------------------------
 
 interface CategoryPillProps {
   label: string;
@@ -446,13 +360,13 @@ function CategoryPill({ label, isSelected, onPress }: CategoryPillProps) {
         style={[
           styles.pill,
           isSelected
-            ? { backgroundColor: colors.text, borderColor: colors.text }
-            : { backgroundColor: "transparent", borderColor: colors.border },
+            ? { backgroundColor: paletteTokens.ink, borderColor: paletteTokens.ink }
+            : { backgroundColor: "transparent", borderColor: colors.line },
         ]}
       >
-        <Icon size={14} strokeWidth={2} color={isSelected ? colors.background : colors.text} />
+        <Icon size={14} strokeWidth={2} color={isSelected ? "#FFFFFF" : colors.ink} />
         <Text
-          style={[styles.pillLabel, { color: isSelected ? colors.background : colors.textSecondary }]}
+          style={[styles.pillLabel, { color: isSelected ? "#FFFFFF" : colors.body }]}
           numberOfLines={1}
         >
           {label}
@@ -462,24 +376,15 @@ function CategoryPill({ label, isSelected, onPress }: CategoryPillProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Empty state
-// ---------------------------------------------------------------------------
-
 function EmptyState({ onBack }: { onBack: () => void }) {
   const { colors } = useThemeColors();
   return (
-    <View style={[styles.emptyRoot, { backgroundColor: colors.background }]}>
-      <View
-        style={[
-          styles.emptyIconWrap,
-          { backgroundColor: colors.surface, borderColor: colors.border },
-        ]}
-      >
-        <PackageOpen size={32} color={colors.textTertiary} strokeWidth={1.5} />
+    <View style={[styles.emptyRoot, { backgroundColor: colors.bg }]}>
+      <View style={[styles.emptyIconWrap, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+        <PackageOpen size={32} color={colors.stone} strokeWidth={1.5} />
       </View>
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>No comparison loaded</Text>
-      <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+      <Text style={[styles.emptyTitle, { color: colors.ink }]}>No comparison loaded</Text>
+      <Text style={[styles.emptySubtitle, { color: colors.body }]}>
         Add two product URLs on the home screen to start comparing.
       </Text>
       <View style={styles.emptyButton}>
@@ -489,18 +394,14 @@ function EmptyState({ onBack }: { onBack: () => void }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main screen
-// ---------------------------------------------------------------------------
-
 export default function CompareScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const { colors, isDark } = useThemeColors();
   const { activeComparison } = useComparisonStore();
   const [selectedCategory, setSelectedCategory] = useState<string>(OVERVIEW_KEY);
-  
+
   const [selectedSpecDetail, setSelectedSpecDetail] = useState<{
     label: string;
     values: string[];
@@ -513,32 +414,30 @@ export default function CompareScreen() {
   const handleSpecPress = async (label: string, values: string[]) => {
     if (!activeComparison) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
+
     const FRIENDLY_TITLES = [
       "Techvisor Says:",
       "Geek Speak Translation:",
       "Nerd Alert:",
       "The Breakdown:",
       "Simply Put:",
-      "Jargon Buster:"
+      "Jargon Buster:",
     ];
     const randomTitle = FRIENDLY_TITLES[Math.floor(Math.random() * FRIENDLY_TITLES.length)];
 
-    console.log(`[Frontend] Fetching spec explanation for: ${label}`);
     setSelectedSpecDetail({ label, values, loading: true, title: randomTitle });
-    
+
     try {
-      const productNames = activeComparison.products.map(p => p.name);
+      const productNames = activeComparison.products.map((p) => p.name);
       const data = await explainSpec(productNames, label, values);
-      console.log(`[Frontend] Successfully fetched spec explanation for: ${label}`);
-      setSelectedSpecDetail(prev => prev ? { ...prev, loading: false, data } : null);
+      setSelectedSpecDetail((prev) => (prev ? { ...prev, loading: false, data } : null));
     } catch (error: unknown) {
-      console.error(`[Frontend] Error fetching spec explanation for ${label}:`, error);
-      setSelectedSpecDetail(prev => prev ? { ...prev, loading: false, error: error instanceof Error ? error.message : "Unknown error" } : null);
+      setSelectedSpecDetail((prev) =>
+        prev ? { ...prev, loading: false, error: error instanceof Error ? error.message : "Unknown error" } : null
+      );
     }
   };
 
-  // Responsive horizontal padding — between 16 and 24.
   const screenPadding = useMemo(
     () => Math.max(16, Math.min(24, Math.round(width * 0.05))),
     [width]
@@ -558,33 +457,27 @@ export default function CompareScreen() {
   const { products, keyDifferences, aiSummary } = activeComparison;
   const productA = products[0];
 
-  // Width of one value card in the category body. Matches the sticky
-  // product card width above so columns align pixel-perfect.
   const valueColumnWidth = useMemo(
     () =>
       Math.max(
         60,
-        (width - 2 * screenPadding - (products.length - 1) * headerGap) /
-          products.length
+        (width - 2 * screenPadding - (products.length - 1) * headerGap) / products.length
       ),
     [width, screenPadding, headerGap, products.length]
   );
 
-  // Group specs by category for category views.
   const categories = useMemo(() => {
     if (!productA) return [] as Array<{ key: string; rows: DetailedSpecRow[] }>;
-    
-    // 1) Support new backend schema format (groupedSpecs)
+
     if ((activeComparison as any).groupedSpecs) {
-      const specsSource = (activeComparison as any).groupedSpecs;
-      const gs = specsSource;
+      const gs = (activeComparison as any).groupedSpecs;
       return Object.entries(gs).map(([key, specsArray]: [string, any]) => {
         const rows = specsArray.map((spec: any) => {
           const values = products.map((p, pIndex) => ({
             productId: p.id,
             productName: p.name,
             productColor: getRetailerColor(p.retailer),
-            displayValue: spec.values && spec.values[pIndex] ? spec.values[pIndex] : "�",
+            displayValue: spec.values && spec.values[pIndex] ? spec.values[pIndex] : "—",
             numericValue: null,
             isWinner: spec.winnerIndex === pIndex,
             isDraw: spec.winnerIndex === -1,
@@ -595,7 +488,6 @@ export default function CompareScreen() {
       });
     }
 
-    // 2) Fallback to old mock format (product.specs)
     if (productA.specs) {
       const map = new Map<string, DetailedSpecRow[]>();
       const specCount = productA.specs.length;
@@ -608,7 +500,7 @@ export default function CompareScreen() {
             productId: p.id,
             productName: p.name,
             productColor: getRetailerColor(p.retailer),
-            displayValue: s?.value ?? "�",
+            displayValue: s?.value ?? "—",
             numericValue: typeof s?.numericValue === "number" ? s.numericValue : null,
             isWinner: !!s?.isWinner,
             isDraw: !!s?.isDraw,
@@ -621,11 +513,10 @@ export default function CompareScreen() {
       }
       return Array.from(map.entries()).map(([key, rows]) => ({ key, rows }));
     }
-    
+
     return [];
   }, [productA, products, activeComparison]);
 
-  // Decorate key differences with winner index from the underlying specs.
   const decoratedDifferences = useMemo<KeyDifference[]>(() => {
     if (!productA) return [];
     return keyDifferences.map((diff) => {
@@ -633,18 +524,16 @@ export default function CompareScreen() {
       let isDraw = false;
 
       if ((activeComparison as any).groupedSpecs) {
-        for (const [group, specs] of Object.entries((activeComparison as any).groupedSpecs)) {
-          const match = (specs as any[]).find(s => s.label === diff.label);
+        for (const specs of Object.values((activeComparison as any).groupedSpecs)) {
+          const match = (specs as any[]).find((s) => s.label === diff.label);
           if (match) {
-             if (match.winnerIndex === -1) isDraw = true;
-             else winnerIndex = match.winnerIndex;
-             break;
+            if (match.winnerIndex === -1) isDraw = true;
+            else winnerIndex = match.winnerIndex;
+            break;
           }
         }
       } else if (productA.specs) {
-        const idx = productA.specs.findIndex(
-          (s) => s.label === diff.label && s.category !== OVERVIEW_KEY
-        );
+        const idx = productA.specs.findIndex((s) => s.label === diff.label && s.category !== OVERVIEW_KEY);
         if (idx >= 0) {
           isDraw = !!productA.specs[idx]?.isDraw;
           const winnerIdx = products.findIndex((p) => p.specs[idx]?.isWinner);
@@ -667,17 +556,17 @@ export default function CompareScreen() {
   );
 
   const handleBack = () => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.back();
   };
 
   const handleExport = async () => {
     if (!activeComparison) return;
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await exportComparisonToPDF(activeComparison, isDark);
   };
 
-  const [alternativesData, setAlternativesData] = useState<{ loading: boolean; data?: any; error?: string } | null>(null);
+  const [alternativesData, setAlternativesData] = useState<{ loading: boolean; data?: any; error?: string } | null>(
+    null
+  );
 
   const handleSelectCategory = (cat: string) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -687,7 +576,9 @@ export default function CompareScreen() {
       setAlternativesData({ loading: true });
       fetchAlternatives(activeComparison.products)
         .then((data) => setAlternativesData({ loading: false, data }))
-        .catch((error: unknown) => setAlternativesData({ loading: false, error: error instanceof Error ? error.message : "Unknown error" }));
+        .catch((error: unknown) =>
+          setAlternativesData({ loading: false, error: error instanceof Error ? error.message : "Unknown error" })
+        );
     }
   };
 
@@ -698,7 +589,7 @@ export default function CompareScreen() {
         <View style={{ marginTop: 20 }}>
           <KeyDifferencesCard
             differences={decoratedDifferences}
-            productColors={products.map((p) => getRetailerColor(p.retailer) || colors.primary)}
+            productColors={products.map((p) => getRetailerColor(p.retailer) || colors.ink)}
             onSpecPress={handleSpecPress}
           />
         </View>
@@ -711,7 +602,7 @@ export default function CompareScreen() {
     if (!found || found.rows.length === 0) {
       return (
         <View style={styles.emptyCategory}>
-          <Text style={[styles.emptyCategoryText, { color: colors.textSecondary }]}>
+          <Text style={[styles.emptyCategoryText, { color: colors.body }]}>
             No specs available in this category.
           </Text>
         </View>
@@ -734,10 +625,8 @@ export default function CompareScreen() {
     if (alternativesData.loading) {
       return (
         <View style={{ alignItems: "center", marginTop: 40, gap: 12 }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{ color: colors.textSecondary }}>
-            Techvisor is searching for better alternatives...
-          </Text>
+          <ActivityIndicator size="large" color={colors.spotify} />
+          <Text style={{ ...type.body, color: colors.body }}>Techvisor is searching for better alternatives...</Text>
         </View>
       );
     }
@@ -746,7 +635,7 @@ export default function CompareScreen() {
       return (
         <View style={{ alignItems: "center", marginTop: 40 }}>
           <AnimatedErrorIcon color={colors.error} />
-          <Text style={{ color: colors.error, marginBottom: 16, textAlign: "center" }}>
+          <Text style={{ ...type.body, color: colors.error, marginBottom: 16, textAlign: "center" }}>
             {alternativesData.error}
           </Text>
           <Button
@@ -757,7 +646,12 @@ export default function CompareScreen() {
                 setAlternativesData({ loading: true });
                 fetchAlternatives(activeComparison.products)
                   .then((data) => setAlternativesData({ loading: false, data }))
-                  .catch((error: unknown) => setAlternativesData({ loading: false, error: error instanceof Error ? error.message : "Unknown error" }));
+                  .catch((error: unknown) =>
+                    setAlternativesData({
+                      loading: false,
+                      error: error instanceof Error ? error.message : "Unknown error",
+                    })
+                  );
               }
             }}
           />
@@ -770,11 +664,11 @@ export default function CompareScreen() {
     if (alternatives.length === 0) {
       return (
         <View style={{ alignItems: "center", marginTop: 40, padding: 20 }}>
-          <Trophy size={48} color={colors.success} strokeWidth={1.5} style={{ marginBottom: 16 }} />
-          <Text style={{ ...Typography.headline, color: colors.text, fontSize: 18, textAlign: "center", marginBottom: 8 }}>
+          <Trophy size={48} color={colors.spotify} strokeWidth={1.5} style={{ marginBottom: 16 }} />
+          <Text style={{ ...type.productName, fontSize: 18, color: colors.ink, textAlign: "center", marginBottom: 8 }}>
             You picked well!
           </Text>
-          <Text style={{ color: colors.textSecondary, textAlign: "center", lineHeight: 22 }}>
+          <Text style={{ ...type.body, color: colors.body, textAlign: "center" }}>
             Techvisor couldn't find any strictly better alternatives in this price range.
           </Text>
         </View>
@@ -783,86 +677,78 @@ export default function CompareScreen() {
 
     return (
       <View style={{ gap: 16 }}>
-        {alternatives.map((alt: { name: string; estimatedPrice: string; reasonWhyBetter: string; url?: string; imageUrl?: string }, index: number) => (
-          <Pressable 
-            key={index} 
-            onPress={() => {
-              const searchQuery = encodeURIComponent(alt.name + " canada");
-              const safeUrl = `https://www.google.ca/search?tbm=shop&q=${searchQuery}`;
-              Linking.openURL(safeUrl);
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            }}
-          >
-            <Card borderRadius={16} style={{ padding: 16, flexDirection: 'row', gap: 16 }}>
-              {alt.imageUrl ? (
-                <Image 
-                  source={{ uri: alt.imageUrl }} 
-                  style={{ width: 80, height: 80, borderRadius: 8, backgroundColor: colors.surfaceHover || '#333' }} 
-                  resizeMode="contain" 
-                />
-              ) : (
-                <View style={{ width: 80, height: 80, borderRadius: 8, backgroundColor: colors.surfaceHover || '#333', alignItems: 'center', justifyContent: 'center' }}>
-                  <PackageOpen size={32} color={colors.textTertiary} />
+        {alternatives.map(
+          (
+            alt: { name: string; estimatedPrice: string; reasonWhyBetter: string; url?: string; imageUrl?: string },
+            index: number
+          ) => (
+            <Pressable
+              key={index}
+              onPress={() => {
+                const searchQuery = encodeURIComponent(alt.name + " canada");
+                const safeUrl = `https://www.google.ca/search?tbm=shop&q=${searchQuery}`;
+                Linking.openURL(safeUrl);
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <Card borderRadius={radii.card} style={{ padding: 16, flexDirection: "row", gap: 16 }}>
+                {alt.imageUrl ? (
+                  <Image
+                    source={{ uri: alt.imageUrl }}
+                    style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: colors.fog }}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: 12,
+                      backgroundColor: colors.fog,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <PackageOpen size={32} color={colors.stone} />
+                  </View>
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...type.productName, fontSize: 17, color: colors.ink, marginBottom: 4 }}>
+                    {alt.name}
+                  </Text>
+                  <Text style={{ ...type.price, color: colors.ink, marginBottom: 8 }}>{alt.estimatedPrice}</Text>
+                  <Text style={{ ...type.body, color: colors.body, fontSize: 14, lineHeight: 20 }}>
+                    {alt.reasonWhyBetter}
+                  </Text>
                 </View>
-              )}
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...Typography.headline, color: colors.text, fontSize: 17, marginBottom: 4 }}>
-                  {alt.name}
-                </Text>
-                <Text style={{ ...Typography.headline, color: colors.primary, fontSize: 15, marginBottom: 8 }}>
-                  {alt.estimatedPrice}
-                </Text>
-                <Text style={{ color: colors.textSecondary, lineHeight: 20, fontSize: 14 }}>
-                  {alt.reasonWhyBetter}
-                </Text>
-              </View>
-            </Card>
-          </Pressable>
-        ))}
+              </Card>
+            </Pressable>
+          )
+        )}
       </View>
     );
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={{ zIndex: 10, backgroundColor: colors.background }}>
-        {/* STICKY: header */}
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
+      <View style={{ zIndex: 10, backgroundColor: colors.bg }}>
         <View style={[styles.header, { paddingHorizontal: screenPadding, paddingTop: insets.top + 4 }]}>
-          <Pressable
-            onPress={handleBack}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-            style={({ pressed }) => [
-              styles.backBtn,
-              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <ArrowLeft size={20} color={colors.text} strokeWidth={2.25} />
-          </Pressable>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Comparison</Text>
-          <Pressable
-            onPress={handleExport}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Export to PDF"
-            style={({ pressed }) => [
-              styles.backBtn,
-              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <Share size={18} color={colors.text} strokeWidth={2.25} />
-          </Pressable>
+          <NavCircle onPress={handleBack} accessibilityRole="button" accessibilityLabel="Go back">
+            <ArrowLeft size={20} color={colors.ink} strokeWidth={2.25} />
+          </NavCircle>
+          <Text style={[styles.headerTitle, { color: colors.ink }]}>Comparison</Text>
+          <NavCircle onPress={handleExport} accessibilityRole="button" accessibilityLabel="Export to PDF">
+            <Share size={18} color={colors.ink} strokeWidth={2.25} />
+          </NavCircle>
         </View>
 
-        {/* STICKY: product cards */}
         <View
           style={[
             styles.productRow,
             {
               paddingHorizontal: screenPadding,
               gap: headerGap,
-              backgroundColor: colors.background,
+              backgroundColor: colors.bg,
             },
           ]}
         >
@@ -873,20 +759,19 @@ export default function CompareScreen() {
               index={i}
               isRecommended={recommendedIndex === i}
               compact={products.length >= 3}
-              onPress={() => router.push('/product/' + p.id)}
+              onPress={() => router.push("/product/" + p.id)}
             />
           ))}
         </View>
 
-        {/* STICKY: category pills */}
         <View
           style={[
             styles.pillsWrap,
             {
               paddingHorizontal: screenPadding,
-              borderTopColor: colors.border,
-              borderBottomColor: colors.border,
-              backgroundColor: colors.background,
+              borderTopColor: colors.line,
+              borderBottomColor: colors.line,
+              backgroundColor: colors.bg,
             },
           ]}
         >
@@ -907,7 +792,6 @@ export default function CompareScreen() {
         </View>
       </View>
 
-      {/* SCROLLING: body */}
       <View style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={[
@@ -923,28 +807,24 @@ export default function CompareScreen() {
           {selectedCategory === OVERVIEW_KEY
             ? renderOverview()
             : selectedCategory === "Alternatives"
-            ? renderAlternatives()
-            : renderCategory(selectedCategory)}
+              ? renderAlternatives()
+              : renderCategory(selectedCategory)}
         </ScrollView>
-        
+
         {selectedSpecDetail && (
           <BlurView
             intensity={isDark ? 30 : 60}
             tint={isDark ? "dark" : "light"}
             style={[StyleSheet.absoluteFill, { zIndex: 5, padding: screenPadding, paddingBottom: insets.bottom + 24 }]}
           >
-            <View style={[styles.aiOverlayCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Pressable
-                onPress={() => setSelectedSpecDetail(null)}
-                hitSlop={12}
-                style={styles.closeBtn}
-              >
-                <X size={20} color={colors.textSecondary} />
+            <View style={[styles.aiOverlayCard, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+              <Pressable onPress={() => setSelectedSpecDetail(null)} hitSlop={12} style={styles.closeBtn}>
+                <X size={20} color={colors.body} />
               </Pressable>
               <View style={styles.aiOverlayHeader}>
                 <View style={styles.aiOverlayTitleWrap}>
-                  <Sparkles size={16} color={colors.ai} strokeWidth={2.25} style={{ marginTop: 2 }} />
-                  <Text style={[styles.aiOverlayTitle, { color: colors.ai }]}>
+                  <Sparkles size={16} color={colors.spotify} strokeWidth={2.25} style={{ marginTop: 2 }} />
+                  <Text style={[styles.aiOverlayTitle, { color: colors.ink }]}>
                     {selectedSpecDetail.title || "Techvisor Says:"} {selectedSpecDetail.label}
                   </Text>
                 </View>
@@ -952,29 +832,29 @@ export default function CompareScreen() {
 
               {selectedSpecDetail.loading ? (
                 <View style={styles.aiOverlayLoading}>
-                  <ActivityIndicator size="large" color={colors.ai} />
-                  <Text style={[styles.aiOverlayLoadingText, { color: colors.textSecondary }]}>Analyzing spec...</Text>
+                  <ActivityIndicator size="large" color={colors.spotify} />
+                  <Text style={[styles.aiOverlayLoadingText, { color: colors.body }]}>Analyzing spec...</Text>
                 </View>
               ) : selectedSpecDetail.error ? (
                 <View style={styles.aiOverlayError}>
                   <AnimatedErrorIcon color={colors.error} />
-                  <Text style={{ color: colors.error, textAlign: 'center' }}>
+                  <Text style={{ ...type.body, color: colors.error, textAlign: "center" }}>
                     Failed to fetch explanation. Please try again.
                   </Text>
                 </View>
               ) : selectedSpecDetail.data ? (
                 <ScrollView showsVerticalScrollIndicator={false}>
-                  <Text style={[styles.aiOverlayConcept, { color: colors.text }]}>
+                  <Text style={[styles.aiOverlayConcept, { color: colors.ink }]}>
                     {selectedSpecDetail.data.concept}
                   </Text>
                   <View style={styles.aiOverlayBreakdowns}>
                     {selectedSpecDetail.data.breakdowns.map((b, idx) => (
-                      <View key={idx} style={[styles.aiOverlayBreakdownItem, { borderTopColor: colors.border }]}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                          <Text style={[styles.aiOverlayProductName, { color: colors.text }]}>{b.productName}</Text>
-                          <Text style={[styles.aiOverlayValue, { color: colors.textTertiary }]}> • {b.value}</Text>
+                      <View key={idx} style={[styles.aiOverlayBreakdownItem, { borderTopColor: colors.line }]}>
+                        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                          <Text style={[styles.aiOverlayProductName, { color: colors.ink }]}>{b.productName}</Text>
+                          <Text style={[styles.aiOverlayValue, { color: colors.stone }]}> • {b.value}</Text>
                         </View>
-                        <Text style={[styles.aiOverlayInsight, { color: colors.textSecondary }]}>{b.insight}</Text>
+                        <Text style={[styles.aiOverlayInsight, { color: colors.body }]}>{b.insight}</Text>
                       </View>
                     ))}
                   </View>
@@ -988,52 +868,33 @@ export default function CompareScreen() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  root: { flex: 1, zIndex: 50 },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingBottom: 12,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: { ...Typography.headline,
-    ...Typography.headline,
-    fontSize: 17,
-    
-    letterSpacing: -0.3,
-  },
-  headerSpacer: { width: 40, height: 40 },
+  headerTitle: { ...type.navTitle },
   scrollContent: {},
-
   productRow: {
     flexDirection: "row",
     paddingTop: 8,
     paddingBottom: 22,
   },
-
-  // Product header card
   headerWrapper: { flex: 1, minWidth: 0 },
   headerCard: {
     padding: 14,
     alignItems: "center",
     minHeight: 168,
     position: "relative",
+    gap: 8,
   },
   headerCardCompact: {
     padding: 8,
     minHeight: 0,
+    gap: 6,
   },
   infoWrap: {
     position: "absolute",
@@ -1050,106 +911,61 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 2,
   },
   headerImageWrap: {
     width: 72,
     height: 64,
     borderRadius: 12,
-    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
     marginTop: 4,
   },
   headerImageWrapCompact: {
     width: 44,
     height: 40,
     borderRadius: 8,
-    marginBottom: 6,
     marginTop: 0,
   },
   headerImage: { width: 64, height: 56 },
   headerImageCompact: { width: 40, height: 36 },
-  headerName: { ...Typography.headline,
-    ...Typography.body,
-    fontSize: 14,
-    
+  headerName: {
+    ...type.productName,
     textAlign: "center",
-    letterSpacing: -0.2,
-    lineHeight: 18,
-    marginBottom: 8,
   },
   headerNameCompact: {
     fontSize: 11,
     lineHeight: 13,
     letterSpacing: -0.1,
-    marginBottom: 4,
   },
-  productPrice: { ...Typography.headline,
-    fontSize: 15,
-    
-    marginBottom: 8,
+  productPrice: {
+    ...type.caption,
+    fontSize: 14,
     textAlign: "center",
   },
   productPriceCompact: {
     fontSize: 12,
-    marginBottom: 4,
   },
-  retailerPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-    borderWidth: 1,
-    gap: 5,
-    maxWidth: "100%",
-  },
-  retailerPillCompact: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    gap: 4,
-  },
-  retailerDot: { width: 6, height: 6, borderRadius: 3 },
-  retailerText: { ...Typography.headline,
-    fontSize: 10,
-    
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-  },
-  retailerTextCompact: {
-    fontSize: 8,
-    letterSpacing: 0.4,
-  },
-
-  // Pills
   pillsWrap: {
     paddingVertical: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  pillsContent: { gap: 8, paddingRight: 4 },
+  pillsContent: { gap: 8, paddingRight: 20 },
   pill: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1,
+    borderRadius: radii.pill,
+    borderWidth: 1.5,
     gap: 6,
     minHeight: 36,
   },
-  pillLabel: { ...Typography.headline,
-    fontSize: 13,
-    
-    letterSpacing: -0.1,
-  },
-
-  // AI Verdict
+  pillLabel: { ...type.chip },
   aiCard: {
-    borderLeftWidth: 3,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: radii.card,
+    padding: 20,
   },
   aiHeader: {
     flexDirection: "row",
@@ -1157,43 +973,12 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 8,
   },
-  aiIconWrap: {
-    width: 20,
-    height: 20,
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  aiLabel: { ...Typography.headline,
-    ...Typography.caption,
-    fontSize: 11,
-    
-    letterSpacing: 0.8,
-  },
-  aiBody: {
-    ...Typography.body,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-
-  // Key differences
+  aiLabel: { ...type.eyebrow },
+  aiBody: { ...type.body },
   diffCard: { padding: 18 },
-  diffHeading: { ...Typography.headline,
-    ...Typography.caption,
-    fontSize: 11,
-    
-    letterSpacing: 0.8,
-    marginBottom: 14,
-  },
+  diffHeading: { ...type.eyebrow, marginBottom: 14 },
   diffRow: { paddingVertical: 14 },
-  diffLabel: { ...Typography.headline,
-    ...Typography.caption,
-    fontSize: 12,
-    
-    letterSpacing: 0.3,
-    textTransform: "none",
-    marginBottom: 10,
-  },
+  diffLabel: { ...type.caption, marginBottom: 10 },
   diffValuesRow: {
     flexDirection: "row",
     alignItems: "stretch",
@@ -1202,22 +987,14 @@ const styles = StyleSheet.create({
   diffCol: {
     flex: 1,
     minWidth: 0,
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: radii.spec,
     paddingHorizontal: 10,
     paddingVertical: 10,
     minHeight: 48,
     justifyContent: "center",
     position: "relative",
   },
-  diffValue: { ...Typography.headline,
-    ...Typography.body,
-    fontSize: 14,
-    
-    lineHeight: 18,
-  },
-
-  // Empty / fallback
+  diffValue: { ...type.body, fontSize: 14, lineHeight: 18 },
   emptyRoot: {
     flex: 1,
     alignItems: "center",
@@ -1233,43 +1010,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 20,
   },
-  emptyTitle: { ...Typography.headline,
-    ...Typography.headline,
-    fontSize: 18,
-    
-    textAlign: "center",
-    marginBottom: 6,
-  },
-  emptySubtitle: {
-    ...Typography.body,
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 20,
-  },
+  emptyTitle: { ...type.productName, fontSize: 18, textAlign: "center", marginBottom: 6 },
+  emptySubtitle: { ...type.body, fontSize: 14, textAlign: "center" },
   emptyButton: { marginTop: 24, alignSelf: "stretch" },
   emptyCategory: { paddingVertical: 32, alignItems: "center" },
-  emptyCategoryText: { ...Typography.body, fontSize: 14 },
-
-  // Category body
+  emptyCategoryText: { ...type.body, fontSize: 14 },
   specDivider: {
     height: StyleSheet.hairlineWidth,
     width: "100%",
   },
-  specLabel: { ...Typography.body,
-    fontSize: 13,
-    
-    paddingTop: 14,
-    paddingBottom: 6,
-  },
+  specLabel: { ...type.specLabel, paddingTop: 14, paddingBottom: 6 },
   specValuesRow: {
     flexDirection: "row",
     paddingBottom: 14,
   },
-
-  // Value card
   valueCard: {
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: radii.spec,
+    borderWidth: 1.5,
     paddingHorizontal: 10,
     paddingVertical: 10,
     minHeight: 48,
@@ -1286,47 +1043,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  valueCardText: { ...Typography.headline,
-    fontSize: 15,
-    
-    lineHeight: 20,
-    textAlign: "left",
-  },
-
-
-
-  // AI Overlay
+  valueCardText: { ...type.specValue, fontSize: 15, lineHeight: 20, textAlign: "left" },
   aiOverlayCard: {
     flex: 1,
-    borderRadius: 24,
+    borderRadius: radii.card,
     borderWidth: 1,
     padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 15,
-    elevation: 10,
   },
   aiOverlayHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 24,
-    paddingRight: 32, // space for close btn
+    paddingRight: 32,
   },
   aiOverlayTitleWrap: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 8,
     flexShrink: 1,
   },
-  aiOverlayTitle: { ...Typography.headline,
-    ...Typography.headline,
-    fontSize: 18,
-    
-    flexShrink: 1,
-  },
+  aiOverlayTitle: { ...type.productName, fontSize: 18, flexShrink: 1 },
   closeBtn: {
-    position: 'absolute',
+    position: "absolute",
     top: 20,
     right: 20,
     padding: 8,
@@ -1334,20 +1072,16 @@ const styles = StyleSheet.create({
   },
   aiOverlayLoading: {
     paddingVertical: 40,
-    alignItems: 'center',
+    alignItems: "center",
     gap: 12,
   },
-  aiOverlayLoadingText: { ...Typography.body,
-    ...Typography.body,
-    fontSize: 14,
-    
-  },
+  aiOverlayLoadingText: { ...type.body, fontSize: 14 },
   aiOverlayError: {
     paddingVertical: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   aiOverlayConcept: {
-    ...Typography.body,
+    ...type.body,
     fontSize: 16,
     lineHeight: 24,
     marginBottom: 24,
@@ -1360,18 +1094,7 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: 16,
   },
-  aiOverlayProductName: { ...Typography.headline,
-    ...Typography.body,
-    fontSize: 15,
-    
-  },
-  aiOverlayValue: {
-    ...Typography.body,
-    fontSize: 14,
-  },
-  aiOverlayInsight: {
-    ...Typography.body,
-    fontSize: 14,
-    lineHeight: 20,
-  },
+  aiOverlayProductName: { ...type.productName, fontSize: 15 },
+  aiOverlayValue: { ...type.body, fontSize: 14 },
+  aiOverlayInsight: { ...type.body, fontSize: 14, lineHeight: 20 },
 });
