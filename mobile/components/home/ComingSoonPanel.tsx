@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
-import { Typography } from '../../constants/Typography';
+import { type } from "../../constants/Typography";
 import { Feather } from "@expo/vector-icons";
 import { InputMode } from "./InputModeTabs";
-import { useThemeColors } from "../../constants/Colors";
+import { paletteTokens, useThemeColors } from "../../constants/Colors";
+import { radii } from "../../constants/Layout";
 
 const CONFIG: Record<
   "upc" | "qr",
@@ -11,7 +12,6 @@ const CONFIG: Record<
     icon: React.ComponentProps<typeof Feather>["name"];
     title: string;
     subtitle: string;
-    accentColor: string;
     description: string;
   }
 > = {
@@ -19,32 +19,27 @@ const CONFIG: Record<
     icon: "maximize",
     title: "Barcode Scanner",
     subtitle: "UPC / EAN",
-    accentColor: "#2383E2",
     description:
-      "Point your camera at any product barcode. We-ll instantly pull the full spec sheet and live Canadian pricing across 7 retailers.",
+      "Point your camera at any product barcode. We'll instantly pull the full spec sheet and live Canadian pricing across 7 retailers.",
   },
   qr: {
     icon: "camera",
     title: "QR Code Scanner",
     subtitle: "Manufacturer & Retailer QR",
-    accentColor: "#8B5CF6",
     description:
-      "Scan QR codes from product boxes, shelf tags, or retailer pages to jump straight to a comparison - no URL typing needed.",
+      "Scan QR codes from product boxes, shelf tags, or retailer pages to jump straight to a comparison — no URL typing needed.",
   },
 };
 
-// Fake barcode lines SVG-style using Views
 function BarcodeSVG({ color, isDark }: { color: string; isDark: boolean }) {
   const bars = [6, 3, 8, 2, 5, 3, 9, 4, 6, 2, 7, 3, 8, 2, 5, 4, 6, 3, 7, 2, 8, 4, 5, 3, 6];
-  const cornerColor = isDark ? "white" : "#111111";
+  const cornerColor = isDark ? "white" : paletteTokens.ink;
   return (
     <View style={svgStyles.wrap}>
-      {/* Corner brackets */}
       <View style={[svgStyles.corner, svgStyles.tl, { borderColor: cornerColor }]} />
       <View style={[svgStyles.corner, svgStyles.tr, { borderColor: cornerColor }]} />
       <View style={[svgStyles.corner, svgStyles.bl, { borderColor: cornerColor }]} />
       <View style={[svgStyles.corner, svgStyles.br, { borderColor: cornerColor }]} />
-      {/* Barcode lines */}
       <View style={svgStyles.bars}>
         {bars.map((h, i) => (
           <View
@@ -66,27 +61,25 @@ function BarcodeSVG({ color, isDark }: { color: string; isDark: boolean }) {
   );
 }
 
-// QR code grid-style using Views
 function QRCodeSVG({ color, isDark }: { color: string; isDark: boolean }) {
-  // A rough 7x7 QR pattern representation
   const grid = [
-    [1,1,1,1,1,1,1,0,1,0,1,1,1,1,1],
-    [1,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
-    [1,0,1,1,1,0,1,0,1,0,1,0,1,0,1],
-    [1,0,1,1,1,0,1,0,0,1,1,0,1,0,1],
-    [1,0,1,1,1,0,1,0,1,0,0,0,1,0,1],
-    [1,0,0,0,0,0,1,0,0,1,0,0,0,0,1],
-    [1,1,1,1,1,1,1,0,1,0,1,1,1,1,1],
-    [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
-    [1,0,1,1,0,1,1,1,1,0,1,0,1,1,0],
-    [0,1,0,0,1,0,0,0,0,1,0,1,0,0,1],
-    [1,1,1,1,1,1,1,0,0,1,1,0,1,0,0],
-    [0,0,1,0,0,0,0,1,1,0,0,1,0,1,1],
-    [1,0,1,1,0,1,1,0,1,0,1,1,1,0,1],
-    [0,1,0,0,1,0,0,1,0,1,0,0,0,1,0],
-    [1,1,1,0,1,1,1,0,1,1,1,0,1,0,1],
+    [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1],
+    [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    [1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0],
+    [0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1],
+    [1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+    [0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0],
+    [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1],
   ];
-  const cornerColor = isDark ? "white" : "#111111";
+  const cornerColor = isDark ? "white" : paletteTokens.ink;
   return (
     <View style={[svgStyles.wrap, { alignItems: "center", justifyContent: "center" }]}>
       <View style={[svgStyles.corner, svgStyles.tl, { borderColor: cornerColor }]} />
@@ -99,10 +92,7 @@ function QRCodeSVG({ color, isDark }: { color: string; isDark: boolean }) {
             {row.map((cell, c) => (
               <View
                 key={c}
-                style={[
-                  svgStyles.qrCell,
-                  { backgroundColor: cell ? color : "transparent", opacity: cell ? 0.85 : 0 },
-                ]}
+                style={[svgStyles.qrCell, { backgroundColor: cell ? color : "transparent", opacity: cell ? 0.85 : 0 }]}
               />
             ))}
           </View>
@@ -151,11 +141,12 @@ const svgStyles = StyleSheet.create({
   qrCell: { width: 7, height: 7, margin: 0.5, borderRadius: 1 },
 });
 
-export function ComingSoonPanel({ mode }: { mode: 'upc' | 'qr' }) {
+export function ComingSoonPanel({ mode }: { mode: Extract<InputMode, "upc" | "qr"> }) {
   const { colors, isDark } = useThemeColors();
   const cfg = CONFIG[mode];
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(14)).current;
+  const accent = colors.spotify;
 
   useEffect(() => {
     fadeAnim.setValue(0);
@@ -164,44 +155,37 @@ export function ComingSoonPanel({ mode }: { mode: 'upc' | 'qr' }) {
       Animated.timing(fadeAnim, { toValue: 1, duration: 280, useNativeDriver: true }),
       Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 120, friction: 8 }),
     ]).start();
-  }, [mode]);
+  }, [mode, fadeAnim, slideAnim]);
 
   return (
     <Animated.View
       style={[
         styles.container,
-        { 
-          backgroundColor: colors.surface, 
-          borderColor: colors.border,
-          opacity: fadeAnim, 
-          transform: [{ translateY: slideAnim }] 
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.line,
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
         },
       ]}
     >
-      {/* Illustration */}
-      <View style={[styles.illustrationBox, { borderBottomColor: colors.border }]}>
-        {mode === "upc" ? (
-          <BarcodeSVG color={cfg.accentColor} isDark={isDark} />
-        ) : (
-          <QRCodeSVG color={cfg.accentColor} isDark={isDark} />
-        )}
+      <View style={[styles.illustrationBox, { borderBottomColor: colors.line }]}>
+        {mode === "upc" ? <BarcodeSVG color={accent} isDark={isDark} /> : <QRCodeSVG color={accent} isDark={isDark} />}
       </View>
 
-      {/* Text */}
       <View style={styles.textBlock}>
-        <View style={[styles.pill, { backgroundColor: cfg.accentColor + "18", borderColor: cfg.accentColor + "40" }]}>
-          <Text style={[styles.pillText, { color: cfg.accentColor }]}>{cfg.subtitle}</Text>
+        <View style={[styles.pill, { backgroundColor: colors.spotifyWash, borderColor: accent }]}>
+          <Text style={[styles.pillText, { color: accent }]}>{cfg.subtitle}</Text>
         </View>
-        <Text style={[styles.title, { color: colors.text }]}>{cfg.title}</Text>
-        <Text style={[styles.desc, { color: colors.textSecondary }]}>{cfg.description}</Text>
+        <Text style={[styles.title, { color: colors.ink }]}>{cfg.title}</Text>
+        <Text style={[styles.desc, { color: colors.body }]}>{cfg.description}</Text>
       </View>
 
-      {/* Footer */}
       <View style={styles.footer}>
-        <View style={[styles.footerDot, { backgroundColor: colors.border }]} />
-        <View style={[styles.footerDot, { backgroundColor: colors.border }]} />
-        <View style={[styles.footerDot, { backgroundColor: colors.border }]} />
-        <Text style={[styles.footerText, { color: colors.textTertiary }]}>Arriving in Phase 2</Text>
+        <View style={[styles.footerDot, { backgroundColor: colors.line }]} />
+        <View style={[styles.footerDot, { backgroundColor: colors.line }]} />
+        <View style={[styles.footerDot, { backgroundColor: colors.line }]} />
+        <Text style={[styles.footerText, { color: colors.stone }]}>Arriving in Phase 2</Text>
       </View>
     </Animated.View>
   );
@@ -209,7 +193,7 @@ export function ComingSoonPanel({ mode }: { mode: 'upc' | 'qr' }) {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
+    borderRadius: radii.card,
     borderWidth: 1,
     overflow: "hidden",
     marginBottom: 24,
@@ -228,22 +212,23 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   pill: {
-    borderRadius: 20,
+    borderRadius: radii.pill,
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   pillText: {
+    ...type.eyebrow,
     fontSize: 11,
-    letterSpacing: 0.5,
   },
   title: {
-    fontSize: 18,
-    letterSpacing: -0.3,
+    ...type.productName,
+    fontFamily: "ClashDisplay-Semibold",
+    fontSize: 20,
   },
   desc: {
+    ...type.body,
     fontSize: 14,
-    lineHeight: 22,
   },
   footer: {
     flexDirection: "row",
@@ -258,6 +243,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   footerText: {
+    ...type.caption,
     fontSize: 11,
     marginLeft: 4,
   },

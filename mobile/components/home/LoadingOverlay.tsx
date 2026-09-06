@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, Animated, StyleSheet } from "react-native";
-import { Typography } from '../../constants/Typography';
+import { type } from "../../constants/Typography";
 import { useThemeColors } from "../../constants/Colors";
 import { Button } from "../ui/Button";
 
@@ -36,7 +36,7 @@ export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCanc
       });
     }, 2500);
     return () => clearInterval(interval);
-  }, [visible]);
+  }, [visible, msgOpacity]);
 
   useEffect(() => {
     if (!visible) return;
@@ -50,32 +50,40 @@ export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCanc
         Animated.timing(dot1, { toValue: 0.3, duration: 300, useNativeDriver: true }),
         Animated.timing(dot2, { toValue: 0.3, duration: 300, useNativeDriver: true }),
         Animated.timing(dot3, { toValue: 0.3, duration: 300, useNativeDriver: true }),
-      ]).start(({ finished }) => { if (finished && !cancelled) pulse(); });
+      ]).start(({ finished }) => {
+        if (finished && !cancelled) pulse();
+      });
     };
     pulse();
-    return () => { cancelled = true; };
-  }, [visible]);
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, dot1, dot2, dot3]);
 
   if (!visible) return null;
 
   return (
-    <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(10,10,10,0.97)" : "rgba(255,255,255,0.97)" }]}>
+    <View
+      style={[
+        styles.overlay,
+        { backgroundColor: isDark ? "rgba(10,10,10,0.97)" : "rgba(246,246,244,0.97)" },
+      ]}
+    >
       <View style={styles.content}>
         <View style={styles.dots}>
-          <Animated.View style={[styles.dot, { opacity: dot1, backgroundColor: colors.primary }]} />
-          <Animated.View style={[styles.dot, { opacity: dot2, backgroundColor: colors.primary }]} />
-          <Animated.View style={[styles.dot, { opacity: dot3, backgroundColor: colors.primary }]} />
+          <Animated.View style={[styles.dot, { opacity: dot1, backgroundColor: colors.spotify }]} />
+          <Animated.View style={[styles.dot, { opacity: dot2, backgroundColor: colors.spotify }]} />
+          <Animated.View style={[styles.dot, { opacity: dot3, backgroundColor: colors.spotify }]} />
         </View>
-        <Animated.Text style={[styles.message, { opacity: msgOpacity, color: colors.text }]}>
+        <Animated.Text style={[styles.message, { opacity: msgOpacity, color: colors.ink }]}>
           {MESSAGES[msgIndex]}
         </Animated.Text>
-        <Text style={[styles.sub, { color: colors.textTertiary, marginBottom: 32 }]}>Powered by Gemini AI</Text>
-        
-        {onCancel && (
+        <Text style={[styles.sub, { color: colors.stone, marginBottom: 32 }]}>Powered by Gemini AI</Text>
+        {onCancel ? (
           <View style={styles.cancelContainer}>
             <Button title="Cancel" variant="ghost" onPress={onCancel} />
           </View>
-        )}
+        ) : null}
       </View>
     </View>
   );
@@ -84,7 +92,6 @@ export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCanc
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10,10,10,0.97)",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 100,
@@ -95,21 +102,19 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#2383E2",
     marginHorizontal: 4,
   },
   message: {
+    ...type.body,
     fontSize: 16,
-    color: "rgba(255,255,255,0.92)",
     textAlign: "center",
     marginBottom: 12,
   },
   sub: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.30)",
+    ...type.caption,
     letterSpacing: 0.5,
   },
   cancelContainer: {
     width: 140,
-  }
+  },
 });

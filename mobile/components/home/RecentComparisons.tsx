@@ -1,11 +1,12 @@
-import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
-import { Typography } from '../../constants/Typography';
-import { useComparisonStore, Comparison } from '../../store/useComparisonStore';
-import { useRouter } from 'expo-router';
-import { Card } from '../ui/Card';
-import * as Haptics from '../../utils/haptics';
-import { useThemeColors } from '../../constants/Colors';
+import React, { useRef, useEffect } from "react";
+import { View, Text, StyleSheet, Pressable, Animated, Image } from "react-native";
+import { type } from "../../constants/Typography";
+import { useComparisonStore, Comparison } from "../../store/useComparisonStore";
+import { useRouter } from "expo-router";
+import { Card } from "../ui/Card";
+import * as Haptics from "../../utils/haptics";
+import { useThemeColors } from "../../constants/Colors";
+import { radii } from "../../constants/Layout";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -15,6 +16,7 @@ function ComparisonCard({ comparison, index }: { comparison: Comparison; index: 
   const setActiveComparison = useComparisonStore((state) => state.setActiveComparison);
   const scale = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const products = comparison.result?.products ?? [];
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -23,15 +25,7 @@ function ComparisonCard({ comparison, index }: { comparison: Comparison; index: 
       delay: index * 50 + 200,
       useNativeDriver: true,
     }).start();
-  }, [fadeAnim]);
-
-  const handlePressIn = () => {
-    Animated.spring(scale, { toValue: 0.96, useNativeDriver: true }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
-  };
+  }, [fadeAnim, index]);
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -42,16 +36,47 @@ function ComparisonCard({ comparison, index }: { comparison: Comparison; index: 
   };
 
   return (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
+    <Animated.View
+      style={{
+        opacity: fadeAnim,
+        transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+      }}
+    >
       <AnimatedPressable
         onPress={handlePress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+        onPressIn={() => Animated.spring(scale, { toValue: 0.98, useNativeDriver: true }).start()}
+        onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start()}
         style={[styles.cardWrapper, { transform: [{ scale }] }]}
       >
-        <Card borderRadius={12} style={styles.card}>
-          <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{comparison.title}</Text>
-          <Text style={[styles.cardDate, { color: colors.textTertiary }]}>{comparison.date}</Text>
+        <Card borderRadius={radii.cardSm} style={styles.card}>
+          <View style={styles.thumbs}>
+            {products.slice(0, 3).map((p, i) => (
+              <View
+                key={p.id}
+                style={[
+                  styles.thumb,
+                  {
+                    marginLeft: i === 0 ? 0 : -10,
+                    zIndex: 4 - i,
+                    backgroundColor: colors.fog,
+                    borderColor: colors.surface,
+                  },
+                ]}
+              >
+                {p.imageUrl ? (
+                  <Image source={{ uri: p.imageUrl }} style={styles.thumbImage} resizeMode="cover" />
+                ) : (
+                  <View style={[styles.thumbSilhouette, { borderColor: colors.stone }]} />
+                )}
+              </View>
+            ))}
+          </View>
+          <View style={styles.meta}>
+            <Text style={[styles.cardTitle, { color: colors.ink }]} numberOfLines={1} ellipsizeMode="tail">
+              {comparison.title}
+            </Text>
+            <Text style={[styles.cardDate, { color: colors.stone }]}>{comparison.date}</Text>
+          </View>
         </Card>
       </AnimatedPressable>
     </Animated.View>
@@ -72,45 +97,44 @@ export function RecentComparisons() {
     }).start();
   }, [fadeAnim]);
 
-  if (recentComparisons.length === 0) return null;
-
   return (
     <View style={styles.container}>
-      <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.textTertiary }]}>
-        RECENT
-      </Animated.Text>
-      {recentComparisons.map((comp, index) => (
-        <ComparisonCard key={comp.id} comparison={comp} index={index} />
-      ))}
+      <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.stone }]}>Recent</Animated.Text>
+      {recentComparisons.length === 0 ? (
+        <Text style={[styles.empty, { color: colors.stone }]}>No comparisons yet</Text>
+      ) : (
+        recentComparisons.map((comp, index) => (
+          <ComparisonCard key={comp.id} comparison={comp} index={index} />
+        ))
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 32,
+  container: { marginTop: 32 },
+  header: { ...type.eyebrow, marginBottom: 16 },
+  empty: { ...type.body },
+  cardWrapper: { marginBottom: 12 },
+  card: { padding: 16, flexDirection: "row", alignItems: "center", gap: 12 },
+  thumbs: { flexDirection: "row", alignItems: "center" },
+  thumb: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  header: {
-    fontSize: 13,
-    
-    color: 'rgba(255, 255, 255, 0.38)',
-    marginBottom: 16,
-    letterSpacing: 1.2,
+  thumbImage: { width: "100%", height: "100%" },
+  thumbSilhouette: {
+    width: 12,
+    height: 18,
+    borderRadius: 3,
+    borderWidth: 1.5,
   },
-  cardWrapper: {
-    marginBottom: 16,
-  },
-  card: {
-    padding: 16,
-  },
-  cardTitle: {
-    ...Typography.headline,
-    fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.92)',
-    marginBottom: 4,
-  },
-  cardDate: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.38)',
-  },
+  meta: { flex: 1, minWidth: 0 },
+  cardTitle: { ...type.productName, fontSize: 15, marginBottom: 4 },
+  cardDate: { ...type.caption },
 });
