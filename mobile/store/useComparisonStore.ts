@@ -58,6 +58,7 @@ interface ComparisonStore {
   setLoading: (isLoading: boolean, message?: string) => void;
   setActiveComparison: (result: ComparisonResult | null) => void;
   addRecentComparison: (comparison: Comparison) => void;
+  clearRecentComparisons: () => void;
   // Dev helpers — only for the in-app mock-data dev tools.
   seedMockComparison: (variant: "two" | "three") => void;
   clearActiveComparison: () => void;
@@ -288,6 +289,7 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
     set((state) => ({
       recentComparisons: [comparison, ...state.recentComparisons].slice(0, 10),
     })),
+  clearRecentComparisons: () => set({ recentComparisons: [] }),
   // Dev helpers
   seedMockComparison: (variant) =>
     set({
