@@ -24,13 +24,6 @@ const TINT = {
   rose: { wash: "#F6E0E0", wellDark: "#3A2C2C" },
 } as const;
 
-export const MODE_WELLS: WellDef[] = [
-  { id: "url", label: "URL", icon: require("../assets/icons/mode-url.png"), tint: TINT.blue },
-  { id: "name", label: "Name", icon: require("../assets/icons/mode-name.png"), tint: TINT.gold },
-  { id: "upc", label: "Barcode", icon: require("../assets/icons/mode-barcode.png"), tint: TINT.sand },
-  { id: "qr", label: "QR Code", icon: require("../assets/icons/mode-qr.png"), tint: TINT.blue },
-];
-
 export const ALL_WELL: WellDef = {
   id: "all",
   label: "All",
