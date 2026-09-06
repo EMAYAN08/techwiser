@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated, Pressable } from "react-native";
+import { Typography } from '../../constants/Typography';
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from '../../utils/haptics';
 import { Button } from "../ui/Button";
@@ -78,7 +79,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: "700",
     color: "#FFFFFF",
     marginBottom: 8,
   },

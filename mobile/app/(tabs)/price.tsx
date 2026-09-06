@@ -13,10 +13,10 @@ export default function PriceScreen() {
     <View
       style={[
         styles.root,
-        { backgroundColor: colors.background, paddingTop: insets.top + 24, paddingBottom: insets.bottom + 100 },
+        { backgroundColor: colors.background, paddingBottom: insets.bottom + 100 },
       ]}
     >
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.text }]}>Price Tracking</Text>
       </View>
 
@@ -34,13 +34,15 @@ export default function PriceScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    paddingHorizontal: 24,
   },
   header: {
-    marginBottom: 32,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
   },
   title: {
-    ...Typography.headline,
+    ...Typography.display,
     fontSize: 28,
   },
   center: {
@@ -50,6 +52,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 32,
+    marginHorizontal: 16,
+    marginTop: 32,
     maxHeight: 400,
   },
   comingSoon: {

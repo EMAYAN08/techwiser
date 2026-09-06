@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Switch } from 'react-native';
+import { Typography } from '../../constants/Typography';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from '../../utils/haptics';
 import { useThemeStore, ThemePreference } from '../../store/useThemeStore';
@@ -133,9 +134,9 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderBottomWidth: 1,
   },
-  headerTitle: { fontSize: 28, fontWeight: '700' },
+  headerTitle: { ...Typography.display, fontSize: 28 },
   scroll: { padding: 16 },
-  sectionTitle: { fontSize: 11, fontWeight: '600', letterSpacing: 1.2, marginBottom: 8, marginLeft: 4, marginTop: 16 },
+  sectionTitle: { ...Typography.eyebrow, fontSize: 11, letterSpacing: 1.2, marginBottom: 8, marginLeft: 4, marginTop: 16 },
   card: { borderWidth: 1, borderRadius: 12, overflow: 'hidden' },
   option: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
   appearanceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, paddingLeft: 16 },

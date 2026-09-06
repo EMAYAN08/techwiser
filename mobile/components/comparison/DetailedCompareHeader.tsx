@@ -290,10 +290,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  title: {
+  title: { ...Typography.headline,
     ...Typography.headline,
     fontSize: 16,
-    fontWeight: "700",
+    
     letterSpacing: -0.3,
     flex: 1,
     textAlign: "center",
@@ -346,10 +346,10 @@ const styles = StyleSheet.create({
     width: "70%",
     height: "70%",
   },
-  tileName: {
+  tileName: { ...Typography.headline,
     ...Typography.headline,
     fontSize: 14,
-    fontWeight: "700",
+    
     lineHeight: 18,
     letterSpacing: -0.2,
   },
@@ -364,9 +364,9 @@ const styles = StyleSheet.create({
     height: 5,
     borderRadius: 3,
   },
-  tileRetailer: {
+  tileRetailer: { ...Typography.headline,
     fontSize: 10,
-    fontWeight: "600",
+    
     letterSpacing: 0.5,
     textTransform: "uppercase",
   },

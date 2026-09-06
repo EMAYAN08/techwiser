@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { StyleSheet, Text, Pressable, PressableProps, Animated, View, StyleProp, ViewStyle } from 'react-native';
 import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -67,5 +68,5 @@ export const Button = React.forwardRef<any, ButtonProps>(
 const styles = StyleSheet.create({
   button: { height: 48, justifyContent: 'center', alignItems: 'center', borderRadius: 8, paddingHorizontal: 24, overflow: 'hidden' },
   innerHighlight: { borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.2)', borderRadius: 8 },
-  text: { fontSize: 15, fontWeight: '600' },
+  text: { ...Typography.button, fontSize: 15 },
 });

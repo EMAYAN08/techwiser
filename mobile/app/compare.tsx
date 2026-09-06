@@ -691,11 +691,6 @@ export default function CompareScreen() {
     }
   };
 
-  const handleViewDetailed = () => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push("/compare/detailed");
-  };
-
   const renderOverview = () => (
     <View>
       <AIVerdictCard summary={aiSummary} />
@@ -708,10 +703,6 @@ export default function CompareScreen() {
           />
         </View>
       )}
-
-      <View style={styles.detailedCta}>
-        <Button title="View Detailed Comparison" variant="primary" onPress={handleViewDetailed} />
-      </View>
     </View>
   );
 
@@ -780,7 +771,7 @@ export default function CompareScreen() {
       return (
         <View style={{ alignItems: "center", marginTop: 40, padding: 20 }}>
           <Trophy size={48} color={colors.success} strokeWidth={1.5} style={{ marginBottom: 16 }} />
-          <Text style={{ color: colors.text, fontSize: 18, fontWeight: "bold", textAlign: "center", marginBottom: 8 }}>
+          <Text style={{ ...Typography.headline, color: colors.text, fontSize: 18, textAlign: "center", marginBottom: 8 }}>
             You picked well!
           </Text>
           <Text style={{ color: colors.textSecondary, textAlign: "center", lineHeight: 22 }}>
@@ -815,10 +806,10 @@ export default function CompareScreen() {
                 </View>
               )}
               <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.text, fontSize: 17, fontWeight: "bold", marginBottom: 4 }}>
+                <Text style={{ ...Typography.headline, color: colors.text, fontSize: 17, marginBottom: 4 }}>
                   {alt.name}
                 </Text>
-                <Text style={{ color: colors.primary, fontSize: 15, fontWeight: "600", marginBottom: 8 }}>
+                <Text style={{ ...Typography.headline, color: colors.primary, fontSize: 15, marginBottom: 8 }}>
                   {alt.estimatedPrice}
                 </Text>
                 <Text style={{ color: colors.textSecondary, lineHeight: 20, fontSize: 14 }}>
@@ -1017,10 +1008,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitle: {
+  headerTitle: { ...Typography.headline,
     ...Typography.headline,
     fontSize: 17,
-    fontWeight: "700",
+    
     letterSpacing: -0.3,
   },
   headerSpacer: { width: 40, height: 40 },
@@ -1079,10 +1070,10 @@ const styles = StyleSheet.create({
   },
   headerImage: { width: 64, height: 56 },
   headerImageCompact: { width: 40, height: 36 },
-  headerName: {
+  headerName: { ...Typography.headline,
     ...Typography.body,
     fontSize: 14,
-    fontWeight: "700",
+    
     textAlign: "center",
     letterSpacing: -0.2,
     lineHeight: 18,
@@ -1094,9 +1085,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
     marginBottom: 4,
   },
-  productPrice: {
+  productPrice: { ...Typography.headline,
     fontSize: 15,
-    fontWeight: "700",
+    
     marginBottom: 8,
     textAlign: "center",
   },
@@ -1120,9 +1111,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   retailerDot: { width: 6, height: 6, borderRadius: 3 },
-  retailerText: {
+  retailerText: { ...Typography.headline,
     fontSize: 10,
-    fontWeight: "700",
+    
     letterSpacing: 0.6,
     textTransform: "uppercase",
   },
@@ -1148,9 +1139,9 @@ const styles = StyleSheet.create({
     gap: 6,
     minHeight: 36,
   },
-  pillLabel: {
+  pillLabel: { ...Typography.headline,
     fontSize: 13,
-    fontWeight: "600",
+    
     letterSpacing: -0.1,
   },
 
@@ -1173,10 +1164,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  aiLabel: {
+  aiLabel: { ...Typography.headline,
     ...Typography.caption,
     fontSize: 11,
-    fontWeight: "700",
+    
     letterSpacing: 0.8,
   },
   aiBody: {
@@ -1187,18 +1178,18 @@ const styles = StyleSheet.create({
 
   // Key differences
   diffCard: { padding: 18 },
-  diffHeading: {
+  diffHeading: { ...Typography.headline,
     ...Typography.caption,
     fontSize: 11,
-    fontWeight: "700",
+    
     letterSpacing: 0.8,
     marginBottom: 14,
   },
   diffRow: { paddingVertical: 14 },
-  diffLabel: {
+  diffLabel: { ...Typography.headline,
     ...Typography.caption,
     fontSize: 12,
-    fontWeight: "600",
+    
     letterSpacing: 0.3,
     textTransform: "none",
     marginBottom: 10,
@@ -1219,10 +1210,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     position: "relative",
   },
-  diffValue: {
+  diffValue: { ...Typography.headline,
     ...Typography.body,
     fontSize: 14,
-    fontWeight: "600",
+    
     lineHeight: 18,
   },
 
@@ -1242,10 +1233,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 20,
   },
-  emptyTitle: {
+  emptyTitle: { ...Typography.headline,
     ...Typography.headline,
     fontSize: 18,
-    fontWeight: "700",
+    
     textAlign: "center",
     marginBottom: 6,
   },
@@ -1264,9 +1255,9 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     width: "100%",
   },
-  specLabel: {
+  specLabel: { ...Typography.body,
     fontSize: 13,
-    fontWeight: "500",
+    
     paddingTop: 14,
     paddingBottom: 6,
   },
@@ -1295,14 +1286,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  valueCardText: {
+  valueCardText: { ...Typography.headline,
     fontSize: 15,
-    fontWeight: "600",
+    
     lineHeight: 20,
     textAlign: "left",
   },
 
-  detailedCta: { marginTop: 24 },
+
 
   // AI Overlay
   aiOverlayCard: {
@@ -1328,10 +1319,10 @@ const styles = StyleSheet.create({
     gap: 8,
     flexShrink: 1,
   },
-  aiOverlayTitle: {
+  aiOverlayTitle: { ...Typography.headline,
     ...Typography.headline,
     fontSize: 18,
-    fontWeight: "700",
+    
     flexShrink: 1,
   },
   closeBtn: {
@@ -1346,10 +1337,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  aiOverlayLoadingText: {
+  aiOverlayLoadingText: { ...Typography.body,
     ...Typography.body,
     fontSize: 14,
-    fontWeight: "500",
+    
   },
   aiOverlayError: {
     paddingVertical: 40,
@@ -1369,10 +1360,10 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: 16,
   },
-  aiOverlayProductName: {
+  aiOverlayProductName: { ...Typography.headline,
     ...Typography.body,
     fontSize: 15,
-    fontWeight: "600",
+    
   },
   aiOverlayValue: {
     ...Typography.body,

@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
+import { Typography } from '../../constants/Typography';
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from "../../constants/Colors";
@@ -93,14 +94,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#2383E2",
   },
   label: {
+    ...Typography.chip,
     fontSize: 11,
-    fontWeight: "500",
     color: "rgba(255,255,255,0.40)",
     textAlign: "center",
   },
   labelActive: {
     color: "#FFFFFF",
-    fontWeight: "600",
+    fontFamily: Typography.button.fontFamily,
   },
 });
 

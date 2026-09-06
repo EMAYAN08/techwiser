@@ -90,9 +90,9 @@ function TwoColCard({ value, colors, isLast }: TwoColCardProps) {
       <Text
         style={[
           styles.twoColValue,
-          {
+          { ...Typography.caption,
             color: isWinner ? colors.success : colors.text,
-            fontFamily: Fonts.mono,
+            
           },
         ]}
         numberOfLines={2}
@@ -162,7 +162,7 @@ function StackedRow({ value, pct, fillColor, colors }: StackedRowProps) {
         <Text
           style={[
             styles.stackedValue,
-            { color: valueColor, fontFamily: Fonts.mono },
+            { ...Typography.caption, color: valueColor },
           ]}
           numberOfLines={1}
         >
@@ -263,9 +263,9 @@ export function SpecBarRow({ row, colors }: SpecBarRowProps) {
               <Text
                 style={[
                   styles.textOnlyValue,
-                  {
+                  { ...Typography.caption,
                     color: v.isWinner ? colors.success : colors.text,
-                    fontFamily: Fonts.mono,
+                    
                   },
                 ]}
                 numberOfLines={1}
@@ -300,10 +300,10 @@ const styles = StyleSheet.create({
   outer: {
     paddingVertical: 14,
   },
-  label: {
+  label: { ...Typography.headline,
     ...Typography.caption,
     fontSize: 11,
-    fontWeight: "700",
+    
     letterSpacing: 0.6,
     textTransform: "uppercase",
     marginBottom: 10,
@@ -335,16 +335,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  twoColName: {
+  twoColName: { ...Typography.headline,
     fontSize: 12,
-    fontWeight: "600",
+    
     letterSpacing: 0.2,
     marginBottom: 6,
     textTransform: "uppercase",
   },
-  twoColValue: {
+  twoColValue: { ...Typography.headline,
     fontSize: 20,
-    fontWeight: "700",
+    
     textAlign: "center",
     lineHeight: 24,
   },
@@ -366,14 +366,14 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
-  stackedName: {
+  stackedName: { ...Typography.body,
     flex: 1,
     fontSize: 13,
-    fontWeight: "500",
+    
   },
-  stackedValue: {
+  stackedValue: { ...Typography.headline,
     fontSize: 14,
-    fontWeight: "600",
+    
     textAlign: "right",
     minWidth: 80,
   },
@@ -394,14 +394,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 6,
   },
-  textOnlyName: {
+  textOnlyName: { ...Typography.body,
     fontSize: 13,
-    fontWeight: "500",
+    
     flex: 1,
   },
-  textOnlyValue: {
+  textOnlyValue: { ...Typography.body,
     fontSize: 14,
-    fontWeight: "500",
+    
     textAlign: "right",
   },
 

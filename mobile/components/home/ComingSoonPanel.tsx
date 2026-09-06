@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
+import { Typography } from '../../constants/Typography';
 import { Feather } from "@expo/vector-icons";
 import { InputMode } from "./InputModeTabs";
 import { useThemeColors } from "../../constants/Colors";
@@ -143,7 +144,6 @@ const svgStyles = StyleSheet.create({
     bottom: 0,
     fontSize: 9,
     letterSpacing: 2,
-    fontWeight: "500",
     opacity: 0.6,
   },
   qrGrid: { flexDirection: "column" },
@@ -235,12 +235,10 @@ const styles = StyleSheet.create({
   },
   pillText: {
     fontSize: 11,
-    fontWeight: "700",
     letterSpacing: 0.5,
   },
   title: {
     fontSize: 18,
-    fontWeight: "700",
     letterSpacing: -0.3,
   },
   desc: {
@@ -261,7 +259,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 11,
-    fontWeight: "500",
     marginLeft: 4,
   },
 });

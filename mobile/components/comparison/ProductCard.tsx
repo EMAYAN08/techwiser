@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { Typography } from "../../constants/Typography";
 import { View, Text, Animated, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '../ui/Card';
@@ -64,11 +65,11 @@ export function ProductCard({ product, index }: { product: any; index: number })
 
 const styles = StyleSheet.create({
   productCard: { padding: 14, height: 170, display: 'flex', flexDirection: 'column' },
-  productName: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.88)', marginVertical: 6, lineHeight: 18 },
-  productPrice: { fontSize: 15, fontWeight: '700', color: '#FFFFFF', marginBottom: 6 },
+  productName: { ...Typography.headline, fontSize: 13, color: 'rgba(255,255,255,0.88)', marginVertical: 6, lineHeight: 18 },
+  productPrice: { ...Typography.headline, fontSize: 15, color: '#FFFFFF', marginBottom: 6 },
   badgesContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 'auto' },
   badge: { alignSelf: 'flex-start', borderWidth: 1, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 2 },
-  badgeText: { fontSize: 9, fontWeight: '700', letterSpacing: 0.8 },
+  badgeText: { ...Typography.headline, fontSize: 9, letterSpacing: 0.8 },
   aiBadge: { backgroundColor: 'rgba(35,131,226,0.12)', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3, alignSelf: 'flex-start' },
-  aiBadgeText: { fontSize: 10, color: '#2383E2', fontWeight: '600' },
+  aiBadgeText: { ...Typography.headline, fontSize: 10, color: '#2383E2' },
 });

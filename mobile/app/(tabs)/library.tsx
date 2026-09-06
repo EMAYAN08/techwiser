@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { ProductCard } from '../../components/comparison/ProductCard';
 import { useThemeColors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
 
 export default function LibraryScreen() {
   const { recentComparisons } = useComparisonStore();
@@ -62,12 +63,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#1A1A1A',
   },
-  headerTitle: { fontSize: 28, fontWeight: '700', color: 'rgba(255,255,255,0.92)' },
+  headerTitle: { ...Typography.display, fontSize: 28 },
   scroll: { padding: 16 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 },
   cardWrapper: { width: '50%', paddingBottom: 16 },
   
   emptyState: { alignItems: 'center', justifyContent: 'center', marginTop: 100, padding: 24 },
-  emptyText: { color: 'rgba(255,255,255,0.8)', fontSize: 18, fontWeight: '600', marginTop: 16, marginBottom: 8 },
-  emptySubtext: { color: 'rgba(255,255,255,0.5)', fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  emptyText: { ...Typography.headline, color: 'rgba(255,255,255,0.8)', fontSize: 18, marginTop: 16, marginBottom: 8 },
+  emptySubtext: { ...Typography.body, color: 'rgba(255,255,255,0.5)', fontSize: 14, textAlign: 'center', lineHeight: 20 },
 });

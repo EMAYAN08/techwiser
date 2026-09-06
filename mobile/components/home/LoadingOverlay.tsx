@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, Animated, StyleSheet } from "react-native";
+import { Typography } from '../../constants/Typography';
 import { useThemeColors } from "../../constants/Colors";
 import { Button } from "../ui/Button";
 
@@ -100,7 +101,6 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 16,
     color: "rgba(255,255,255,0.92)",
-    fontWeight: "500",
     textAlign: "center",
     marginBottom: 12,
   },

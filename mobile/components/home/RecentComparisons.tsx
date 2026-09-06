@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
+import { Typography } from '../../constants/Typography';
 import { useComparisonStore, Comparison } from '../../store/useComparisonStore';
 import { useRouter } from 'expo-router';
 import { Card } from '../ui/Card';
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 13,
-    fontWeight: '500',
+    
     color: 'rgba(255, 255, 255, 0.38)',
     marginBottom: 16,
     letterSpacing: 1.2,
@@ -103,8 +104,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardTitle: {
+    ...Typography.headline,
     fontSize: 15,
-    fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.92)',
     marginBottom: 4,
   },

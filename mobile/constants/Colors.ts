@@ -1,40 +1,102 @@
 import { useColorScheme } from 'react-native';
 import { useThemeStore } from '../store/useThemeStore';
 
+export const paletteTokens = {
+  spotify: "#1DB954",
+  spotifyInk: "#0A0A0A",
+  spotifyWashLight: "#E8F8EE",
+  paper: "#F6F6F4",
+  ink: "#0A0A0A",
+  fog: "#EFEFEA",
+  stone: "#8C8C86",
+  lineLight: "#E8E8E4",
+  bodyLight: "#5A5A58",
+  surfaceLight: "#FFFFFF",
+  surfaceDark: "#161616",
+  fogDark: "#1C1C1C",
+  bodyDark: "#A8A8A4",
+  tabBarLight: "#1A1A1A",
+  tabBarDark: "#141414",
+} as const;
+
 export const palette = {
-  dark: {
-    background: "#0A0A0A",
-    surface: "#141414",
-    surfaceHighlight: "#1F1F1F",
-    border: "#2A2A2A",
-    text: "#FFFFFF",
-    textSecondary: "rgba(255,255,255,0.6)",
-    textTertiary: "rgba(255,255,255,0.38)",
-    primary: "#2383E2",
-    primaryMuted: "rgba(35,131,226,0.12)",
-    success: "#2EA043",
-    successMuted: "rgba(46,160,67,0.08)",
+  light: {
+    background: paletteTokens.paper,
+    surface: paletteTokens.surfaceLight,
+    surfaceHighlight: paletteTokens.fog,
+    surfaceHover: paletteTokens.fog,
+    border: paletteTokens.lineLight,
+    text: paletteTokens.ink,
+    textSecondary: paletteTokens.bodyLight,
+    textTertiary: paletteTokens.stone,
+    primary: paletteTokens.ink,
+    primaryMuted: paletteTokens.lineLight,
+    success: paletteTokens.spotify,
+    successMuted: paletteTokens.spotifyWashLight,
     error: "#EB5757",
     errorMuted: "rgba(235, 87, 87, 0.1)",
-    ai: "#A259FF",
-    aiMuted: "rgba(162, 89, 255, 0.1)",
+    ai: paletteTokens.ink,
+    aiMuted: paletteTokens.fog,
+    // Exact theme.ts match
+    bg: paletteTokens.paper,
+    ink: paletteTokens.ink,
+    body: paletteTokens.bodyLight,
+    stone: paletteTokens.stone,
+    fog: paletteTokens.fog,
+    line: paletteTokens.lineLight,
+    spotify: paletteTokens.spotify,
+    spotifyInk: paletteTokens.spotifyInk,
+    spotifyWash: paletteTokens.spotifyWashLight,
+    primaryBtn: paletteTokens.ink,
+    primaryBtnFg: "#FFFFFF",
+    tabBar: paletteTokens.tabBarLight,
+    tabSelectedIcon: paletteTokens.spotify,
+    tabSelectedLabel: "#FFFFFF",
+    tabUnselected: paletteTokens.stone,
+    segmentSelectedBg: paletteTokens.ink,
+    segmentSelectedFg: "#FFFFFF",
+    verdictBg: paletteTokens.ink,
+    verdictFg: "#FFFFFF",
+    overlay: "rgba(10,10,10,0.08)",
   },
-  light: {
-    background: "#FFFFFF",
-    surface: "#F7F7F7",
-    surfaceHighlight: "#EEEEEE",
-    border: "#E5E5E5",
-    text: "#111111",
-    textSecondary: "rgba(17,17,17,0.6)",
-    textTertiary: "rgba(17,17,17,0.38)",
-    primary: "#0066CC",
-    primaryMuted: "rgba(0,102,204,0.12)",
-    success: "#2EA043",
-    successMuted: "rgba(46,160,67,0.08)",
-    error: "#D32F2F",
-    errorMuted: "rgba(211, 47, 47, 0.1)",
-    ai: "#8A2BE2",
-    aiMuted: "rgba(138, 43, 226, 0.1)",
+  dark: {
+    background: paletteTokens.ink,
+    surface: paletteTokens.surfaceDark,
+    surfaceHighlight: paletteTokens.fogDark,
+    surfaceHover: paletteTokens.fogDark,
+    border: "rgba(255,255,255,0.08)",
+    text: paletteTokens.paper,
+    textSecondary: paletteTokens.bodyDark,
+    textTertiary: paletteTokens.stone,
+    primary: paletteTokens.spotify,
+    primaryMuted: "rgba(255,255,255,0.08)",
+    success: paletteTokens.spotify,
+    successMuted: "rgba(29,185,84,0.12)",
+    error: "#EB5757",
+    errorMuted: "rgba(235, 87, 87, 0.1)",
+    ai: paletteTokens.paper,
+    aiMuted: paletteTokens.fogDark,
+    // Exact theme.ts match
+    bg: paletteTokens.ink,
+    ink: paletteTokens.paper,
+    body: paletteTokens.bodyDark,
+    stone: paletteTokens.stone,
+    fog: paletteTokens.fogDark,
+    line: "rgba(255,255,255,0.08)",
+    spotify: paletteTokens.spotify,
+    spotifyInk: paletteTokens.spotifyInk,
+    spotifyWash: "rgba(29,185,84,0.12)",
+    primaryBtn: paletteTokens.spotify,
+    primaryBtnFg: paletteTokens.spotifyInk,
+    tabBar: paletteTokens.tabBarDark,
+    tabSelectedIcon: paletteTokens.spotify,
+    tabSelectedLabel: "#FFFFFF",
+    tabUnselected: paletteTokens.stone,
+    segmentSelectedBg: paletteTokens.spotify,
+    segmentSelectedFg: paletteTokens.spotifyInk,
+    verdictBg: paletteTokens.ink,
+    verdictFg: "#FFFFFF",
+    overlay: "rgba(255,255,255,0.06)",
   },
 };
 
@@ -52,27 +114,8 @@ export function useThemeColors() {
   };
 }
 
-export const RETAILER_COLORS: Record<string, string> = {
-  "bestbuy": "#003B64",
-  "amazon": "#FF9900",
-  "canadacomputers": "#E31837",
-  "memoryexpress": "#005BAA",
-  "newegg": "#E2241B",
-  "staples": "#CC0000",
-  "thesource": "#E4002B",
-  "costco": "#005BAA",
-  "walmart": "#0071CE",
-};
-
-export function getRetailerColor(retailerName?: string, fallback: string = "#555555") {
-  if (!retailerName) return fallback;
-  const normalized = retailerName.toLowerCase().replace(/[^a-z]/g, "");
-  for (const [key, color] of Object.entries(RETAILER_COLORS)) {
-    if (normalized.includes(key)) {
-      return color;
-    }
-  }
-  return fallback;
+export function getRetailerColor(retailerName?: string, fallback?: string) {
+  return fallback || paletteTokens.stone;
 }
 
 export const RETAILER_NAMES: Record<string, string> = {

@@ -1,3 +1,4 @@
+import { Typography } from '../../constants/Typography';
 import React, { useEffect, useRef } from "react";
 import {
   View, Text, StyleSheet, Animated, PanResponder, Pressable,
@@ -319,7 +320,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between", marginBottom: 10,
   },
   headerLabel: {
-    fontSize: 12, fontWeight: "600",
+    ...Typography.eyebrow,
+    fontSize: 12,
     color: "rgba(255,255,255,0.35)", letterSpacing: 0.8,
   },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
@@ -330,7 +332,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 6, borderWidth: 1, borderColor: "#2A2A2A",
   },
-  clearAllText: { fontSize: 12, color: "rgba(255,255,255,0.35)", fontWeight: "500" },
+  clearAllText: { ...Typography.caption, fontSize: 12, color: "rgba(255,255,255,0.35)" },
   rowWrap: { justifyContent: "center", overflow: "hidden" },
   deleteIcon: {
     position: "absolute", right: 14,
@@ -347,7 +349,7 @@ const styles = StyleSheet.create({
     height: 48,
   },
   addBtnText: {
+    ...Typography.button,
     fontSize: 15,
-    fontWeight: "600",
   },
 });

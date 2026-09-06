@@ -102,16 +102,16 @@ const styles = StyleSheet.create({
     minHeight: 56,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  title: {
+  title: { ...Typography.headline,
     ...Typography.headline,
     fontSize: 16,
-    fontWeight: "600",
+    
     flex: 1,
   },
-  count: {
+  count: { ...Typography.body,
     ...Typography.caption,
     fontSize: 12,
-    fontWeight: "500",
+    
     textTransform: "none",
     marginLeft: 12,
   },

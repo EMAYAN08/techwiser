@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View, Text, Animated, Pressable } from "react-native";
+import { Typography } from '../../constants/Typography';
 import { useRouter } from "expo-router";
 import * as Haptics from '../../utils/haptics';
 import { URLInputGroup } from "../../components/home/URLInputGroup";
@@ -141,7 +142,7 @@ export default function Home() {
         backgroundColor: colors.background
       }}>
         <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.text }]}>
-          Workspace
+          Compare
         </Animated.Text>
         <Text style={[styles.subheader, { color: colors.textTertiary }]}>Compare any 2-4 tech products at once</Text>
 
@@ -185,8 +186,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 24, paddingTop: 64, paddingBottom: 32 },
   header: {
+    ...Typography.display,
     fontSize: 28,
-    fontWeight: "700",
     color: "rgba(255,255,255,0.92)",
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -205,8 +206,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   devLabel: {
+    ...Typography.eyebrow,
     fontSize: 10,
-    fontWeight: "700",
     letterSpacing: 0.8,
     marginBottom: 10,
   },
@@ -224,8 +225,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   devBtnText: {
+    ...Typography.button,
     fontSize: 12,
-    fontWeight: "600",
     letterSpacing: -0.1,
   },
 });

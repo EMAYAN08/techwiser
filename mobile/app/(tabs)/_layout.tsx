@@ -1,3 +1,4 @@
+import { Typography } from '../../constants/Typography';
 import React, { useEffect, useRef } from "react";
 import {
   AccessibilityInfo,
@@ -105,7 +106,7 @@ function TabItem({
         <Text
           style={[
             styles.tabLabel,
-            { color, fontWeight: focused ? "600" : "500" },
+            { color, fontFamily: focused ? Typography.button.fontFamily : Typography.chip.fontFamily },
           ]}
           numberOfLines={1}
         >

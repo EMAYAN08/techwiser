@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Typography, Fonts } from '../../constants/Typography';
 import { View, Text, ScrollView, StyleSheet, Linking, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -193,25 +194,25 @@ const styles = StyleSheet.create({
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
   backBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   retailerBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  retailerText: { color: '#FFF', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  retailerText: { ...Typography.headline, color: '#FFF', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
   brand: { color: 'rgba(255,255,255,0.6)', fontSize: 14, marginBottom: 4 },
-  productName: { color: '#FFF', fontSize: 24, fontWeight: '700', letterSpacing: -0.5, marginBottom: 8 },
-  price: { color: '#10B981', fontSize: 18, fontWeight: '600' },
+  productName: { ...Typography.headline, color: '#FFF', fontSize: 24, letterSpacing: -0.5, marginBottom: 8 },
+  price: { ...Typography.headline, color: '#10B981', fontSize: 18 },
 
   card: { backgroundColor: '#141414', borderWidth: 1, borderColor: '#2A2A2A', borderRadius: 16, padding: 20, marginBottom: 16 },
   
   aiHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 },
-  aiTitle: { color: '#A259FF', fontSize: 14, fontWeight: '600' },
+  aiTitle: { ...Typography.headline, color: '#A259FF', fontSize: 14 },
   aiSummary: { color: 'rgba(255,255,255,0.8)', fontSize: 15, lineHeight: 22, marginBottom: 16 },
   badgesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   badge: { backgroundColor: 'rgba(162, 89, 255, 0.1)', borderWidth: 1, borderColor: 'rgba(162, 89, 255, 0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { color: '#A259FF', fontSize: 12, fontWeight: '600' },
+  badgeText: { ...Typography.headline, color: '#A259FF', fontSize: 12 },
 
-  sectionTitle: { color: '#FFF', fontSize: 18, fontWeight: '600', marginBottom: 16 },
+  sectionTitle: { ...Typography.headline, color: '#FFF', fontSize: 18, marginBottom: 16 },
   specRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2A2A2A' },
   noBorder: { borderBottomWidth: 0 },
   specLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 14, flex: 1, paddingRight: 16 },
-  specValue: { color: '#FFF', fontSize: 14, fontWeight: '500', flex: 1, textAlign: 'right' },
+  specValue: { ...Typography.body, color: '#FFF', fontSize: 14, flex: 1, textAlign: 'right' },
 
   sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   bodyText: { fontSize: 15, lineHeight: 22 },

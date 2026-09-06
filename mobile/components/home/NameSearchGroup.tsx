@@ -1,3 +1,4 @@
+import { Typography } from '../../constants/Typography';
 import React, { useState, useRef, useEffect } from "react";
 import {
   View, Text, TextInput, StyleSheet, Pressable, Animated, ScrollView,
@@ -289,8 +290,8 @@ const styles = StyleSheet.create({
     height: 48,
   },
   addBtnText: {
+    ...Typography.button,
     fontSize: 15,
-    fontWeight: "600",
   },
   searchBtn: {
     flexDirection: "row",
@@ -307,8 +308,8 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   searchBtnText: {
+    ...Typography.button,
     fontSize: 15,
-    fontWeight: "600",
     color: "#FFFFFF",
   },
   comingSoonRow: {
@@ -325,6 +326,5 @@ const styles = StyleSheet.create({
   comingSoonNote: {
     fontSize: 11,
     color: "rgba(255,255,255,0.20)",
-    fontWeight: "500",
-  },
+    },
 });
