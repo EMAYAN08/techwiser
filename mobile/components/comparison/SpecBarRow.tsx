@@ -8,7 +8,8 @@ import {
 } from "react-native";
 import { Trophy } from "lucide-react-native";
 import { useThemeColors } from "../../constants/Colors";
-import { Fonts, Typography } from "../../constants/Typography";
+import { type } from "../../constants/Typography";
+import { radii } from "../../constants/Layout";
 
 type Palette = ReturnType<typeof useThemeColors>["colors"];
 
@@ -33,10 +34,6 @@ interface SpecBarRowProps {
   colors: Palette;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function shortName(name: string): string {
   const trimmed = name.trim();
   if (trimmed.length === 0) return name;
@@ -44,57 +41,39 @@ function shortName(name: string): string {
   return first.length > 10 ? first.slice(0, 10) : first;
 }
 
-// ---------------------------------------------------------------------------
-// Two-column comparison card (2 products)
-// ---------------------------------------------------------------------------
-
 interface TwoColCardProps {
   value: DetailedSpecValue;
   colors: Palette;
-  isLast: boolean;
 }
 
-function TwoColCard({ value, colors, isLast }: TwoColCardProps) {
-  const isWinner = value.isWinner && !value.isDraw;
+function TwoColCard({ value, colors }: TwoColCardProps) {
+  const isWinner = value.isWinner || value.isDraw;
   return (
     <View
       style={[
         styles.twoColCard,
         {
-          backgroundColor: isWinner ? colors.successMuted : colors.surface,
-          borderColor: isWinner ? colors.success : colors.border,
+          backgroundColor: isWinner ? colors.spotifyWash : colors.fog,
+          borderColor: isWinner ? colors.spotify : "transparent",
         },
       ]}
       accessible
       accessibilityRole="text"
-      accessibilityLabel={
-        isWinner
-          ? `${value.displayValue}. Winner.`
-          : value.displayValue
-      }
+      accessibilityLabel={isWinner ? `${value.displayValue}. Winner.` : value.displayValue}
     >
       {isWinner && (
-        <View style={[styles.trophyWrap, { backgroundColor: colors.success }]}>
-          <Trophy size={9} color={colors.background} strokeWidth={2.5} />
+        <View style={[styles.trophyWrap, { backgroundColor: colors.spotify }]}>
+          <Trophy size={9} color={colors.spotifyInk} strokeWidth={2.5} />
         </View>
       )}
       <Text
-        style={[
-          styles.twoColName,
-          { color: isWinner ? colors.success : colors.textSecondary },
-        ]}
+        style={[styles.twoColName, { color: isWinner ? colors.ink : colors.stone }]}
         numberOfLines={1}
       >
         {shortName(value.productName)}
       </Text>
       <Text
-        style={[
-          styles.twoColValue,
-          { ...Typography.caption,
-            color: isWinner ? colors.success : colors.text,
-            
-          },
-        ]}
+        style={[styles.twoColValue, { color: isWinner ? colors.ink : colors.body }]}
         numberOfLines={2}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
@@ -104,10 +83,6 @@ function TwoColCard({ value, colors, isLast }: TwoColCardProps) {
     </View>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Stacked row (3+ products) with animated thin bar
-// ---------------------------------------------------------------------------
 
 interface StackedRowProps {
   value: DetailedSpecValue;
@@ -143,38 +118,24 @@ function StackedRow({ value, pct, fillColor, colors }: StackedRowProps) {
     outputRange: ["0%", `${pct * 100}%`],
   });
 
-  const isWinner = value.isWinner && !value.isDraw;
-  const valueColor = isWinner ? colors.success : colors.text;
-  const nameColor = isWinner ? colors.success : colors.textSecondary;
+  const isWinner = value.isWinner || value.isDraw;
+  const valueColor = isWinner ? colors.ink : colors.body;
+  const nameColor = isWinner ? colors.ink : colors.stone;
 
   return (
     <View style={styles.stackedRow}>
       <View style={styles.stackedTopRow}>
         {isWinner && (
-          <View style={[styles.stackedDot, { backgroundColor: colors.success }]} />
+          <View style={[styles.stackedDot, { backgroundColor: colors.spotify }]} />
         )}
-        <Text
-          style={[styles.stackedName, { color: nameColor }]}
-          numberOfLines={1}
-        >
+        <Text style={[styles.stackedName, { color: nameColor }]} numberOfLines={1}>
           {shortName(value.productName)}
         </Text>
-        <Text
-          style={[
-            styles.stackedValue,
-            { ...Typography.caption, color: valueColor },
-          ]}
-          numberOfLines={1}
-        >
+        <Text style={[styles.stackedValue, { color: valueColor }]} numberOfLines={1}>
           {value.displayValue}
         </Text>
       </View>
-      <View
-        style={[
-          styles.stackedTrack,
-          { backgroundColor: colors.surfaceHighlight },
-        ]}
-      >
+      <View style={[styles.stackedTrack, { backgroundColor: colors.fog }]}>
         <Animated.View
           style={[
             styles.stackedFill,
@@ -189,10 +150,6 @@ function StackedRow({ value, pct, fillColor, colors }: StackedRowProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Public row
-// ---------------------------------------------------------------------------
-
 export function SpecBarRow({ row, colors }: SpecBarRowProps) {
   const values = row.values;
 
@@ -203,11 +160,6 @@ export function SpecBarRow({ row, colors }: SpecBarRowProps) {
 
   const hasNumeric = useMemo(
     () => values.some((v) => v.numericValue !== null),
-    [values]
-  );
-
-  const hasDraw = useMemo(
-    () => values.some((v) => v.isDraw),
     [values]
   );
 
@@ -224,56 +176,44 @@ export function SpecBarRow({ row, colors }: SpecBarRowProps) {
   };
 
   const fillColorFor = (v: DetailedSpecValue): string => {
-    if (hasDraw) return colors.textTertiary;
-    return v.isWinner ? colors.success : colors.textTertiary;
+    return v.isWinner || v.isDraw ? colors.spotify : colors.stone;
   };
 
   return (
     <View style={styles.outer}>
-      <Text style={[styles.label, { color: colors.textTertiary }]}>
-        {row.label}
-      </Text>
+      <Text style={[styles.label, { color: colors.stone }]}>{row.label}</Text>
 
       {allMissing ? (
-        <Text style={[styles.missing, { color: colors.textTertiary }]}>
+        <Text style={[styles.missing, { color: colors.stone }]}>
           Not enough verified info
         </Text>
       ) : values.length <= 2 ? (
         <View style={styles.twoColRow}>
-          {values.map((v, i) => (
-            <TwoColCard
-              key={v.productId}
-              value={v}
-              colors={colors}
-              isLast={i === values.length - 1}
-            />
+          {values.map((v) => (
+            <TwoColCard key={v.productId} value={v} colors={colors} />
           ))}
         </View>
       ) : !hasNumeric ? (
-        // 3+ products with no numeric values: just stack name + value.
         <View style={styles.stackedList}>
-          {values.map((v) => (
-            <View key={v.productId} style={styles.textOnlyRow}>
-              <Text
-                style={[styles.textOnlyName, { color: colors.textSecondary }]}
-                numberOfLines={1}
-              >
-                {shortName(v.productName)}
-              </Text>
-              <Text
-                style={[
-                  styles.textOnlyValue,
-                  { ...Typography.caption,
-                    color: v.isWinner ? colors.success : colors.text,
-                    
-                  },
-                ]}
-                numberOfLines={1}
-              >
-                {v.displayValue}
-              </Text>
-            </View>
-          ))}
+          {values.map((v) => {
+            const win = v.isWinner || v.isDraw;
+            return (
+              <View key={v.productId} style={styles.textOnlyRow}>
+                <Text
+                  style={[styles.textOnlyName, { color: win ? colors.ink : colors.stone }]}
+                  numberOfLines={1}
+                >
+                  {shortName(v.productName)}
+                </Text>
+                <Text
+                  style={[styles.textOnlyValue, { color: win ? colors.ink : colors.body }]}
+                  numberOfLines={1}
+                >
+                  {v.displayValue}
+                </Text>
+              </View>
+            );
+          })}
         </View>
       ) : (
         <View style={styles.stackedList}>
@@ -292,24 +232,14 @@ export function SpecBarRow({ row, colors }: SpecBarRowProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
 const styles = StyleSheet.create({
   outer: {
     paddingVertical: 14,
   },
-  label: { ...Typography.headline,
-    ...Typography.caption,
-    fontSize: 11,
-    
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
+  label: {
+    ...type.specLabel,
     marginBottom: 10,
   },
-
-  // Two-column cards
   twoColRow: {
     flexDirection: "row",
     gap: 10,
@@ -318,8 +248,8 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     minHeight: 96,
-    borderRadius: 14,
-    borderWidth: 1,
+    borderRadius: radii.spec,
+    borderWidth: 1.5,
     padding: 14,
     alignItems: "center",
     justifyContent: "center",
@@ -335,21 +265,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  twoColName: { ...Typography.headline,
-    fontSize: 12,
-    
-    letterSpacing: 0.2,
+  twoColName: {
+    ...type.eyebrow,
+    fontSize: 11,
     marginBottom: 6,
-    textTransform: "uppercase",
   },
-  twoColValue: { ...Typography.headline,
-    fontSize: 20,
-    
+  twoColValue: {
+    ...type.specValue,
     textAlign: "center",
-    lineHeight: 24,
   },
-
-  // Stacked rows (3+)
   stackedList: {
     gap: 12,
   },
@@ -366,14 +290,14 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
-  stackedName: { ...Typography.body,
+  stackedName: {
+    ...type.body,
     flex: 1,
     fontSize: 13,
-    
   },
-  stackedValue: { ...Typography.headline,
+  stackedValue: {
+    ...type.specValue,
     fontSize: 14,
-    
     textAlign: "right",
     minWidth: 80,
   },
@@ -386,28 +310,24 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 2,
   },
-
-  // Text-only rows (3+ non-numeric)
   textOnlyRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 6,
   },
-  textOnlyName: { ...Typography.body,
+  textOnlyName: {
+    ...type.body,
     fontSize: 13,
-    
     flex: 1,
   },
-  textOnlyValue: { ...Typography.body,
+  textOnlyValue: {
+    ...type.specValue,
     fontSize: 14,
-    
     textAlign: "right",
   },
-
-  // Missing
   missing: {
-    fontSize: 13,
+    ...type.caption,
     fontStyle: "italic",
     paddingVertical: 8,
   },

@@ -4,19 +4,20 @@ import {
   AccessibilityInfo,
   FlatList,
   Image,
-  Pressable,
   StyleSheet,
   Text,
   View,
   type ListRenderItemInfo,
 } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
-import * as Haptics from '../../utils/haptics';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useThemeColors, getRetailerColor, formatRetailerName } from "../../constants/Colors";
-import { Typography } from "../../constants/Typography";
+import { useThemeColors } from "../../constants/Colors";
+import { type } from "../../constants/Typography";
+import { radii, size } from "../../constants/Layout";
 import { getCategoryIcon } from "./CategoryIcon";
 import { normalizeTitle } from "./utils";
+import { NavCircle } from "../ui/NavCircle";
+import { RetailerPill } from "../ui/RetailerPill";
 import type { Product } from "../../store/useComparisonStore";
 
 type Palette = ReturnType<typeof useThemeColors>["colors"];
@@ -29,10 +30,6 @@ interface DetailedCompareHeaderProps {
 const TILE_WIDTH = 200;
 const TILE_GAP = 10;
 
-// ---------------------------------------------------------------------------
-// Product tile — flat, no decorative borders
-// ---------------------------------------------------------------------------
-
 interface ProductTileProps {
   product: Product;
   colors: Palette;
@@ -41,21 +38,19 @@ interface ProductTileProps {
 
 function ProductTile({ product, colors, isPagerItem }: ProductTileProps) {
   const Icon = getCategoryIcon(product.name);
-  const retailer = product.retailer ? formatRetailerName(product.retailer).toUpperCase() : "";
 
   return (
     <View
       style={[
         styles.tile,
-        { backgroundColor: colors.surface, width: isPagerItem ? TILE_WIDTH : undefined },
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.line,
+          width: isPagerItem ? TILE_WIDTH : undefined,
+        },
       ]}
     >
-      <View
-        style={[
-          styles.tileImage,
-          { backgroundColor: colors.surfaceHighlight },
-        ]}
-      >
+      <View style={[styles.tileImage, { backgroundColor: colors.fog }]}>
         {product.imageUrl ? (
           <Image
             source={{ uri: product.imageUrl }}
@@ -63,41 +58,24 @@ function ProductTile({ product, colors, isPagerItem }: ProductTileProps) {
             resizeMode="contain"
           />
         ) : (
-          <Icon size={22} color={colors.textSecondary} strokeWidth={1.75} />
+          <Icon size={22} color={colors.stone} strokeWidth={1.75} />
         )}
       </View>
 
-      <Text
-        style={[styles.tileName, { color: colors.text }]}
-        numberOfLines={2}
-        ellipsizeMode="tail"
-      >
+      <Text style={[styles.tileName, { color: colors.ink }]} numberOfLines={2} ellipsizeMode="tail">
         {normalizeTitle(product.name)}
       </Text>
 
-      {retailer.length > 0 && (
-        <View style={styles.tileRetailerRow}>
-          <View
-            style={[
-              styles.tileDot,
-              { backgroundColor: getRetailerColor(product.retailer) || colors.textTertiary },
-            ]}
-          />
-          <Text
-            style={[styles.tileRetailer, { color: colors.textSecondary }]}
-            numberOfLines={1}
-          >
-            {retailer}
-          </Text>
-        </View>
-      )}
+      {product.price ? (
+        <Text style={[styles.tilePrice, { color: colors.stone }]} numberOfLines={1}>
+          {product.price}
+        </Text>
+      ) : null}
+
+      {product.retailer ? <RetailerPill retailer={product.retailer} /> : null}
     </View>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Pager dots
-// ---------------------------------------------------------------------------
 
 interface PagerDotsProps {
   count: number;
@@ -115,8 +93,7 @@ function PagerDots({ count, activeIndex, colors }: PagerDotsProps) {
           style={[
             styles.dot,
             {
-              backgroundColor:
-                i === activeIndex ? colors.text : colors.textTertiary,
+              backgroundColor: i === activeIndex ? colors.ink : colors.stone,
             },
           ]}
         />
@@ -124,10 +101,6 @@ function PagerDots({ count, activeIndex, colors }: PagerDotsProps) {
     </View>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Header
-// ---------------------------------------------------------------------------
 
 export function DetailedCompareHeader({
   products,
@@ -137,10 +110,7 @@ export function DetailedCompareHeader({
   const insets = useSafeAreaInsets();
   const [pagerIndex, setPagerIndex] = useState(0);
 
-  // Stagger mount animation for the product tiles.
-  const staggerAnims = useRef(
-    products.map(() => new Animated.Value(0))
-  ).current;
+  const staggerAnims = useRef(products.map(() => new Animated.Value(0))).current;
   useEffect(() => {
     let cancelled = false;
     AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
@@ -166,7 +136,6 @@ export function DetailedCompareHeader({
   }, [staggerAnims]);
 
   const handleBack = () => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onBack();
   };
 
@@ -180,31 +149,16 @@ export function DetailedCompareHeader({
       style={[
         styles.container,
         {
-          backgroundColor: colors.background,
+          backgroundColor: colors.bg,
           paddingTop: insets.top + 4,
         },
       ]}
     >
       <View style={styles.topBar}>
-        <Pressable
-          onPress={handleBack}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          style={({ pressed }) => [
-            styles.backBtn,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              opacity: pressed ? 0.7 : 1,
-            },
-          ]}
-        >
-          <ArrowLeft size={20} color={colors.text} strokeWidth={2.25} />
-        </Pressable>
-        <Text style={[styles.title, { color: colors.text }]}>
-          Detailed comparison
-        </Text>
+        <NavCircle onPress={handleBack} accessibilityRole="button" accessibilityLabel="Go back">
+          <ArrowLeft size={20} color={colors.ink} strokeWidth={2.25} />
+        </NavCircle>
+        <Text style={[styles.title, { color: colors.ink }]}>Comparison</Text>
         <View style={styles.titleSpacer} />
       </View>
 
@@ -223,19 +177,12 @@ export function DetailedCompareHeader({
               const x = e.nativeEvent.contentOffset.x;
               const next = Math.max(
                 0,
-                Math.min(
-                  products.length - 1,
-                  Math.round(x / (TILE_WIDTH + TILE_GAP))
-                )
+                Math.min(products.length - 1, Math.round(x / (TILE_WIDTH + TILE_GAP)))
               );
               if (next !== pagerIndex) setPagerIndex(next);
             }}
           />
-          <PagerDots
-            count={products.length}
-            activeIndex={pagerIndex}
-            colors={colors}
-          />
+          <PagerDots count={products.length} activeIndex={pagerIndex} colors={colors} />
         </View>
       ) : (
         <View style={styles.splitRow}>
@@ -267,10 +214,6 @@ export function DetailedCompareHeader({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
 const styles = StyleSheet.create({
   container: {
     paddingBottom: 16,
@@ -282,27 +225,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 18,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: { ...Typography.headline,
-    ...Typography.headline,
-    fontSize: 16,
-    
-    letterSpacing: -0.3,
+  title: {
+    ...type.navTitle,
     flex: 1,
     textAlign: "center",
   },
   titleSpacer: {
-    width: 40,
+    width: size.navCircle,
   },
-
-  // Two-product row
   splitRow: {
     flexDirection: "row",
     gap: 10,
@@ -310,8 +240,6 @@ const styles = StyleSheet.create({
   splitTile: {
     flex: 1,
   },
-
-  // 3+ product pager
   pagerContent: {
     gap: TILE_GAP,
     paddingRight: TILE_GAP,
@@ -328,46 +256,30 @@ const styles = StyleSheet.create({
     height: 5,
     borderRadius: 3,
   },
-
-  // Tile (shared)
   tile: {
-    borderRadius: 14,
+    borderRadius: radii.card,
+    borderWidth: 1,
     padding: 12,
+    gap: 8,
   },
   tileImage: {
     width: "100%",
     aspectRatio: 2.4,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
   },
   tileImageReal: {
     width: "70%",
     height: "70%",
   },
-  tileName: { ...Typography.headline,
-    ...Typography.headline,
+  tileName: {
+    ...type.productName,
     fontSize: 14,
-    
     lineHeight: 18,
-    letterSpacing: -0.2,
   },
-  tileRetailerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 6,
-    gap: 5,
-  },
-  tileDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-  },
-  tileRetailer: { ...Typography.headline,
-    fontSize: 10,
-    
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
+  tilePrice: {
+    ...type.caption,
+    fontSize: 14,
   },
 });
