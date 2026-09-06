@@ -74,6 +74,7 @@ interface TabItemProps {
   focused: boolean;
   onPress: () => void;
   pillBg: string;
+  pillShadow?: object;
   activeColor: string;
   inactiveColor: string;
   activeLabel: string;
@@ -84,6 +85,7 @@ function TabItem({
   focused,
   onPress,
   pillBg,
+  pillShadow,
   activeColor,
   inactiveColor,
   activeLabel,
@@ -118,7 +120,7 @@ function TabItem({
       accessibilityState={{ selected: focused }}
       accessibilityHint={`Go to ${label} tab`}
       hitSlop={4}
-      style={[styles.tab, focused && { backgroundColor: pillBg }]}
+      style={[styles.tab, focused && { backgroundColor: pillBg }, focused && pillShadow]}
     >
       <Animated.View style={[styles.tabInner, { transform: [{ scale }] }]}>
         <Icon size={20} color={color} strokeWidth={focused ? 2.4 : 1.75} />
@@ -167,29 +169,40 @@ function CustomTabBar({
 
   if (hidden) return null;
 
-  const elevationStyle =
+  const liquidShadow =
     Platform.OS === "web"
       ? ({
           boxShadow: isDark
-            ? "0 10px 28px rgba(0,0,0,0.42), 0 1px 0 rgba(255,255,255,0.06) inset"
-            : "0 12px 32px rgba(10,10,10,0.08), 0 1px 0 rgba(255,255,255,0.65) inset",
+            ? "0 18px 40px rgba(0,0,0,0.48), 0 2px 8px rgba(0,0,0,0.28)"
+            : "0 16px 40px rgba(20,16,10,0.12), 0 2px 8px rgba(20,16,10,0.06)",
         } as const)
       : {
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: isDark ? 8 : 6 },
-          shadowOpacity: isDark ? 0.28 : 0.1,
-          shadowRadius: isDark ? 18 : 16,
-          elevation: isDark ? 10 : 4,
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: isDark ? 0.4 : 0.14,
+          shadowRadius: isDark ? 22 : 18,
+          elevation: isDark ? 14 : 8,
         };
+
+  const glassChrome =
+    Platform.OS === "web"
+      ? ({
+          backdropFilter: isDark ? "blur(36px) saturate(190%)" : "blur(32px) saturate(180%)",
+          WebkitBackdropFilter: isDark ? "blur(36px) saturate(190%)" : "blur(32px) saturate(180%)",
+          boxShadow: isDark
+            ? "inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -1px 0 rgba(0,0,0,0.28)"
+            : "inset 0 1px 0 rgba(255,255,255,0.92), inset 0 -0.5px 0 rgba(10,10,10,0.06)",
+        } as object)
+      : null;
 
   return (
     <Animated.View
       pointerEvents="box-none"
       style={[
         styles.wrap,
-        elevationStyle,
+        liquidShadow,
         {
-          bottom: insets.bottom + 12,
+          bottom: Math.max(insets.bottom, 10) + 8,
           opacity: mountAnim,
           transform: [
             {
@@ -203,18 +216,29 @@ function CustomTabBar({
       ]}
     >
       <View
-        style={[styles.glass, { borderColor: colors.tabBarBorder }]}
+        style={[
+          styles.glass,
+          { borderColor: colors.tabBarBorder, backgroundColor: colors.tabBar },
+          glassChrome,
+        ]}
         {...(Platform.OS === "web" ? {} : barHandlers)}
       >
-        <BlurView
-          intensity={isDark ? 42 : 55}
-          tint={isDark ? "dark" : "light"}
-          experimentalBlurMethod="dimezisBlurView"
-          style={StyleSheet.absoluteFill}
-        />
+        {Platform.OS !== "web" ? (
+          <BlurView
+            intensity={isDark ? 48 : 64}
+            tint={isDark ? "dark" : "light"}
+            experimentalBlurMethod="dimezisBlurView"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : null}
         <View
           pointerEvents="none"
-          style={[styles.frost, { backgroundColor: colors.tabBar }]}
+          style={[
+            styles.shine,
+            {
+              backgroundColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.42)",
+            },
+          ]}
         />
         {state.routes.map((route, index) => {
           const def = TABS.find((t) => t.name === route.name);
@@ -239,6 +263,15 @@ function CustomTabBar({
               focused={focused}
               onPress={onPress}
               pillBg={colors.tabPill}
+              pillShadow={
+                Platform.OS === "web"
+                  ? ({
+                      boxShadow: isDark
+                        ? "inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 4px rgba(0,0,0,0.25)"
+                        : "inset 0 1px 0 rgba(255,255,255,0.95), 0 1px 5px rgba(10,10,10,0.08)",
+                    } as const)
+                  : undefined
+              }
               activeColor={colors.tabSelectedIcon}
               activeLabel={colors.tabSelectedLabel}
               inactiveColor={colors.tabUnselected}
@@ -330,8 +363,8 @@ const styles = StyleSheet.create({
   },
   wrap: {
     position: "absolute",
-    left: 12,
-    right: 12,
+    left: 16,
+    right: 16,
     height: size.tabBar,
     borderRadius: radii.pill,
     zIndex: 4,
@@ -345,15 +378,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 8,
-    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 6,
+    gap: 2,
   },
-  frost: {
-    ...StyleSheet.absoluteFillObject,
+  shine: {
+    position: "absolute",
+    top: 0,
+    left: 18,
+    right: 18,
+    height: 1.5,
+    borderRadius: 1,
   },
   tab: {
     flex: 1,
-    height: 48,
+    height: 52,
     borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
@@ -367,6 +406,6 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 11,
-    letterSpacing: 0.2,
+    letterSpacing: 0.15,
   },
 });
