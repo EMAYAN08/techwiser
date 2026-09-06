@@ -29,4 +29,5 @@ export const size = {
   tabBar: 64,
   navCircle: 44,
   hit: 44,
+  modeWell: 72,
 } as const;

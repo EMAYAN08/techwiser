@@ -18,6 +18,8 @@ export const paletteTokens = {
   tabBarLight: "#FFFFFF",
   tabBarDark: "#141414",
   scannerAmber: "#C9B896",
+  modeWellLight: "#EBE6DC",
+  modeWellDark: "#2C2C2C",
 } as const;
 
 export const palette = {
@@ -62,6 +64,7 @@ export const palette = {
     verdictFg: "#FFFFFF",
     overlay: "rgba(10,10,10,0.08)",
     scannerAmber: paletteTokens.scannerAmber,
+    modeWell: paletteTokens.modeWellLight,
   },
   dark: {
     background: paletteTokens.ink,
@@ -104,6 +107,7 @@ export const palette = {
     verdictFg: "#FFFFFF",
     overlay: "rgba(255,255,255,0.06)",
     scannerAmber: paletteTokens.scannerAmber,
+    modeWell: paletteTokens.modeWellDark,
   },
 };
 

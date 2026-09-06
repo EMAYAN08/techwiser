@@ -174,6 +174,6 @@ const styles = StyleSheet.create({
   },
   subheader: {
     ...Typography.subtitle,
-    marginBottom: 20,
+    marginBottom: 18,
   },
 });
