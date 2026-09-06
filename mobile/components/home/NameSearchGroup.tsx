@@ -3,8 +3,9 @@ import {
   View, Text, TextInput, StyleSheet, Pressable, Animated, ScrollView,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../../utils/haptics';
 import { Card } from "../ui/Card";
+import { Button } from "../ui/Button";
 import { useThemeColors } from "../../constants/Colors";
 
 // Mock autocomplete suggestions for demo
@@ -150,9 +151,9 @@ export function NameSearchGroup() {
   return (
     <Animated.View style={{ opacity: fadeAnim }}>
       {/* Info pill */}
-      <View style={[styles.infoPill, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Feather name="info" size={12} color={colors.textSecondary} />
-        <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+      <View style={[styles.infoPill, { backgroundColor: colors.primaryMuted, borderColor: colors.primary + '40' }]}>
+        <Feather name="info" size={14} color={colors.primary} />
+        <Text style={[styles.infoText, { color: colors.primary }]}>
           Type a product name - we search across all Canadian retailers
         </Text>
       </View>
@@ -167,25 +168,32 @@ export function NameSearchGroup() {
         />
       ))}
 
-      {names.length < 4 && (
-        <Pressable onPress={addName} style={styles.addBtn}>
-          <Feather name="plus" size={14} color={colors.textSecondary} />
-          <Text style={[styles.addBtnText, { color: colors.textSecondary }]}>Add product</Text>
-        </Pressable>
-      )}
-
-      {/* Search button */}
-      <Pressable
-        style={[
-          styles.searchBtn,
-          names.filter((n) => n.trim()).length < 2 && styles.searchBtnDisabled,
-        ]}
-        disabled={names.filter((n) => n.trim()).length < 2}
-        onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
-      >
-        <Feather name="search" size={16} color="#FFFFFF" />
-        <Text style={styles.searchBtnText}>Search & Compare</Text>
-      </Pressable>
+      <View style={{ flexDirection: "row", gap: 12, marginBottom: 16, alignItems: "center" }}>
+        {names.length < 4 && (
+          <View style={{ flex: 1 }}>
+            <Pressable
+              onPress={addName}
+              style={({ pressed }) => [
+                styles.addBtn,
+                { backgroundColor: colors.primaryMuted, borderColor: colors.primary + '40' },
+                pressed && { opacity: 0.7 }
+              ]}
+            >
+              <Feather name="plus" size={14} color={colors.primary} />
+              <Text style={[styles.addBtnText, { color: colors.primary }]}>Add product</Text>
+            </Pressable>
+          </View>
+        )}
+        <View style={{ flex: 1 }}>
+          <Button
+            title="Compare"
+            variant="primary"
+            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
+            disabled={names.filter((n) => n.trim()).length < 2}
+            style={{ width: '100%' }}
+          />
+        </View>
+      </View>
 
       {/* Coming soon note */}
       <View style={styles.comingSoonRow}>
@@ -274,14 +282,15 @@ const styles = StyleSheet.create({
   addBtn: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    marginBottom: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 48,
   },
   addBtnText: {
-    fontSize: 14,
-    color: "rgba(255,255,255,0.35)",
+    fontSize: 15,
+    fontWeight: "600",
   },
   searchBtn: {
     flexDirection: "row",

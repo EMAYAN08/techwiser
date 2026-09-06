@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { useComparisonStore, Comparison } from '../../store/useComparisonStore';
 import { useRouter } from 'expo-router';
 import { Card } from '../ui/Card';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from '../../constants/Colors';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -49,7 +49,7 @@ function ComparisonCard({ comparison, index }: { comparison: Comparison; index: 
         style={[styles.cardWrapper, { transform: [{ scale }] }]}
       >
         <Card borderRadius={12} style={styles.card}>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>{comparison.title}</Text>
+          <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{comparison.title}</Text>
           <Text style={[styles.cardDate, { color: colors.textTertiary }]}>{comparison.date}</Text>
         </Card>
       </AnimatedPressable>

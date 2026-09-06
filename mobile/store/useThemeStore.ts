@@ -8,6 +8,6 @@ interface ThemeStore {
 }
 
 export const useThemeStore = create<ThemeStore>((set) => ({
-  preference: "system",
+  preference: "dark",
   setPreference: (preference) => set({ preference }),
 }));

@@ -51,3 +51,51 @@ export function useThemeColors() {
     colors: isDark ? palette.dark : palette.light,
   };
 }
+
+export const RETAILER_COLORS: Record<string, string> = {
+  "bestbuy": "#003B64",
+  "amazon": "#FF9900",
+  "canadacomputers": "#E31837",
+  "memoryexpress": "#005BAA",
+  "newegg": "#E2241B",
+  "staples": "#CC0000",
+  "thesource": "#E4002B",
+  "costco": "#005BAA",
+  "walmart": "#0071CE",
+};
+
+export function getRetailerColor(retailerName?: string, fallback: string = "#555555") {
+  if (!retailerName) return fallback;
+  const normalized = retailerName.toLowerCase().replace(/[^a-z]/g, "");
+  for (const [key, color] of Object.entries(RETAILER_COLORS)) {
+    if (normalized.includes(key)) {
+      return color;
+    }
+  }
+  return fallback;
+}
+
+export const RETAILER_NAMES: Record<string, string> = {
+  "bestbuy": "Best Buy",
+  "amazon": "Amazon",
+  "canadacomputers": "Canada Computers",
+  "memoryexpress": "Memory Express",
+  "newegg": "Newegg",
+  "staples": "Staples",
+  "thesource": "The Source",
+  "costco": "Costco",
+  "walmart": "Walmart",
+};
+
+export function formatRetailerName(retailerName?: string): string {
+  if (!retailerName) return "Unknown Retailer";
+  const normalized = retailerName.toLowerCase().replace(/[^a-z]/g, "");
+  for (const [key, cleanName] of Object.entries(RETAILER_NAMES)) {
+    if (normalized.includes(key)) {
+      return cleanName;
+    }
+  }
+  // Fallback to capitalizing whatever they gave us
+  return retailerName.toUpperCase();
+}
+

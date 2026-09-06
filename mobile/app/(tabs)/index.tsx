@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ScrollView, StyleSheet, View, Text, Animated } from "react-native";
+import { ScrollView, StyleSheet, View, Text, Animated, Pressable } from "react-native";
 import { useRouter } from "expo-router";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../../utils/haptics';
 import { URLInputGroup } from "../../components/home/URLInputGroup";
 import { RecentComparisons } from "../../components/home/RecentComparisons";
 import { LoadingOverlay } from "../../components/home/LoadingOverlay";
@@ -24,18 +24,31 @@ const RETAILER_COLORS: Record<string, string> = {
 
 export default function Home() {
   const router = useRouter();
-  const { urls, isLoading, setLoading, setActiveComparison, addRecentComparison } =
-    useComparisonStore();
+  const {
+    urls,
+    isLoading,
+    setLoading,
+    setActiveComparison,
+    addRecentComparison,
+    seedMockComparison,
+  } = useComparisonStore();
   const [inputMode, setInputMode] = useState<InputMode>("url");
   const { colors } = useThemeColors();
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const panelFade = useRef(new Animated.Value(1)).current;
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1, duration: 400, useNativeDriver: true,
     }).start();
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   const handleModeChange = (mode: InputMode) => {
@@ -48,13 +61,23 @@ export default function Home() {
   const validUrls = urls.filter((url: string) => url.trim().length > 0);
   const canCompare = validUrls.length >= 2 && inputMode === "url";
 
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setLoading(false);
+  };
+
   const handleCompare = async () => {
     if (!canCompare || isLoading) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true, "Fetching product pages...");
     
+    abortControllerRef.current = new AbortController();
+
     try {
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:3000";
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || "https://techwiser.onrender.com";
       console.log(`Sending comparison to ${apiUrl}/api/compare`);
 
       const response = await fetch(`${apiUrl}/api/compare`, {
@@ -63,6 +86,7 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ urls: validUrls }),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
@@ -84,10 +108,16 @@ export default function Home() {
         result: data,
       });
       setLoading(false);
+      abortControllerRef.current = null;
       router.push("/compare");
     } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log("Comparison request cancelled by user.");
+        return;
+      }
       console.log("Backend fetch failed:", err.message);
       setLoading(false);
+      abortControllerRef.current = null;
       
       let msg = err.message || "Failed to extract specs.";
       if (msg.includes("Network request timed out") || msg.includes("Failed to fetch")) {
@@ -100,30 +130,41 @@ export default function Home() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <LoadingOverlay visible={isLoading} />
+      <LoadingOverlay visible={isLoading} onCancel={handleCancel} />
+      
+      {/* FIXED TOP SECTION */}
+      <View style={{ 
+        paddingHorizontal: 24, 
+        paddingTop: 64, 
+        paddingBottom: 8, 
+        zIndex: 10, 
+        backgroundColor: colors.background
+      }}>
+        <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.text }]}>
+          Workspace
+        </Animated.Text>
+        <Text style={[styles.subheader, { color: colors.textTertiary }]}>Compare any 2-4 tech products at once</Text>
+
+        <InputModeTabs activeMode={inputMode} onModeChange={handleModeChange} />
+      </View>
+
+      {/* SCROLLABLE CONTENT */}
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 4, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
         scrollEnabled={scrollEnabled}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.text }]}>
-          Workspace
-        </Animated.Text>
-        <Text style={[styles.subheader, { color: colors.textTertiary }]}>Compare any 2-4 Canadian tech products</Text>
-
-        <InputModeTabs activeMode={inputMode} onModeChange={handleModeChange} />
-
         <Animated.View style={{ opacity: panelFade }}>
           {inputMode === "url" && (
             <>
-              <URLInputGroup onSwipeStart={() => setScrollEnabled(false)} onSwipeEnd={() => setScrollEnabled(true)} />
-              <Button
-                title={isLoading ? "Comparing..." : "Compare"}
-                variant="primary"
-                onPress={handleCompare}
-                disabled={!canCompare || isLoading}
+              <URLInputGroup 
+                onSwipeStart={() => setScrollEnabled(false)} 
+                onSwipeEnd={() => setScrollEnabled(true)} 
+                onCompare={handleCompare}
+                isLoading={isLoading}
+                canCompare={canCompare}
               />
             </>
           )}
@@ -133,6 +174,7 @@ export default function Home() {
         </Animated.View>
 
         <RecentComparisons />
+
       </ScrollView>
     </View>
   );
@@ -153,5 +195,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "rgba(255,255,255,0.38)",
     marginBottom: 24,
+  },
+
+  // Dev seed panel
+  devPanel: {
+    marginTop: 24,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  devLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  devRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  devBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+    minHeight: 36,
+    justifyContent: "center",
+  },
+  devBtnText: {
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: -0.1,
   },
 });

@@ -1,0 +1,45 @@
+{
+  "Computing & Mobile": {
+    "Subcategories": [
+      "Smartphones",
+      "Tablets",
+      "Laptops",
+      "Desktops"
+    ],
+    "Attribute_Groups": {
+      "Core Performance": ["Operating System", "Processor / Chipset", "RAM / Memory", "Storage Capacity"],
+      "Display & Video": ["Screen Size", "Resolution", "Panel Technology", "Refresh Rate"],
+      "Power & Battery": ["Battery Capacity", "Charging Speed", "Estimated Runtime"],
+      "Connectivity & I/O": ["Wireless (Wi-Fi/Cellular)", "Physical Ports", "Bluetooth Version"],
+      "Design & Build": ["Weight", "Dimensions", "Durability / IP Rating"]
+    }
+  },
+  "Home Entertainment & Displays": {
+    "Subcategories": [
+      "Televisions",
+      "Monitors",
+      "Audio Systems & Soundbars",
+      "Streaming Devices"
+    ],
+    "Attribute_Groups": {
+      "Visual Performance": ["Screen Size", "Max Resolution", "Panel Type (OLED/LED)", "Refresh Rate", "HDR Support"],
+      "Audio Features": ["Channel Configuration", "Total Wattage", "Surround Format (Atmos/DTS)"],
+      "Smart & OS": ["Operating System", "Voice Assistant Support", "App Ecosystem"],
+      "Connectivity": ["HDMI Ports (2.1/eARC)", "Wireless Casting", "Bluetooth Audio"],
+      "Physical Setup": ["Dimensions (with stand)", "VESA Mount Compatibility"]
+    }
+  },
+  "Wearables & Health": {
+    "Subcategories": [
+      "Smartwatches",
+      "Smart Rings",
+      "Fitness Trackers"
+    ],
+    "Attribute_Groups": {
+      "Health & Tracking": ["Primary Sensors (HR, SpO2, ECG)", "Sleep & Recovery Tracking", "Activity Profiles"],
+      "Display & Interface": ["Screen Type", "Always-On Display", "Input (Touch/Buttons)"],
+      "Power & Durability": ["Battery Life (Days)", "Water Resistance (ATM/IP)", "Case Material"],
+      "Ecosystem": ["Companion App", "OS Compatibility", "Subscription Required"]
+    }
+  }
+}

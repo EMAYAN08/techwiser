@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, Animated, PanResponder, Pressable,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import * as Haptics from "expo-haptics";
+import * as Haptics from '../../utils/haptics';
 import { useThemeColors } from "../../constants/Colors";
 import { Feather } from "@expo/vector-icons";
 import { useComparisonStore } from "../../store/useComparisonStore";
@@ -12,7 +12,8 @@ import { Button } from "../ui/Button";
 
 const SUPPORTED_DOMAINS = [
   "bestbuy.ca", "amazon.ca", "canadacomputers.com",
-  "memoryexpress.com", "newegg.ca", "staples.ca", "thesource.ca",
+  "memoryexpress.com", "newegg.ca", "staples.ca", "thesource.ca", "costco.ca",
+  "walmart.ca"
 ];
 
 type ValidationState = "idle" | "valid" | "invalid";
@@ -171,9 +172,18 @@ function SwipeableRow({
 interface URLInputGroupProps {
   onSwipeStart?: () => void;
   onSwipeEnd?: () => void;
+  onCompare?: () => void;
+  isLoading?: boolean;
+  canCompare?: boolean;
 }
 
-export function URLInputGroup({ onSwipeStart = () => {}, onSwipeEnd = () => {} }: URLInputGroupProps) {
+export function URLInputGroup({ 
+  onSwipeStart = () => {}, 
+  onSwipeEnd = () => {},
+  onCompare = () => {},
+  isLoading = false,
+  canCompare = false,
+}: URLInputGroupProps) {
   const { colors } = useThemeColors();
   const { urls, updateUrl, addUrl, removeUrl, setUrls } = useComparisonStore();
   const animValues    = useRef(urls.map(() => new Animated.Value(0))).current;
@@ -224,10 +234,10 @@ export function URLInputGroup({ onSwipeStart = () => {}, onSwipeEnd = () => {} }
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.headerLabel, { color: colors.textTertiary }]}>Product URLs</Text>
+        <Text style={[styles.headerLabel, { color: colors.textTertiary }]}>PRODUCT URLs</Text>
         <View style={styles.headerRight}>
           {urls.length > 2 && (
-            <Text style={[styles.swipeHint, { color: colors.textTertiary }]}>? swipe to remove</Text>
+            <Text style={[styles.swipeHint, { color: colors.textTertiary }]}>Swipe left to remove</Text>
           )}
           {hasAnyContent && (
             <Animated.View style={{ transform: [{ scale: clearScale }] }}>
@@ -264,31 +274,53 @@ export function URLInputGroup({ onSwipeStart = () => {}, onSwipeEnd = () => {} }
         </Animated.View>
       ))}
 
-      {urls.length < 4 && (
-        <Animated.View
-          style={{
-            opacity: animValues[urls.length],
-            transform: [{
-              translateY: animValues[urls.length].interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
-            }],
-          }}
-        >
-          <Button variant="ghost" title="+ Add product" onPress={addUrl} style={styles.addButton} />
-        </Animated.View>
-      )}
+      <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
+        {urls.length < 4 && (
+          <Animated.View
+            style={{
+              flex: 1,
+              opacity: animValues[urls.length],
+              transform: [{
+                translateY: animValues[urls.length].interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
+              }],
+            }}
+          >
+            <Pressable
+              onPress={addUrl}
+              style={({ pressed }) => [
+                styles.addBtn,
+                { backgroundColor: colors.primaryMuted, borderColor: colors.primary + '40' },
+                pressed && { opacity: 0.7 }
+              ]}
+            >
+              <Feather name="plus" size={14} color={colors.primary} />
+              <Text style={[styles.addBtnText, { color: colors.primary }]}>Add product</Text>
+            </Pressable>
+          </Animated.View>
+        )}
+        <View style={{ flex: 1 }}>
+          <Button
+            title={isLoading ? "Comparing..." : "Compare"}
+            variant="primary"
+            onPress={onCompare}
+            disabled={!canCompare || isLoading}
+            style={{ width: '100%' }}
+          />
+        </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { marginVertical: 16 },
+  container: { marginBottom: 16, marginTop: 4 },
   header: {
     flexDirection: "row", alignItems: "center",
     justifyContent: "space-between", marginBottom: 10,
   },
   headerLabel: {
     fontSize: 12, fontWeight: "600",
-    color: "rgba(255,255,255,0.35)", letterSpacing: 0.8, textTransform: "uppercase",
+    color: "rgba(255,255,255,0.35)", letterSpacing: 0.8,
   },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
   swipeHint: { fontSize: 11, color: "rgba(255,255,255,0.20)" },
@@ -305,5 +337,17 @@ const styles = StyleSheet.create({
     top: 0, bottom: 12,
     alignItems: "center", justifyContent: "center", width: 32,
   },
-  addButton: { marginTop: 4 },
+  addBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 48,
+  },
+  addBtnText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
 });

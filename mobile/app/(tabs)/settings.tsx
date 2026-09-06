@@ -1,12 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Switch } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../utils/haptics';
 import { useThemeStore, ThemePreference } from '../../store/useThemeStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import { useThemeColors } from '../../constants/Colors';
 
 export default function SettingsScreen() {
   const { preference, setPreference } = useThemeStore();
+  const { hapticsEnabled, setHapticsEnabled } = useSettingsStore();
   const { colors } = useThemeColors();
 
   const handleSelect = (pref: ThemePreference) => {
@@ -80,6 +82,24 @@ export default function SettingsScreen() {
           <View style={styles.appearanceRow}>
             <Text style={[styles.optionText, { color: colors.text }]}>Appearance</Text>
             <SegmentedControl />
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          
+          <View style={styles.appearanceRow}>
+            <Text style={[styles.optionText, { color: colors.text }]}>Haptic Feedback</Text>
+            <Switch
+              value={hapticsEnabled}
+              onValueChange={(value) => {
+                setHapticsEnabled(value);
+                if (value) {
+                  // Play a preview haptic if they just enabled it
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+              }}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor="#FFFFFF"
+            />
           </View>
 
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
