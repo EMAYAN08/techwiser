@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from "react-native";
-import { SlidersHorizontal, ChevronDown, Check } from "lucide-react-native";
+import { SlidersHorizontal, Check } from "lucide-react-native";
 import { useComparisonStore, Product } from "../../store/useComparisonStore";
 import { ProductCard } from "../../components/comparison/ProductCard";
 import { CircularWells } from "../../components/ui/CircularWells";
@@ -32,8 +32,8 @@ export default function LibraryScreen() {
   const { recentComparisons } = useComparisonStore();
   const { colors, isDark } = useThemeColors();
   const insets = useSafeAreaInsets();
-  const [filterOpen, setFilterOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [wellsOpen, setWellsOpen] = useState(false);
   const [filterBy, setFilterBy] = useState<FilterBy>("retailer");
   const [selectedId, setSelectedId] = useState("all");
 
@@ -64,41 +64,42 @@ export default function LibraryScreen() {
   }, [allProducts]);
 
   const activeWells = filterBy === "retailer" ? retailerWells : typeWells;
-  const filterLabel = FILTER_OPTIONS.find((o) => o.id === filterBy)?.label ?? "Retailer";
 
   const filtered = useMemo(() => {
-    if (selectedId === "all") return allProducts;
+    if (!wellsOpen || selectedId === "all") return allProducts;
     if (filterBy === "retailer") {
       return allProducts.filter((p) => getRetailerKey(p.retailer) === selectedId);
     }
     return allProducts.filter((p) => classifyProduct(p) === selectedId);
-  }, [allProducts, filterBy, selectedId]);
+  }, [allProducts, filterBy, selectedId, wellsOpen]);
 
-  const isFiltered = selectedId !== "all";
+  const isFiltered = wellsOpen && selectedId !== "all";
+  const iconActive = menuOpen || wellsOpen;
 
-  useEffect(() => {
-    if (!filterOpen) setMenuOpen(false);
-  }, [filterOpen]);
+  const dismissFilters = () => {
+    setMenuOpen(false);
+    setWellsOpen(false);
+    setSelectedId("all");
+  };
 
-  const toggleFilter = () => {
-    const next = !filterOpen;
-    setFilterOpen(next);
-    if (!next) {
-      setSelectedId("all");
-      setMenuOpen(false);
+  const onIconPress = () => {
+    if (menuOpen) {
+      dismissFilters();
+      return;
     }
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setMenuOpen(true);
   };
 
   const handleFilterBy = (next: FilterBy) => {
-    setMenuOpen(false);
-    if (next === filterBy) return;
     setFilterBy(next);
     setSelectedId("all");
+    setWellsOpen(true);
+    setMenuOpen(false);
     void Haptics.selectionAsync();
   };
 
   const handleSelectWell = (id: string) => {
-    setMenuOpen(false);
     const valid = activeWells.some((w) => w.id === id) ? id : "all";
     setSelectedId(valid);
   };
@@ -118,6 +119,19 @@ export default function LibraryScreen() {
     ? `${filtered.length} of ${allProducts.length}`
     : `${allProducts.length} saved product${allProducts.length === 1 ? "" : "s"}`;
 
+  const menuShadow =
+    Platform.OS === "web"
+      ? ({
+          boxShadow: isDark ? "0 10px 28px rgba(0,0,0,0.45)" : "0 10px 24px rgba(10,10,10,0.10)",
+        } as const)
+      : {
+          shadowColor: "#000",
+          shadowOpacity: isDark ? 0.35 : 0.1,
+          shadowRadius: 14,
+          shadowOffset: { width: 0, height: 8 },
+          elevation: 8,
+        };
+
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 16 }]}>
@@ -129,57 +143,23 @@ export default function LibraryScreen() {
             )}
           </View>
           {allProducts.length > 0 && (
-            <View>
+            <View style={styles.iconWrap}>
               <NavCircle
-                onPress={toggleFilter}
+                onPress={onIconPress}
                 accessibilityRole="button"
-                accessibilityLabel={filterOpen ? "Hide filters" : "Show filters"}
-                accessibilityState={{ expanded: filterOpen }}
-                style={filterOpen ? { backgroundColor: colors.ink } : undefined}
+                accessibilityLabel="Filter library"
+                accessibilityState={{ expanded: menuOpen }}
+                style={iconActive ? { backgroundColor: colors.ink } : undefined}
               >
                 <SlidersHorizontal
                   size={18}
-                  color={filterOpen ? colors.bg : colors.ink}
+                  color={iconActive ? colors.bg : colors.ink}
                   strokeWidth={2}
                 />
               </NavCircle>
-              {isFiltered && !filterOpen ? (
+              {isFiltered && !menuOpen ? (
                 <View style={[styles.dot, { backgroundColor: colors.spotify }]} />
               ) : null}
-            </View>
-          )}
-        </View>
-
-        {filterOpen && allProducts.length > 0 && (
-          <View style={styles.filterPanel}>
-            <View style={styles.selectWrap}>
-              <Pressable
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setMenuOpen((v) => !v);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={`Filter by ${filterLabel}`}
-                accessibilityState={{ expanded: menuOpen }}
-                style={[
-                  styles.select,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: menuOpen ? colors.ink : colors.line,
-                  },
-                ]}
-              >
-                <Text style={[styles.selectHint, { color: colors.stone }]}>Filter by</Text>
-                <View style={styles.selectValue}>
-                  <Text style={[styles.selectLabel, { color: colors.ink }]}>{filterLabel}</Text>
-                  <ChevronDown
-                    size={16}
-                    color={colors.ink}
-                    strokeWidth={2.2}
-                    style={{ transform: [{ rotate: menuOpen ? "180deg" : "0deg" }] }}
-                  />
-                </View>
-              </Pressable>
 
               {menuOpen ? (
                 <View
@@ -189,23 +169,11 @@ export default function LibraryScreen() {
                       backgroundColor: colors.surface,
                       borderColor: colors.line,
                     },
-                    Platform.OS === "web"
-                      ? ({
-                          boxShadow: isDark
-                            ? "0 12px 32px rgba(0,0,0,0.45)"
-                            : "0 12px 28px rgba(10,10,10,0.10)",
-                        } as const)
-                      : {
-                          shadowColor: "#000",
-                          shadowOpacity: isDark ? 0.35 : 0.1,
-                          shadowRadius: 16,
-                          shadowOffset: { width: 0, height: 8 },
-                          elevation: 8,
-                        },
+                    menuShadow,
                   ]}
                 >
-                  {FILTER_OPTIONS.map((opt, i) => {
-                    const active = opt.id === filterBy;
+                  {FILTER_OPTIONS.map((opt) => {
+                    const active = wellsOpen && opt.id === filterBy;
                     return (
                       <Pressable
                         key={opt.id}
@@ -214,8 +182,6 @@ export default function LibraryScreen() {
                         accessibilityState={{ selected: active }}
                         style={({ pressed }) => [
                           styles.menuRow,
-                          i === 0 && styles.menuRowFirst,
-                          i === FILTER_OPTIONS.length - 1 && styles.menuRowLast,
                           active && { backgroundColor: colors.fog },
                           pressed && { backgroundColor: colors.fog },
                         ]}
@@ -231,14 +197,18 @@ export default function LibraryScreen() {
                         >
                           {opt.label}
                         </Text>
-                        {active ? <Check size={16} color={colors.spotify} strokeWidth={2.4} /> : null}
+                        {active ? <Check size={15} color={colors.spotify} strokeWidth={2.4} /> : null}
                       </Pressable>
                     );
                   })}
                 </View>
               ) : null}
             </View>
+          )}
+        </View>
 
+        {wellsOpen && allProducts.length > 0 ? (
+          <View style={styles.wells}>
             <CircularWells
               items={activeWells}
               selectedId={activeWells.some((w) => w.id === selectedId) ? selectedId : "all"}
@@ -247,7 +217,7 @@ export default function LibraryScreen() {
               allowDeselectToAll
             />
           </View>
-        )}
+        ) : null}
       </View>
 
       <ScrollView
@@ -291,63 +261,46 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: space.gutter,
     paddingBottom: 12,
+    zIndex: 8,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
     gap: 12,
+    zIndex: 9,
   },
   headerText: { flex: 1 },
   headerTitle: { ...Typography.display },
   count: { ...Typography.caption, marginTop: 6 },
-  filterPanel: { marginTop: 16, gap: 16, zIndex: 6 },
-  selectWrap: { zIndex: 8 },
-  select: {
-    height: 48,
-    borderRadius: radii.field,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  selectHint: {
-    ...Typography.caption,
-    fontSize: 13,
-  },
-  selectValue: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  selectLabel: {
-    fontFamily: fonts.uiBold,
-    fontSize: 14,
-    lineHeight: 18,
+  iconWrap: {
+    position: "relative",
+    zIndex: 10,
   },
   menu: {
     position: "absolute",
-    top: 54,
-    left: 0,
+    top: 48,
     right: 0,
-    borderRadius: radii.cardSm,
+    width: 168,
+    borderRadius: 14,
     borderWidth: 1,
     overflow: "hidden",
-    zIndex: 12,
+    zIndex: 20,
   },
   menuRow: {
-    minHeight: 48,
-    paddingHorizontal: 16,
+    minHeight: 42,
+    paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 12,
   },
-  menuRowFirst: {},
-  menuRowLast: {},
   menuLabel: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 14,
+    lineHeight: 18,
+  },
+  wells: {
+    marginTop: 16,
   },
   dot: {
     position: "absolute",
