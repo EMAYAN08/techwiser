@@ -120,7 +120,6 @@ export function CircularWells({
         style={styles.scrollView}
         contentContainerStyle={styles.scroll}
         accessibilityRole="tablist"
-        {...({ dataSet: { tabSwipeIgnore: "true" } } as object)}
       >
         {nodes}
       </ScrollView>
