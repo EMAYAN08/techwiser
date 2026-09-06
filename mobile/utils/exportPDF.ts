@@ -39,24 +39,24 @@ export async function exportComparisonToPDF(comparison: any, isDark: boolean = t
 
   const themeVars = isDark ? `
     --bg: #0A0A0A;
-    --surface: #141414;
-    --border: #2A2A2A;
-    --text: #FFFFFF;
-    --text-sec: rgba(255,255,255,0.6);
-    --ai: #A259FF;
-    --ai-bg: rgba(162, 89, 255, 0.1);
-    --success: #10B981;
-    --success-bg: rgba(16, 185, 129, 0.1);
+    --surface: #161616;
+    --border: rgba(255,255,255,0.08);
+    --text: #F6F6F4;
+    --text-sec: #A8A8A4;
+    --ai: #1DB954;
+    --ai-bg: rgba(29,185,84,0.12);
+    --success: #1DB954;
+    --success-bg: rgba(29,185,84,0.12);
   ` : `
-    --bg: #F9FAFB;
+    --bg: #F6F6F4;
     --surface: #FFFFFF;
-    --border: #E5E7EB;
-    --text: #111827;
-    --text-sec: #4B5563;
-    --ai: #A259FF;
-    --ai-bg: #f4f0ff;
-    --success: #10B981;
-    --success-bg: #e6f4ea;
+    --border: #E8E8E4;
+    --text: #0A0A0A;
+    --text-sec: #5A5A58;
+    --ai: #1DB954;
+    --ai-bg: #E8F8EE;
+    --success: #1DB954;
+    --success-bg: #E8F8EE;
   `;
 
   // Generate HTML for Products Header
@@ -88,7 +88,7 @@ export async function exportComparisonToPDF(comparison: any, isDark: boolean = t
             <div class="diff-row" style="${i === keyDifferences.length - 1 ? 'border-bottom: none;' : ''}">
               <div class="diff-label" style="width: ${colWidth}%;">${diff.label}</div>
               ${diff.values.map((val: string, idx: number) => `
-                <div class="diff-value" style="width: ${colWidth}%; ${diff.winnerIndex === idx ? 'color: var(--success); font-weight: bold;' : ''}">
+                <div class="diff-value" style="width: ${colWidth}%; ${diff.winnerIndex === idx ? 'background: var(--success-bg); color: var(--text); font-weight: 600; border-radius: 12px; padding: 8px;' : ''}">
                   ${val}
                 </div>
               `).join('')}
@@ -200,20 +200,21 @@ export async function exportComparisonToPDF(comparison: any, isDark: boolean = t
             color: var(--text);
           }
           .product-price {
-            color: var(--success);
+            color: var(--text);
             font-size: 13px;
             font-weight: 600;
             margin-bottom: 6px;
           }
           .retailer-badge {
             font-size: 9px;
-            color: #fff;
+            color: var(--text-sec);
             text-transform: uppercase;
-            font-weight: 700;
-            background: #333;
+            font-weight: 600;
+            letter-spacing: 0.8px;
             display: inline-block;
-            padding: 3px 6px;
-            border-radius: 4px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
           }
           .card {
             background: var(--surface);
@@ -222,20 +223,21 @@ export async function exportComparisonToPDF(comparison: any, isDark: boolean = t
             padding: 20px;
           }
           .ai-summary {
-            background: var(--ai-bg);
-            padding: 16px;
-            border-radius: 12px;
-            border-left: 4px solid var(--ai);
+            background: #0A0A0A;
+            padding: 20px;
+            border-radius: 20px;
             margin-bottom: 24px;
             line-height: 1.6;
             font-size: 14px;
-            color: var(--text-sec);
+            color: #FFFFFF;
           }
           .ai-summary strong {
             color: var(--ai);
             display: block;
             margin-bottom: 6px;
-            font-size: 15px;
+            font-size: 11px;
+            letter-spacing: 1.6px;
+            text-transform: uppercase;
           }
           .differences {
             margin-top: 20px;
@@ -257,16 +259,19 @@ export async function exportComparisonToPDF(comparison: any, isDark: boolean = t
             color: var(--text);
           }
           .winner {
-            color: var(--success);
+            background: var(--success-bg);
+            color: var(--text);
             font-weight: 600;
+            border-radius: 12px;
+            padding: 8px;
           }
           .winner-badge {
             display: inline-block;
-            background: var(--success-bg);
-            color: var(--success);
+            background: var(--success);
+            color: #0A0A0A;
             font-size: 10px;
             padding: 2px 6px;
-            border-radius: 4px;
+            border-radius: 999px;
             margin-top: 6px;
           }
         </style>
@@ -297,26 +302,26 @@ export async function exportProductToPDF(product: any, isDark: boolean = true) {
 
   const themeVars = isDark ? `
     --bg: #0A0A0A;
-    --surface: #141414;
-    --border: #2A2A2A;
-    --text: #FFFFFF;
-    --text-sec: rgba(255,255,255,0.6);
-    --ai: #A259FF;
-    --ai-bg: rgba(162, 89, 255, 0.1);
-    --success: #10B981;
-    --primary: #2383E2;
-    --primary-bg: rgba(35, 131, 226, 0.1);
+    --surface: #161616;
+    --border: rgba(255,255,255,0.08);
+    --text: #F6F6F4;
+    --text-sec: #A8A8A4;
+    --ai: #1DB954;
+    --ai-bg: rgba(29,185,84,0.12);
+    --success: #1DB954;
+    --primary: #1DB954;
+    --primary-bg: rgba(29,185,84,0.12);
   ` : `
-    --bg: #F9FAFB;
+    --bg: #F6F6F4;
     --surface: #FFFFFF;
-    --border: #E5E7EB;
-    --text: #111827;
-    --text-sec: #4B5563;
-    --ai: #A259FF;
-    --ai-bg: #f4f0ff;
-    --success: #10B981;
-    --primary: #2383E2;
-    --primary-bg: #f0f7ff;
+    --border: #E8E8E4;
+    --text: #0A0A0A;
+    --text-sec: #5A5A58;
+    --ai: #1DB954;
+    --ai-bg: #E8F8EE;
+    --success: #1DB954;
+    --primary: #0A0A0A;
+    --primary-bg: #EFEFEA;
   `;
 
   const html = `
@@ -356,20 +361,21 @@ export async function exportProductToPDF(product: any, isDark: boolean = true) {
           }
           .price-retailer {
             font-size: 18px;
-            color: var(--success);
-            font-weight: 700;
+            color: var(--text);
+            font-weight: 600;
             margin-bottom: 30px;
           }
           .retailer-badge {
-            background: #333;
-            color: #fff;
+            color: var(--text-sec);
             font-size: 10px;
-            font-weight: 700;
+            font-weight: 600;
             padding: 4px 8px;
-            border-radius: 4px;
+            border-radius: 999px;
             margin-left: 12px;
             vertical-align: middle;
             text-transform: uppercase;
+            letter-spacing: 0.8px;
+            border: 1px solid var(--border);
           }
           .card {
             background: var(--surface);
@@ -385,17 +391,16 @@ export async function exportProductToPDF(product: any, isDark: boolean = true) {
             color: var(--text);
           }
           .ai-summary {
-            background: var(--ai-bg);
-            padding: 16px;
-            border-radius: 12px;
-            border-left: 4px solid var(--ai);
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 20px;
             line-height: 1.6;
             font-size: 14px;
             color: var(--text-sec);
-            border: 1px solid rgba(162, 89, 255, 0.2);
+            border: 1px solid var(--border);
           }
           .ai-title {
-            color: var(--ai);
+            color: var(--text);
             font-weight: 600;
             font-size: 15px;
             margin-bottom: 8px;
@@ -428,17 +433,16 @@ export async function exportProductToPDF(product: any, isDark: boolean = true) {
             color: var(--text-sec);
           }
           .insight-box {
-            background: var(--primary-bg);
-            padding: 16px;
-            border-radius: 12px;
-            border: 1px solid rgba(35, 131, 226, 0.2);
-            border-left: 4px solid var(--primary);
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
             font-size: 15px;
             line-height: 1.6;
             color: var(--text-sec);
           }
           .insight-title {
-            color: var(--primary);
+            color: var(--text);
             font-weight: 600;
             font-size: 15px;
             margin-bottom: 8px;
