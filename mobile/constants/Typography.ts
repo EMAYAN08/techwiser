@@ -17,7 +17,7 @@ export const fonts = {
 export const type = {
   screenTitle: {
     fontFamily: fonts.displayBold,
-    fontSize: 40,
+    fontSize: 30,
     lineHeight: 42,
     letterSpacing: -0.8,
     ...fontFix,
