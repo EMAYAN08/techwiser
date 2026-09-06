@@ -7,10 +7,12 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  View,
 } from "react-native";
 import { Tabs, usePathname } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
 import { Zap, BookOpen, Settings as SettingsIcon, Tag, LucideIcon } from "lucide-react-native";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
@@ -158,27 +160,25 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     Platform.OS === "web"
       ? ({
           boxShadow: isDark
-            ? "0 8px 24px rgba(0,0,0,0.38)"
-            : "0 10px 30px rgba(10,10,10,0.08), 0 1px 0 rgba(10,10,10,0.04)",
+            ? "0 10px 28px rgba(0,0,0,0.42), 0 1px 0 rgba(255,255,255,0.06) inset"
+            : "0 12px 32px rgba(10,10,10,0.08), 0 1px 0 rgba(255,255,255,0.65) inset",
         } as const)
       : {
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: isDark ? 8 : 4 },
-          shadowOpacity: isDark ? 0.22 : 0.08,
-          shadowRadius: isDark ? 16 : 14,
-          elevation: isDark ? 8 : 3,
+          shadowOffset: { width: 0, height: isDark ? 8 : 6 },
+          shadowOpacity: isDark ? 0.28 : 0.1,
+          shadowRadius: isDark ? 18 : 16,
+          elevation: isDark ? 10 : 4,
         };
 
   return (
     <Animated.View
       pointerEvents="box-none"
       style={[
-        styles.container,
+        styles.wrap,
         elevationStyle,
         {
           bottom: insets.bottom + 12,
-          backgroundColor: colors.tabBar,
-          borderColor: colors.tabBarBorder,
           opacity: mountAnim,
           transform: [
             {
@@ -191,35 +191,47 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         },
       ]}
     >
-      {state.routes.map((route, index) => {
-        const def = TABS.find((t) => t.name === route.name);
-        if (!def) return null;
-        const focused = state.index === index;
+      <View style={[styles.glass, { borderColor: colors.tabBarBorder }]}>
+        <BlurView
+          intensity={isDark ? 42 : 55}
+          tint={isDark ? "dark" : "light"}
+          experimentalBlurMethod="dimezisBlurView"
+          style={StyleSheet.absoluteFill}
+        />
+        <View
+          pointerEvents="none"
+          style={[styles.frost, { backgroundColor: colors.tabBar }]}
+        />
+        {state.routes.map((route, index) => {
+          const def = TABS.find((t) => t.name === route.name);
+          if (!def) return null;
+          const focused = state.index === index;
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: "tabPress",
-            target: route.key,
-            canPreventDefault: true,
-          });
-          if (!focused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
-          }
-        };
+          const onPress = () => {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!focused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
 
-        return (
-          <TabItem
-            key={route.key}
-            def={def}
-            focused={focused}
-            onPress={onPress}
-            pillBg={colors.tabPill}
-            activeColor={colors.tabSelectedIcon}
-            activeLabel={colors.tabSelectedLabel}
-            inactiveColor={colors.tabUnselected}
-          />
-        );
-      })}
+          return (
+            <TabItem
+              key={route.key}
+              def={def}
+              focused={focused}
+              onPress={onPress}
+              pillBg={colors.tabPill}
+              activeColor={colors.tabSelectedIcon}
+              activeLabel={colors.tabSelectedLabel}
+              inactiveColor={colors.tabUnselected}
+            />
+          );
+        })}
+      </View>
     </Animated.View>
   );
 }
@@ -247,19 +259,28 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrap: {
     position: "absolute",
     left: 12,
     right: 12,
     height: size.tabBar,
     borderRadius: radii.pill,
+    zIndex: 4,
+  },
+  glass: {
+    flex: 1,
+    height: size.tabBar,
+    borderRadius: radii.pill,
     borderWidth: 1,
+    overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 8,
     gap: 4,
-    zIndex: 4,
+  },
+  frost: {
+    ...StyleSheet.absoluteFillObject,
   },
   tab: {
     flex: 1,
@@ -268,6 +289,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
+    zIndex: 1,
   },
   tabInner: {
     alignItems: "center",
