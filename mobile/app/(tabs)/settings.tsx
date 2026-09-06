@@ -1,16 +1,23 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, Switch } from 'react-native';
-import { Typography } from '../../constants/Typography';
-import { Feather } from '@expo/vector-icons';
-import * as Haptics from '../../utils/haptics';
-import { useThemeStore, ThemePreference } from '../../store/useThemeStore';
-import { useSettingsStore } from '../../store/useSettingsStore';
-import { useThemeColors } from '../../constants/Colors';
+import React from "react";
+import { View, Text, StyleSheet, Pressable, ScrollView, Switch, Alert, Linking } from "react-native";
+import { type } from "../../constants/Typography";
+import { Feather } from "@expo/vector-icons";
+import * as Haptics from "../../utils/haptics";
+import { useThemeStore, ThemePreference } from "../../store/useThemeStore";
+import { useSettingsStore } from "../../store/useSettingsStore";
+import { useComparisonStore } from "../../store/useComparisonStore";
+import { paletteTokens, useThemeColors } from "../../constants/Colors";
+import { radii, space } from "../../constants/Layout";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Constants from "expo-constants";
 
 export default function SettingsScreen() {
   const { preference, setPreference } = useThemeStore();
   const { hapticsEnabled, setHapticsEnabled } = useSettingsStore();
+  const clearRecentComparisons = useComparisonStore((s) => s.clearRecentComparisons);
   const { colors } = useThemeColors();
+  const insets = useSafeAreaInsets();
+  const version = Constants.nativeApplicationVersion || Constants.expoConfig?.version || "1.0.0";
 
   const handleSelect = (pref: ThemePreference) => {
     if (preference !== pref) {
@@ -19,49 +26,51 @@ export default function SettingsScreen() {
     }
   };
 
-  const GenericOption = ({ label, icon, isDestructive = false }: { label: string, icon: any, isDestructive?: boolean }) => {
-    return (
-      <Pressable 
-        style={({ pressed }) => [
-          styles.option,
-          pressed && { backgroundColor: colors.primaryMuted }
-        ]}
-        onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-      >
-        <Feather name={icon} size={18} color={isDestructive ? colors.error : colors.textSecondary} />
-        <Text style={[styles.optionText, { color: isDestructive ? colors.error : colors.text }]}>
-          {label}
-        </Text>
-        <Feather name="chevron-right" size={16} color={colors.textTertiary} style={{ marginLeft: 'auto' }} />
-      </Pressable>
-    );
-  };
+  const Row = ({
+    label,
+    icon,
+    onPress,
+    trailing,
+  }: {
+    label: string;
+    icon: React.ComponentProps<typeof Feather>["name"];
+    onPress?: () => void;
+    trailing?: React.ReactNode;
+  }) => (
+    <Pressable
+      style={({ pressed }) => [styles.option, pressed && onPress && { backgroundColor: colors.fog }]}
+      onPress={
+        onPress
+          ? () => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onPress();
+            }
+          : undefined
+      }
+    >
+      <Feather name={icon} size={18} color={colors.body} />
+      <Text style={[styles.optionText, { color: colors.ink }]}>{label}</Text>
+      {trailing ?? <Feather name="chevron-right" size={16} color={colors.stone} style={{ marginLeft: "auto" }} />}
+    </Pressable>
+  );
 
-  const SegmentedControl = () => {
-    const options: { id: ThemePreference; icon: any }[] = [
-      { id: 'system', icon: 'monitor' },
-      { id: 'light', icon: 'sun' },
-      { id: 'dark', icon: 'moon' },
+  const AppearanceControl = () => {
+    const options: { id: ThemePreference; icon: React.ComponentProps<typeof Feather>["name"] }[] = [
+      { id: "system", icon: "monitor" },
+      { id: "light", icon: "sun" },
+      { id: "dark", icon: "moon" },
     ];
-
     return (
-      <View style={[styles.segmentContainer, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+      <View style={[styles.segmentContainer, { backgroundColor: colors.fog }]}>
         {options.map((opt) => {
           const isActive = preference === opt.id;
           return (
             <Pressable
               key={opt.id}
               onPress={() => handleSelect(opt.id)}
-              style={[
-                styles.segmentButton,
-                isActive && { backgroundColor: colors.border }
-              ]}
+              style={[styles.segmentButton, isActive && { backgroundColor: paletteTokens.ink }]}
             >
-              <Feather 
-                name={opt.icon} 
-                size={15} 
-                color={isActive ? colors.text : colors.textTertiary} 
-              />
+              <Feather name={opt.icon} size={15} color={isActive ? "#FFFFFF" : colors.stone} />
             </Pressable>
           );
         })}
@@ -70,57 +79,78 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 16 }]}>
+        <Text style={[styles.headerTitle, { color: colors.ink }]}>Settings</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        
-        <Text style={[styles.sectionTitle, { color: colors.textTertiary }]}>PREFERENCES</Text>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.sectionTitle, { color: colors.stone }]}>Preferences</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
           <View style={styles.appearanceRow}>
-            <Text style={[styles.optionText, { color: colors.text }]}>Appearance</Text>
-            <SegmentedControl />
+            <Text style={[styles.optionText, { color: colors.ink }]}>Appearance</Text>
+            <AppearanceControl />
           </View>
-
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          
+          <View style={[styles.divider, { backgroundColor: colors.line }]} />
           <View style={styles.appearanceRow}>
-            <Text style={[styles.optionText, { color: colors.text }]}>Haptic Feedback</Text>
+            <Text style={[styles.optionText, { color: colors.ink }]}>Haptic Feedback</Text>
             <Switch
               value={hapticsEnabled}
               onValueChange={(value) => {
                 setHapticsEnabled(value);
-                if (value) {
-                  // Play a preview haptic if they just enabled it
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }
+                if (value) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }}
-              trackColor={{ false: colors.border, true: colors.primary }}
+              trackColor={{ false: colors.line, true: colors.spotify }}
               thumbColor="#FFFFFF"
+              ios_backgroundColor={colors.line}
             />
           </View>
-
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <GenericOption label="Currency" icon="dollar-sign" />
+          <View style={[styles.divider, { backgroundColor: colors.line }]} />
+          <Row
+            label="Currency"
+            icon="dollar-sign"
+            trailing={<Text style={[styles.trailing, { color: colors.stone }]}>CAD</Text>}
+          />
         </View>
 
-        <Text style={[styles.sectionTitle, { color: colors.textTertiary }]}>DATA & STORAGE</Text>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <GenericOption label="Clear Search History" icon="trash-2" isDestructive />
+        <Text style={[styles.sectionTitle, { color: colors.stone }]}>Data</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+          <Row
+            label="Clear search history"
+            icon="trash-2"
+            onPress={() =>
+              Alert.alert("Clear search history", "This will remove your recent comparisons on this device.", [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Clear",
+                  style: "destructive",
+                  onPress: () => clearRecentComparisons(),
+                },
+              ])
+            }
+          />
         </View>
 
-        <Text style={[styles.sectionTitle, { color: colors.textTertiary }]}>ABOUT</Text>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <GenericOption label="Privacy Policy" icon="shield" />
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <GenericOption label="Terms of Service" icon="file-text" />
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <GenericOption label="App Version 1.0.0" icon="info" />
+        <Text style={[styles.sectionTitle, { color: colors.stone }]}>About</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+          <Row
+            label="Privacy Policy"
+            icon="shield"
+            onPress={() => Linking.openURL("https://github.com/EMAYAN08/techwiser")}
+          />
+          <View style={[styles.divider, { backgroundColor: colors.line }]} />
+          <Row
+            label="Terms of Service"
+            icon="file-text"
+            onPress={() => Linking.openURL("https://github.com/EMAYAN08/techwiser")}
+          />
+          <View style={[styles.divider, { backgroundColor: colors.line }]} />
+          <Row
+            label="App version"
+            icon="info"
+            trailing={<Text style={[styles.trailing, { color: colors.stone }]}>{version}</Text>}
+          />
         </View>
-
       </ScrollView>
     </View>
   );
@@ -129,31 +159,37 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingHorizontal: space.gutter,
     paddingBottom: 16,
-    borderBottomWidth: 1,
   },
-  headerTitle: { ...Typography.display, fontSize: 28 },
-  scroll: { padding: 16 },
-  sectionTitle: { ...Typography.eyebrow, fontSize: 11, letterSpacing: 1.2, marginBottom: 8, marginLeft: 4, marginTop: 16 },
-  card: { borderWidth: 1, borderRadius: 12, overflow: 'hidden' },
-  option: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
-  appearanceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, paddingLeft: 16 },
-  optionText: { fontSize: 15 },
-  segmentContainer: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    padding: 4, 
-    borderRadius: 8,
-    borderWidth: 1,
+  headerTitle: { ...type.screenTitle },
+  scroll: { paddingHorizontal: space.gutter },
+  sectionTitle: { ...type.eyebrow, marginBottom: 8, marginLeft: 4, marginTop: 20 },
+  card: { borderWidth: 1, borderRadius: radii.cardSm, overflow: "hidden" },
+  option: { flexDirection: "row", alignItems: "center", padding: 16, gap: 12, minHeight: 52 },
+  appearanceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 12,
+    paddingLeft: 16,
+    minHeight: 52,
+  },
+  optionText: { ...type.body, fontFamily: type.button.fontFamily, fontSize: 15 },
+  trailing: { ...type.caption, marginLeft: "auto" },
+  segmentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 4,
+    borderRadius: radii.pill,
   },
   segmentButton: {
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: radii.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 40,
   },
-  divider: { height: 1, marginLeft: 46 },
+  divider: { height: StyleSheet.hairlineWidth, marginLeft: 46 },
 });
