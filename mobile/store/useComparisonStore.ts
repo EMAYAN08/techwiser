@@ -275,7 +275,7 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
     }),
   addUrl: () =>
     set((state) =>
-      state.urls.length < 4 ? { urls: [...state.urls, ""] } : state
+      state.urls.length < 3 ? { urls: [...state.urls, ""] } : state
     ),
   removeUrl: (index) =>
     set((state) => ({

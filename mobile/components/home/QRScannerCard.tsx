@@ -20,6 +20,8 @@ type Props = {
 
 type CamError = "denied" | "missing" | null;
 
+const FLOW = Easing.bezier(0.16, 1, 0.3, 1);
+
 function WebQrCamera({
   active,
   onScan,
@@ -129,14 +131,23 @@ function WebQrCamera({
   return <View ref={hostRef} collapsable={false} style={StyleSheet.absoluteFillObject} />;
 }
 
-function Viewfinder({ color }: { color: string }) {
+function Viewfinder({ color, opacity, scale }: { color: string; opacity: Animated.Value; scale: Animated.Value }) {
   return (
-    <>
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        StyleSheet.absoluteFillObject,
+        {
+          opacity,
+          transform: [{ scale }],
+        },
+      ]}
+    >
       <View style={[styles.corner, styles.tl, { borderColor: color }]} />
       <View style={[styles.corner, styles.tr, { borderColor: color }]} />
       <View style={[styles.corner, styles.bl, { borderColor: color }]} />
       <View style={[styles.corner, styles.br, { borderColor: color }]} />
-    </>
+    </Animated.View>
   );
 }
 
@@ -148,24 +159,33 @@ export function QRScannerCard({ scanning, atCapacity, flashTick, scannedCount, o
   const [torch, setTorch] = useState(false);
   const scanLine = useRef(new Animated.Value(0)).current;
   const flashOp = useRef(new Animated.Value(0)).current;
+  const greenFlash = useRef(new Animated.Value(0)).current;
+  const idleOp = useRef(new Animated.Value(1)).current;
+  const breathe = useRef(new Animated.Value(0)).current;
+  const cornerOp = useRef(new Animated.Value(0.7)).current;
+  const cornerScale = useRef(new Animated.Value(1)).current;
+  const countScale = useRef(new Animated.Value(1)).current;
+  const capOp = useRef(new Animated.Value(0)).current;
+  const lineOp = useRef(new Animated.Value(0.45)).current;
 
   const granted = permission?.granted === true && camError === null;
   const nativeReady = Platform.OS !== "web" && granted && live && !atCapacity;
   const webReady = Platform.OS === "web" && live && camError === null && !atCapacity;
+  const showingIdle = !live || !!camError;
 
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(scanLine, {
           toValue: 1,
-          duration: 1800,
-          easing: Easing.inOut(Easing.quad),
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
         Animated.timing(scanLine, {
           toValue: 0,
-          duration: 1800,
-          easing: Easing.inOut(Easing.quad),
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
       ])
@@ -175,10 +195,91 @@ export function QRScannerCard({ scanning, atCapacity, flashTick, scannedCount, o
   }, [scanLine]);
 
   useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breathe, {
+          toValue: 1,
+          duration: 1800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(breathe, {
+          toValue: 0,
+          duration: 1800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [breathe]);
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(cornerOp, {
+          toValue: showingIdle ? 0.55 : 1,
+          duration: 1100,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(cornerOp, {
+          toValue: showingIdle ? 0.85 : 0.62,
+          duration: 1100,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [cornerOp, showingIdle]);
+
+  useEffect(() => {
+    Animated.timing(idleOp, {
+      toValue: showingIdle ? 1 : 0,
+      duration: 320,
+      easing: FLOW,
+      useNativeDriver: true,
+    }).start();
+  }, [showingIdle, idleOp]);
+
+  useEffect(() => {
+    Animated.timing(lineOp, {
+      toValue: atCapacity ? 0 : live && !camError && scanning ? 1 : 0.42,
+      duration: 280,
+      easing: FLOW,
+      useNativeDriver: true,
+    }).start();
+  }, [atCapacity, live, camError, scanning, lineOp]);
+
+  useEffect(() => {
+    Animated.timing(capOp, {
+      toValue: atCapacity ? 1 : 0,
+      duration: 280,
+      easing: FLOW,
+      useNativeDriver: true,
+    }).start();
+  }, [atCapacity, capOp]);
+
+  useEffect(() => {
     if (!flashTick) return;
-    flashOp.setValue(0.72);
-    Animated.timing(flashOp, { toValue: 0, duration: 320, useNativeDriver: true }).start();
-  }, [flashTick, flashOp]);
+    flashOp.setValue(0.42);
+    greenFlash.setValue(0.28);
+    cornerScale.setValue(1.08);
+    Animated.parallel([
+      Animated.timing(flashOp, { toValue: 0, duration: 240, easing: FLOW, useNativeDriver: true }),
+      Animated.timing(greenFlash, { toValue: 0, duration: 520, easing: FLOW, useNativeDriver: true }),
+      Animated.spring(cornerScale, { toValue: 1, tension: 180, friction: 8, useNativeDriver: true }),
+    ]).start();
+  }, [flashTick, flashOp, greenFlash, cornerScale]);
+
+  useEffect(() => {
+    if (!scannedCount) return;
+    countScale.setValue(0.86);
+    Animated.spring(countScale, { toValue: 1, tension: 280, friction: 8, useNativeDriver: true }).start();
+  }, [scannedCount, countScale]);
 
   const startCamera = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -229,66 +330,79 @@ export function QRScannerCard({ scanning, atCapacity, flashTick, scannedCount, o
         />
       ) : null}
 
-      {!live || camError ? (
-        <View style={styles.idle}>
-          <ScanQrCode size={36} color={colors.spotify} strokeWidth={1.6} />
-          <Text style={[styles.idleTitle, { color: "#F6F6F4" }]}>Scan a product QR</Text>
-          <Text style={[styles.idleSub, { color: "rgba(246,246,244,0.62)" }]}>
-            {camError === "denied"
-              ? "Camera permission denied — use a photo, paste, or sample"
-              : camError === "missing"
-                ? "No camera here — use a photo, paste, or a sample QR"
-                : "Box, shelf tag, or retailer page"}
-          </Text>
-        </View>
-      ) : null}
-
-      <Viewfinder color={colors.spotify} />
-
-      <View pointerEvents="none" style={styles.scanLineTrack}>
+      <Animated.View pointerEvents="none" style={[styles.idle, { opacity: idleOp }]}>
         <Animated.View
           style={{
-            height: 2,
+            transform: [
+              {
+                scale: breathe.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [1, 1.08],
+                }),
+              },
+            ],
+            opacity: breathe.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.78, 1],
+            }),
+          }}
+        >
+          <ScanQrCode size={36} color={colors.spotify} strokeWidth={1.6} />
+        </Animated.View>
+        <Text style={[styles.idleTitle, { color: "#F6F6F4" }]}>Scan a product QR</Text>
+        <Text style={[styles.idleSub, { color: "rgba(246,246,244,0.62)" }]}>
+          {camError === "denied"
+            ? "Camera permission denied — try a photo instead"
+            : camError === "missing"
+              ? "No camera here — scan a QR from a photo"
+              : "Box, shelf tag, or retailer page"}
+        </Text>
+      </Animated.View>
+
+      <Viewfinder color={colors.spotify} opacity={cornerOp} scale={cornerScale} />
+
+      <Animated.View pointerEvents="none" style={[styles.scanLineTrack, { opacity: lineOp }]}>
+        <Animated.View
+          style={{
             width: "100%",
             transform: [
               {
                 translateY: scanLine.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0, 130],
+                  outputRange: [0, 118],
                 }),
               },
             ],
           }}
         >
-          <View
-            style={{
-              height: 2,
-              width: "100%",
-              borderRadius: 2,
-              backgroundColor: colors.spotify,
-              opacity: live && !camError && !atCapacity ? 0.95 : 0.45,
-            }}
-          />
+          <View style={[styles.scanGlow, { backgroundColor: colors.spotify }]} />
+          <View style={[styles.scanCore, { backgroundColor: colors.spotify }]} />
         </Animated.View>
-      </View>
+      </Animated.View>
 
       <Animated.View
         pointerEvents="none"
         style={[styles.flash, { backgroundColor: "#FFFFFF", opacity: flashOp }]}
       />
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.flash, { backgroundColor: colors.spotify, opacity: greenFlash }]}
+      />
 
-      {atCapacity ? (
-        <View style={styles.capacityMask}>
-          <Text style={styles.capacityText}>4 of 4 — remove one to scan more</Text>
-        </View>
-      ) : null}
+      <Animated.View pointerEvents="none" style={[styles.capacityMask, { opacity: capOp }]}>
+        <Text style={styles.capacityText}>
+          {MAX_QR_PRODUCTS} of {MAX_QR_PRODUCTS} — remove one to scan more
+        </Text>
+      </Animated.View>
 
       <View style={styles.hudTop}>
-        <View style={[styles.countPill, { backgroundColor: "rgba(10,10,10,0.72)" }]}>
+        <Animated.View
+          style={[styles.countPill, { backgroundColor: "rgba(10,10,10,0.72)", transform: [{ scale: countScale }] }]}
+        >
           <Text style={styles.countText}>
             {scannedCount} / {MAX_QR_PRODUCTS}
           </Text>
-        </View>
+        </Animated.View>
         {live && Platform.OS !== "web" && !camError ? (
           <Pressable
             onPress={() => {
@@ -310,12 +424,16 @@ export function QRScannerCard({ scanning, atCapacity, flashTick, scannedCount, o
       {statusText ? <Text style={styles.status}>{statusText}</Text> : null}
 
       <View style={styles.hudBottom}>
-        {!live || camError ? (
+        {showingIdle ? (
           <Pressable
             onPress={startCamera}
             style={({ pressed }) => [
               styles.cta,
-              { backgroundColor: isDark ? colors.spotify : "#F6F6F4", opacity: pressed ? 0.8 : 1 },
+              {
+                backgroundColor: isDark ? colors.spotify : "#F6F6F4",
+                opacity: pressed ? 0.8 : 1,
+                transform: [{ scale: pressed ? 0.96 : 1 }],
+              },
             ]}
           >
             <Camera size={16} color={isDark ? paletteTokens.spotifyInk : paletteTokens.ink} strokeWidth={2.2} />
@@ -331,7 +449,7 @@ export function QRScannerCard({ scanning, atCapacity, flashTick, scannedCount, o
           }}
           style={({ pressed }) => [
             styles.ctaGhost,
-            { opacity: pressed ? 0.75 : 1 },
+            { opacity: pressed ? 0.75 : 1, transform: [{ scale: pressed ? 0.96 : 1 }] },
           ]}
           accessibilityLabel="Scan QR from photo"
         >
@@ -357,6 +475,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingBottom: 28,
+    zIndex: 2,
   },
   idleTitle: {
     ...type.productName,
@@ -387,6 +506,21 @@ const styles = StyleSheet.create({
     height: 134,
     overflow: "hidden",
     zIndex: 4,
+  },
+  scanGlow: {
+    height: 14,
+    width: "100%",
+    borderRadius: 8,
+    opacity: 0.18,
+  },
+  scanCore: {
+    position: "absolute",
+    top: 6,
+    left: 0,
+    right: 0,
+    height: 2,
+    borderRadius: 2,
+    opacity: 0.95,
   },
   flash: {
     ...StyleSheet.absoluteFillObject,

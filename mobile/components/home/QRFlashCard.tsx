@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, Pressable, Animated, Image } from "react-native";
-import { X, CheckCircle2, AlertTriangle, Link2, Loader } from "lucide-react-native";
+import { View, Text, StyleSheet, Pressable, Animated, Image, Easing, Platform } from "react-native";
+import { X, CheckCircle2, AlertTriangle, Loader, Copy, Check, ShoppingBag } from "lucide-react-native";
+import * as Clipboard from "expo-clipboard";
 import { useThemeColors } from "../../constants/Colors";
 import { type } from "../../constants/Typography";
 import { radii } from "../../constants/Layout";
 import * as Haptics from "../../utils/haptics";
+
+const FLOW = Easing.bezier(0.16, 1, 0.3, 1);
 
 export type QrItem = {
   id: string;
@@ -15,9 +18,108 @@ export type QrItem = {
   retailer: string;
   domain: string;
   imageUrl: string | null;
+  imageCandidates?: string[];
   description?: string | null;
   error?: string;
 };
+
+function retailerLetter(retailer: string, domain: string) {
+  const src = retailer || domain || "?";
+  const letter = src.replace(/[^A-Za-z]/g, "").charAt(0);
+  return (letter || "?").toUpperCase();
+}
+
+function PreviewThumb({
+  sources,
+  loading,
+  retailer,
+  domain,
+  colors,
+}: {
+  sources: string[];
+  loading: boolean;
+  retailer: string;
+  domain: string;
+  colors: ReturnType<typeof useThemeColors>["colors"];
+}) {
+  const [srcIndex, setSrcIndex] = useState(0);
+  const [failed, setFailed] = useState(sources.length === 0);
+  const imgOp = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0.45)).current;
+  const sourceKey = sources.join("|");
+
+  useEffect(() => {
+    setSrcIndex(0);
+    setFailed(sources.length === 0);
+    imgOp.setValue(0);
+  }, [sourceKey, sources.length, imgOp]);
+
+  useEffect(() => {
+    if (!loading && !failed) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 780,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0.45,
+          duration: 780,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [loading, failed, pulse]);
+
+  const src = !failed && sources[srcIndex] ? sources[srcIndex] : null;
+  const letter = retailerLetter(retailer, domain);
+
+  const showImage = Boolean(src);
+  const webImgProps =
+    Platform.OS === "web" ? ({ referrerPolicy: "no-referrer" } as Record<string, string>) : {};
+
+  return (
+    <View style={[styles.thumb, { backgroundColor: colors.fog }]}>
+      {showImage ? (
+        <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: imgOp }]}>
+          <Image
+            source={{ uri: src as string }}
+            style={styles.thumbImg}
+            resizeMode="cover"
+            onLoad={() => {
+              Animated.timing(imgOp, { toValue: 1, duration: 380, easing: FLOW, useNativeDriver: true }).start();
+            }}
+            onError={() => {
+              if (srcIndex < sources.length - 1) setSrcIndex((n) => n + 1);
+              else setFailed(true);
+            }}
+            {...webImgProps}
+          />
+        </Animated.View>
+      ) : (
+        <Animated.View
+          style={[
+            styles.fallback,
+            { opacity: loading ? pulse : 1 },
+          ]}
+        >
+          <View style={[styles.fallbackGlyph, { backgroundColor: colors.ink }]}>
+            <Text style={[styles.fallbackLetter, { color: colors.bg }]}>{letter}</Text>
+          </View>
+          <ShoppingBag size={16} color={colors.stone} strokeWidth={2} />
+          <Text style={[styles.fallbackStore, { color: colors.stone }]} numberOfLines={1}>
+            {retailer || domain || "Product"}
+          </Text>
+        </Animated.View>
+      )}
+    </View>
+  );
+}
 
 export function QRFlashCard({
   item,
@@ -29,38 +131,110 @@ export function QRFlashCard({
   onRemove: () => void;
 }) {
   const { colors } = useThemeColors();
-  const [imgFailed, setImgFailed] = useState(false);
-  const enter = useRef(new Animated.Value(0)).current;
+  const [copied, setCopied] = useState(false);
+  const life = useRef(new Animated.Value(0)).current;
+  const shift = useRef(new Animated.Value(0)).current;
   const flash = useRef(new Animated.Value(1)).current;
-  const pulse = useRef(new Animated.Value(0.4)).current;
+  const spin = useRef(new Animated.Value(0)).current;
+  const checkPop = useRef(new Animated.Value(1)).current;
+  const copyPop = useRef(new Animated.Value(1)).current;
+  const removing = useRef(false);
+  const lastStatus = useRef(item.status);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    Animated.spring(enter, {
+    Animated.spring(life, {
       toValue: 1,
       useNativeDriver: true,
-      tension: 140,
-      friction: 12,
-      delay: index * 40,
+      tension: 110,
+      friction: 14,
+      delay: Math.min(index, 3) * 55,
     }).start();
     Animated.timing(flash, {
       toValue: 0,
-      duration: 700,
-      delay: 180,
+      duration: 780,
+      delay: 160,
+      easing: FLOW,
       useNativeDriver: false,
     }).start();
-  }, [enter, flash, index]);
+    // mount-only enter
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (item.status !== "valid" || lastStatus.current === "valid") {
+      lastStatus.current = item.status;
+      return;
+    }
+    lastStatus.current = item.status;
+    flash.setValue(1);
+    Animated.timing(flash, {
+      toValue: 0,
+      duration: 640,
+      easing: FLOW,
+      useNativeDriver: false,
+    }).start();
+    checkPop.setValue(0.25);
+    Animated.spring(checkPop, {
+      toValue: 1,
+      tension: 220,
+      friction: 8,
+      useNativeDriver: true,
+    }).start();
+  }, [item.status, flash, checkPop]);
 
   useEffect(() => {
     if (item.status !== "loading") return;
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0.4, duration: 700, useNativeDriver: true }),
-      ])
+    spin.setValue(0);
+    const spinLoop = Animated.loop(
+      Animated.timing(spin, { toValue: 1, duration: 1000, easing: Easing.linear, useNativeDriver: true })
     );
-    loop.start();
-    return () => loop.stop();
-  }, [item.status, pulse]);
+    spinLoop.start();
+    return () => spinLoop.stop();
+  }, [item.status, spin]);
+
+  const handleRemove = () => {
+    if (removing.current) return;
+    removing.current = true;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Animated.parallel([
+      Animated.timing(life, {
+        toValue: 0,
+        duration: 200,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(shift, {
+        toValue: 16,
+        duration: 200,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished) onRemove();
+      else removing.current = false;
+    });
+  };
+
+  const handleCopy = async () => {
+    try {
+      await Clipboard.setStringAsync(item.url);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCopied(true);
+      copyPop.setValue(0.25);
+      Animated.spring(copyPop, { toValue: 1, tension: 220, friction: 8, useNativeDriver: true }).start();
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setCopied(false), 1600);
+    } catch {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+  };
 
   const isOk = item.status === "valid";
   const isWait = item.status === "loading";
@@ -76,13 +250,21 @@ export function QRFlashCard({
       ? "Fetching preview…"
       : item.error || "Can't use this link";
 
+  const sources =
+    item.imageCandidates && item.imageCandidates.length
+      ? item.imageCandidates
+      : item.imageUrl
+        ? [item.imageUrl]
+        : [];
+
   return (
     <Animated.View
       style={{
-        opacity: enter,
+        opacity: life,
         transform: [
-          { scale: enter.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) },
-          { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) },
+          { translateY: life.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) },
+          { translateX: shift },
+          { scale: life.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) },
         ],
       }}
     >
@@ -95,19 +277,14 @@ export function QRFlashCard({
           },
         ]}
       >
-        <View style={[styles.thumb, { backgroundColor: colors.fog }]}>
-          {item.imageUrl && !imgFailed ? (
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={styles.thumbImg}
-              resizeMode="cover"
-              onError={() => setImgFailed(true)}
-            />
-          ) : (
-            <Animated.View style={{ opacity: isWait ? pulse : 1, alignItems: "center" }}>
-              <Link2 size={18} color={colors.stone} strokeWidth={2} />
-            </Animated.View>
-          )}
+        <View style={styles.thumbWrap}>
+          <PreviewThumb
+            sources={sources}
+            loading={isWait}
+            retailer={item.retailer}
+            domain={item.domain}
+            colors={colors}
+          />
           <View style={[styles.indexBadge, { backgroundColor: colors.ink }]}>
             <Text style={[styles.indexText, { color: colors.bg }]}>{index + 1}</Text>
           </View>
@@ -120,17 +297,30 @@ export function QRFlashCard({
                 {item.retailer || item.domain || "LINK"}
               </Text>
             </View>
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                onRemove();
-              }}
-              hitSlop={10}
-              style={[styles.removeBtn, { backgroundColor: colors.fog }]}
-              accessibilityLabel="Remove scanned product"
-            >
-              <X size={14} color={colors.body} strokeWidth={2.4} />
-            </Pressable>
+            <View style={styles.iconRow}>
+              <Pressable
+                onPress={handleCopy}
+                hitSlop={8}
+                style={[styles.iconBtn, { backgroundColor: copied ? colors.spotifyWash : colors.fog }]}
+                accessibilityLabel="Copy product URL"
+              >
+                <Animated.View style={{ transform: [{ scale: copyPop }] }}>
+                  {copied ? (
+                    <Check size={13} color={colors.spotify} strokeWidth={2.6} />
+                  ) : (
+                    <Copy size={13} color={colors.body} strokeWidth={2.4} />
+                  )}
+                </Animated.View>
+              </Pressable>
+              <Pressable
+                onPress={handleRemove}
+                hitSlop={8}
+                style={[styles.iconBtn, { backgroundColor: colors.fog }]}
+                accessibilityLabel="Remove scanned product"
+              >
+                <X size={14} color={colors.body} strokeWidth={2.4} />
+              </Pressable>
+            </View>
           </View>
 
           <Text style={[styles.title, { color: colors.ink }]} numberOfLines={2}>
@@ -142,14 +332,29 @@ export function QRFlashCard({
 
           <View style={styles.statusRow}>
             {isOk ? (
-              <CheckCircle2 size={13} color={statusColor} strokeWidth={2.4} />
+              <Animated.View style={{ transform: [{ scale: checkPop }] }}>
+                <CheckCircle2 size={13} color={statusColor} strokeWidth={2.4} />
+              </Animated.View>
             ) : isWait ? (
-              <Loader size={13} color={statusColor} strokeWidth={2.4} />
+              <Animated.View
+                style={{
+                  transform: [
+                    {
+                      rotate: spin.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ["0deg", "360deg"],
+                      }),
+                    },
+                  ],
+                }}
+              >
+                <Loader size={13} color={statusColor} strokeWidth={2.4} />
+              </Animated.View>
             ) : (
               <AlertTriangle size={13} color={statusColor} strokeWidth={2.4} />
             )}
             <Text style={[styles.statusText, { color: statusColor }]} numberOfLines={1}>
-              {statusLabel}
+              {copied ? "URL copied" : statusLabel}
             </Text>
           </View>
         </View>
@@ -166,8 +371,14 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     minHeight: 108,
   },
+  thumbWrap: {
+    width: 96,
+    alignSelf: "stretch",
+  },
   thumb: {
     width: 96,
+    flex: 1,
+    minHeight: 108,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -176,6 +387,30 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: 96,
     height: "100%",
+  },
+  fallback: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingHorizontal: 8,
+  },
+  fallbackGlyph: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fallbackLetter: {
+    ...type.button,
+    fontSize: 16,
+  },
+  fallbackStore: {
+    ...type.caption,
+    fontSize: 10,
+    textAlign: "center",
   },
   indexBadge: {
     position: "absolute",
@@ -186,6 +421,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 2,
   },
   indexText: {
     ...type.eyebrow,
@@ -209,14 +445,19 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    maxWidth: "70%",
+    maxWidth: "52%",
   },
   retailerText: {
     ...type.eyebrow,
     fontSize: 10,
     letterSpacing: 0.8,
   },
-  removeBtn: {
+  iconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  iconBtn: {
     width: 28,
     height: 28,
     borderRadius: 14,

@@ -1,4 +1,4 @@
-export const MAX_QR_PRODUCTS = 4;
+export const MAX_QR_PRODUCTS = 3;
 
 export const SUPPORTED_DOMAINS = [
   "bestbuy.ca",
@@ -22,33 +22,6 @@ export const SHORTENER_DOMAINS = [
   "t.co",
   "bestbuy.app.link",
   "newegg.io",
-] as const;
-
-export const SAMPLE_PRODUCTS = [
-  {
-    id: "iphone",
-    label: "iPhone 15 Pro",
-    retailer: "Best Buy",
-    url: "https://www.bestbuy.ca/en-ca/product/apple-iphone-15-pro-256gb-blue-titanium/16802913",
-  },
-  {
-    id: "galaxy",
-    label: "Galaxy S24 Ultra",
-    retailer: "Best Buy",
-    url: "https://www.bestbuy.ca/en-ca/product/samsung-galaxy-s24-ultra-512gb-titanium-black/16803012",
-  },
-  {
-    id: "pixel",
-    label: "Pixel 8 Pro",
-    retailer: "Best Buy",
-    url: "https://www.bestbuy.ca/en-ca/product/google-pixel-8-pro-256gb-obsidian/16789012",
-  },
-  {
-    id: "sony",
-    label: "WH-1000XM5",
-    retailer: "Amazon",
-    url: "https://www.amazon.ca/Sony-WH-1000XM5-Cancelling-Headphones-Silver/dp/B09XS7JWHC",
-  },
 ] as const;
 
 const TRACKING_PARAMS = [
@@ -322,9 +295,37 @@ export type UrlPreview = {
   title: string;
   description: string | null;
   imageUrl: string | null;
+  imageCandidates: string[];
 };
 
 const previewCache = new Map<string, UrlPreview>();
+
+function uniqueUrls(list: Array<string | null | undefined>): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const u of list) {
+    if (!u || seen.has(u)) continue;
+    seen.add(u);
+    out.push(u);
+  }
+  return out;
+}
+
+function corsSafeImage(url: string): string | null {
+  try {
+    const stripped = url.replace(/^https?:\/\//i, "");
+    if (!stripped) return null;
+    return `https://wsrv.nl/?url=${encodeURIComponent(stripped)}&w=320&h=320&fit=cover&output=jpg`;
+  } catch {
+    return null;
+  }
+}
+
+export function buildImageCandidates(...urls: Array<string | null | undefined>): string[] {
+  const direct = uniqueUrls(urls);
+  const proxied = uniqueUrls(direct.map((u) => corsSafeImage(u)));
+  return uniqueUrls([...direct, ...proxied]);
+}
 
 export async function fetchUrlPreview(url: string): Promise<UrlPreview> {
   const parsed = parseProductUrl(url);
@@ -332,6 +333,7 @@ export async function fetchUrlPreview(url: string): Promise<UrlPreview> {
     title: parsed.title,
     description: null,
     imageUrl: parsed.guessImage ?? null,
+    imageCandidates: buildImageCandidates(parsed.guessImage),
   };
   const cached = previewCache.get(url);
   if (cached) return cached;
@@ -346,10 +348,19 @@ export async function fetchUrlPreview(url: string): Promise<UrlPreview> {
     if (res.ok) {
       const json = await res.json();
       if (json?.status === "success" && json.data) {
+        const image =
+          (json.data.image?.url as string | undefined) ||
+          (json.data.logo?.url as string | undefined) ||
+          fallback.imageUrl;
         const preview: UrlPreview = {
           title: (json.data.title as string) || fallback.title,
           description: (json.data.description as string) || null,
-          imageUrl: json.data.image?.url || json.data.logo?.url || fallback.imageUrl,
+          imageUrl: image || null,
+          imageCandidates: buildImageCandidates(
+            json.data.image?.url,
+            json.data.logo?.url,
+            fallback.imageUrl
+          ),
         };
         previewCache.set(url, preview);
         return preview;
@@ -361,8 +372,4 @@ export async function fetchUrlPreview(url: string): Promise<UrlPreview> {
 
   previewCache.set(url, fallback);
   return fallback;
-}
-
-export function sampleQrImage(url: string): string {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&bgcolor=F6F6F4&color=0A0A0A&data=${encodeURIComponent(url)}`;
 }

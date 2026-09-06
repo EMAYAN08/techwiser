@@ -136,7 +136,7 @@ export function NameSearchGroup() {
   };
 
   const addName = () => {
-    if (names.length < 4) {
+    if (names.length < 3) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setNames([...names, ""]);
     }
@@ -167,7 +167,7 @@ export function NameSearchGroup() {
       ))}
 
       <View style={{ flexDirection: "row", gap: 12, marginBottom: 16, alignItems: "center" }}>
-        {names.length < 4 ? (
+        {names.length < 3 ? (
           <View style={{ flex: 1 }}>
             <Pressable
               onPress={addName}

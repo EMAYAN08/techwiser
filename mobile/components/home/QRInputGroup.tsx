@@ -1,33 +1,22 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  Animated,
-  Image,
-  Platform,
-} from "react-native";
-import * as Clipboard from "expo-clipboard";
+import { View, Text, StyleSheet, Pressable, Animated, Easing, Platform } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Feather } from "@expo/vector-icons";
 import { useThemeColors } from "../../constants/Colors";
 import { type } from "../../constants/Typography";
-import { radii, size } from "../../constants/Layout";
+import { radii } from "../../constants/Layout";
 import { Button } from "../ui/Button";
-import { Input } from "../ui/Input";
 import * as Haptics from "../../utils/haptics";
 import {
   MAX_QR_PRODUCTS,
-  SAMPLE_PRODUCTS,
   canonicalizeUrl,
   expandShortUrl,
   extractQrPayload,
   fetchUrlPreview,
   isShortenerHost,
   parseProductUrl,
-  sampleQrImage,
   getHostname,
+  buildImageCandidates,
 } from "../../utils/qr";
 import { decodeQrFromImageUri } from "../../utils/decodeQr";
 import { QRFlashCard, type QrItem } from "./QRFlashCard";
@@ -35,8 +24,24 @@ import { QRScannerCard } from "./QRScannerCard";
 
 type ToastTone = "ok" | "warn" | "err";
 
+const FLOW = Easing.bezier(0.16, 1, 0.3, 1);
+
 function makeId() {
   return `qr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function fadeUp(anim: Animated.Value, from = 18) {
+  return {
+    opacity: anim,
+    transform: [
+      {
+        translateY: anim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [from, 0],
+        }),
+      },
+    ],
+  };
 }
 
 export function QRInputGroup({
@@ -48,32 +53,59 @@ export function QRInputGroup({
 }) {
   const { colors } = useThemeColors();
   const [items, setItems] = useState<QrItem[]>([]);
-  const [pasteValue, setPasteValue] = useState("");
   const [toast, setToast] = useState<{ text: string; tone: ToastTone } | null>(null);
   const [flashTick, setFlashTick] = useState(0);
   const [paused, setPaused] = useState(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [shownHint, setShownHint] = useState("Scan 2–3 product QR codes to compare.");
+
+  const scannerEnter = useRef(new Animated.Value(0)).current;
+  const ctaEnter = useRef(new Animated.Value(0)).current;
   const toastOp = useRef(new Animated.Value(0)).current;
+  const toastY = useRef(new Animated.Value(8)).current;
+  const hintOp = useRef(new Animated.Value(1)).current;
+  const ctaScale = useRef(new Animated.Value(1)).current;
+  const cardsOp = useRef(new Animated.Value(1)).current;
   const itemsRef = useRef(items);
   const busyRef = useRef(false);
   const lastScanRef = useRef({ data: "", at: 0 });
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const readyWas = useRef(false);
   itemsRef.current = items;
 
   useEffect(() => {
-    Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }).start();
-  }, [fadeAnim]);
+    Animated.stagger(95, [
+      Animated.timing(scannerEnter, { toValue: 1, duration: 520, easing: FLOW, useNativeDriver: true }),
+      Animated.timing(ctaEnter, { toValue: 1, duration: 460, easing: FLOW, useNativeDriver: true }),
+    ]).start();
+  }, [scannerEnter, ctaEnter]);
 
-  const showToast = useCallback((text: string, tone: ToastTone) => {
-    setToast({ text, tone });
-    toastOp.setValue(0);
-    Animated.timing(toastOp, { toValue: 1, duration: 160, useNativeDriver: true }).start();
-    const handle = setTimeout(() => {
-      Animated.timing(toastOp, { toValue: 0, duration: 180, useNativeDriver: true }).start(() => {
-        setToast(null);
-      });
-    }, 2600);
-    return () => clearTimeout(handle);
-  }, [toastOp]);
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
+
+  const showToast = useCallback(
+    (text: string, tone: ToastTone) => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      setToast({ text, tone });
+      toastOp.setValue(0);
+      toastY.setValue(10);
+      Animated.parallel([
+        Animated.timing(toastOp, { toValue: 1, duration: 240, easing: FLOW, useNativeDriver: true }),
+        Animated.timing(toastY, { toValue: 0, duration: 320, easing: FLOW, useNativeDriver: true }),
+      ]).start();
+      toastTimer.current = setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(toastOp, { toValue: 0, duration: 200, easing: FLOW, useNativeDriver: true }),
+          Animated.timing(toastY, { toValue: -8, duration: 200, easing: FLOW, useNativeDriver: true }),
+        ]).start(({ finished }) => {
+          if (finished) setToast(null);
+        });
+      }, 2400);
+    },
+    [toastOp, toastY]
+  );
 
   const addUrlCard = useCallback(
     async (rawUrl: string) => {
@@ -105,6 +137,7 @@ export function QRInputGroup({
         retailer: parsed.retailer,
         domain: parsed.domain,
         imageUrl: parsed.guessImage ?? null,
+        imageCandidates: buildImageCandidates(parsed.guessImage),
         error: parsed.valid ? undefined : parsed.message,
       };
       setItems((prev) => [...prev, next]);
@@ -121,6 +154,9 @@ export function QRInputGroup({
                     status: "valid",
                     title: preview.title || i.title,
                     imageUrl: preview.imageUrl || i.imageUrl,
+                    imageCandidates: preview.imageCandidates.length
+                      ? preview.imageCandidates
+                      : i.imageCandidates,
                     description: preview.description,
                   }
                 : i
@@ -207,39 +243,6 @@ export function QRInputGroup({
     }
   };
 
-  const handleClipboard = async () => {
-    try {
-      const text = await Clipboard.getStringAsync();
-      if (text?.trim()) {
-        await ingest(text.trim());
-        return;
-      }
-      try {
-        const img = await Clipboard.getImageAsync({ format: "png" });
-        if (img?.data) {
-          const payload = await decodeQrFromImageUri(`data:image/png;base64,${img.data}`);
-          if (payload) {
-            await ingest(payload);
-            return;
-          }
-        }
-      } catch {
-        /* no image on clipboard */
-      }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast("Clipboard is empty — paste a URL below", "warn");
-    } catch {
-      showToast("Couldn't read the clipboard. Paste into the field below.", "warn");
-    }
-  };
-
-  const handleManual = async () => {
-    const value = pasteValue.trim();
-    if (!value) return;
-    await ingest(value);
-    setPasteValue("");
-  };
-
   const removeItem = (id: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
   };
@@ -247,7 +250,13 @@ export function QRInputGroup({
   const handleClearAll = () => {
     if (!items.length) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setItems([]);
+    Animated.timing(cardsOp, { toValue: 0, duration: 180, easing: FLOW, useNativeDriver: true }).start(
+      ({ finished }) => {
+        if (!finished) return;
+        setItems([]);
+        cardsOp.setValue(1);
+      }
+    );
   };
 
   const validUrls = items.filter((i) => i.status === "valid" || i.status === "loading").map((i) => i.url);
@@ -255,7 +264,7 @@ export function QRInputGroup({
   const canCompare = readyUrls.length >= 2 && !isLoading;
   const slotsLeft = MAX_QR_PRODUCTS - items.length;
 
-  let hint = "Scan 2–4 product QR codes to compare.";
+  let hint = "Scan 2–3 product QR codes to compare.";
   if (readyUrls.length === 1) hint = "Scan 1 more to compare.";
   else if (readyUrls.length >= 2 && slotsLeft > 0) {
     hint = `${readyUrls.length} ready · ${slotsLeft} slot${slotsLeft === 1 ? "" : "s"} left.`;
@@ -264,36 +273,48 @@ export function QRInputGroup({
     hint = "Need 2 supported Canadian retailer links.";
   }
 
-  const pasteState = !pasteValue.trim()
-    ? "idle"
-    : extractQrPayload(pasteValue).kind === "url"
-      ? "valid"
-      : "invalid";
+  useEffect(() => {
+    if (hint === shownHint) return;
+    Animated.timing(hintOp, { toValue: 0, duration: 120, easing: FLOW, useNativeDriver: true }).start(() => {
+      setShownHint(hint);
+      Animated.timing(hintOp, { toValue: 1, duration: 240, easing: FLOW, useNativeDriver: true }).start();
+    });
+  }, [hint, hintOp, shownHint]);
+
+  useEffect(() => {
+    if (canCompare && !readyWas.current) {
+      ctaScale.setValue(0.96);
+      Animated.spring(ctaScale, { toValue: 1, tension: 160, friction: 8, useNativeDriver: true }).start();
+    }
+    readyWas.current = canCompare;
+  }, [canCompare, ctaScale]);
 
   return (
-    <Animated.View style={{ opacity: fadeAnim, marginBottom: 8 }}>
-      <View style={styles.header}>
-        <Text style={[styles.headerLabel, { color: colors.stone }]}>QR scanner</Text>
-        {items.length > 0 ? (
-          <Pressable
-            onPress={handleClearAll}
-            style={[styles.clearAllBtn, { backgroundColor: colors.fog }]}
-            hitSlop={8}
-          >
-            <Feather name="trash-2" size={12} color={colors.body} />
-            <Text style={[styles.clearAllText, { color: colors.body }]}>Clear all</Text>
-          </Pressable>
-        ) : null}
-      </View>
+    <View style={{ marginBottom: 8 }}>
+      <Animated.View style={fadeUp(scannerEnter, 14)}>
+        <View style={styles.header}>
+          <Text style={[styles.headerLabel, { color: colors.stone }]}>QR scanner</Text>
+          {items.length > 0 ? (
+            <Pressable
+              onPress={handleClearAll}
+              style={[styles.clearAllBtn, { backgroundColor: colors.fog }]}
+              hitSlop={8}
+            >
+              <Feather name="trash-2" size={12} color={colors.body} />
+              <Text style={[styles.clearAllText, { color: colors.body }]}>Clear all</Text>
+            </Pressable>
+          ) : null}
+        </View>
 
-      <QRScannerCard
-        scanning={!paused && items.length < MAX_QR_PRODUCTS}
-        atCapacity={items.length >= MAX_QR_PRODUCTS}
-        flashTick={flashTick}
-        scannedCount={items.length}
-        onScan={handleScan}
-        onGallery={handleGallery}
-      />
+        <QRScannerCard
+          scanning={!paused && items.length < MAX_QR_PRODUCTS}
+          atCapacity={items.length >= MAX_QR_PRODUCTS}
+          flashTick={flashTick}
+          scannedCount={items.length}
+          onScan={handleScan}
+          onGallery={handleGallery}
+        />
+      </Animated.View>
 
       {toast ? (
         <Animated.View
@@ -301,6 +322,7 @@ export function QRInputGroup({
             styles.toast,
             {
               opacity: toastOp,
+              transform: [{ translateY: toastY }],
               backgroundColor: toast.tone === "err" ? colors.errorMuted : colors.spotifyWash,
               borderColor: toast.tone === "err" ? colors.error : colors.spotify,
             },
@@ -317,84 +339,38 @@ export function QRInputGroup({
         </Animated.View>
       ) : null}
 
-      <Text style={[styles.hint, { color: colors.stone }]}>{hint}</Text>
-
-      <View style={styles.pasteRow}>
-        <View style={{ flex: 1 }}>
-          <Input
-            placeholder="Paste decoded QR or product URL"
-            value={pasteValue}
-            onChangeText={setPasteValue}
-            onPaste={handleClipboard}
-            onClear={() => setPasteValue("")}
-            validationState={pasteState}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            returnKeyType="done"
-            onSubmitEditing={handleManual}
-          />
-        </View>
-        <Pressable
-          onPress={handleManual}
-          disabled={!pasteValue.trim()}
-          style={({ pressed }) => [
-            styles.addPaste,
-            {
-              backgroundColor: colors.ink,
-              opacity: !pasteValue.trim() ? 0.3 : pressed ? 0.75 : 1,
-            },
-          ]}
-        >
-          <Text style={[styles.addPasteText, { color: colors.bg }]}>Add</Text>
-        </Pressable>
-      </View>
-
-      <Text style={[styles.sampleLabel, { color: colors.stone }]}>Try a sample scan</Text>
-      <View style={styles.samples}>
-        {SAMPLE_PRODUCTS.map((sample) => {
-          const already = items.some((i) => i.canon === canonicalizeUrl(sample.url));
-          return (
-            <Pressable
-              key={sample.id}
-              onPress={() => ingest(sample.url)}
-              disabled={already || items.length >= MAX_QR_PRODUCTS}
-              style={({ pressed }) => [
-                styles.sample,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: already ? colors.spotify : colors.line,
-                  opacity: already || items.length >= MAX_QR_PRODUCTS ? 0.55 : pressed ? 0.78 : 1,
-                },
-              ]}
-            >
-              <Image
-                source={{ uri: sampleQrImage(sample.url) }}
-                style={[styles.sampleQr, { backgroundColor: colors.fog }]}
-              />
-              <Text style={[styles.sampleName, { color: colors.ink }]} numberOfLines={1}>
-                {sample.label}
-              </Text>
-              <Text style={[styles.sampleStore, { color: colors.stone }]} numberOfLines={1}>
-                {sample.retailer}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <Animated.Text style={[styles.hint, { color: colors.stone, opacity: hintOp }]}>
+        {shownHint}
+      </Animated.Text>
 
       {items.length > 0 ? (
-        <View style={styles.cards}>
+        <Animated.View style={[styles.cards, { opacity: cardsOp }]}>
           <Text style={[styles.headerLabel, { color: colors.stone, marginBottom: 8 }]}>
             Scanned · {readyUrls.length} ready
           </Text>
           {items.map((item, index) => (
             <QRFlashCard key={item.id} item={item} index={index} onRemove={() => removeItem(item.id)} />
           ))}
-        </View>
+        </Animated.View>
       ) : null}
 
-      <View style={styles.actions}>
+      <Animated.View
+        style={[
+          styles.actions,
+          {
+            opacity: ctaEnter,
+            transform: [
+              {
+                translateY: ctaEnter.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [14, 0],
+                }),
+              },
+              { scale: ctaScale },
+            ],
+          },
+        ]}
+      >
         <View style={{ flex: 1 }}>
           <Button
             title={isLoading ? "Comparing..." : `Compare${readyUrls.length ? ` ${readyUrls.length}` : ""}`}
@@ -404,13 +380,11 @@ export function QRInputGroup({
             style={{ width: "100%" }}
           />
         </View>
-      </View>
+      </Animated.View>
       {validUrls.length >= 2 && readyUrls.length < 2 ? (
-        <Text style={[styles.hint, { color: colors.stone, marginTop: 8 }]}>
-          Waiting on previews…
-        </Text>
+        <Text style={[styles.hint, { color: colors.stone, marginTop: 8 }]}>Waiting on previews…</Text>
       ) : null}
-    </Animated.View>
+    </View>
   );
 }
 
@@ -448,56 +422,6 @@ const styles = StyleSheet.create({
     ...type.caption,
     fontSize: 12,
     marginBottom: 12,
-  },
-  pasteRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    marginBottom: 18,
-  },
-  addPaste: {
-    height: size.field,
-    paddingHorizontal: 16,
-    borderRadius: radii.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  addPasteText: {
-    ...type.button,
-    fontSize: 14,
-  },
-  sampleLabel: {
-    ...type.eyebrow,
-    marginBottom: 10,
-  },
-  samples: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 18,
-  },
-  sample: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: radii.field,
-    padding: 8,
-    alignItems: "center",
-    gap: 4,
-  },
-  sampleQr: {
-    width: 56,
-    height: 56,
-    borderRadius: 8,
-  },
-  sampleName: {
-    ...type.caption,
-    fontSize: 11,
-    fontFamily: "Satoshi-Medium",
-    textAlign: "center",
-  },
-  sampleStore: {
-    ...type.caption,
-    fontSize: 10,
-    textAlign: "center",
   },
   cards: {
     gap: 10,

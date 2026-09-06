@@ -188,7 +188,7 @@ export function URLInputGroup({
       ...urls.map((_, i) =>
         Animated.timing(animValues[i], { toValue: 1, duration: 380, delay: i * 60, useNativeDriver: true })
       ),
-      ...(urls.length < 4
+      ...(urls.length < 3
         ? [Animated.timing(animValues[urls.length], { toValue: 1, duration: 380, delay: urls.length * 60, useNativeDriver: true })]
         : []),
     ];
@@ -271,7 +271,7 @@ export function URLInputGroup({
       ))}
 
       <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-        {urls.length < 4 ? (
+        {urls.length < 3 ? (
           <Animated.View
             style={{
               flex: 1,
