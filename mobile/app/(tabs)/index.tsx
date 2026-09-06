@@ -9,6 +9,7 @@ import { LoadingOverlay } from "../../components/home/LoadingOverlay";
 import { InputModeTabs, InputMode } from "../../components/home/InputModeTabs";
 import { ComingSoonPanel } from "../../components/home/ComingSoonPanel";
 import { NameSearchGroup } from "../../components/home/NameSearchGroup";
+import { QRInputGroup } from "../../components/home/QRInputGroup";
 import { useComparisonStore } from "../../store/useComparisonStore";
 import { useThemeColors } from "../../constants/Colors";
 import { space } from "../../constants/Layout";
@@ -62,8 +63,10 @@ export default function Home() {
     setLoading(false);
   };
 
-  const handleCompare = async () => {
-    if (!canCompare || isLoading) return;
+  const handleCompare = async (overrideUrls?: string[] | unknown) => {
+    const source = Array.isArray(overrideUrls) ? overrideUrls : urls;
+    const compareUrls = source.filter((url: string) => typeof url === "string" && url.trim().length > 0);
+    if (compareUrls.length < 2 || isLoading) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true, "Fetching product pages...");
     abortControllerRef.current = new AbortController();
@@ -73,7 +76,7 @@ export default function Home() {
       const response = await fetch(`${apiUrl}/api/compare`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ urls: validUrls }),
+        body: JSON.stringify({ urls: compareUrls }),
         signal: abortControllerRef.current.signal,
       });
 
@@ -91,7 +94,7 @@ export default function Home() {
         id: data.id,
         title: `${data.products[0].name} vs ${data.products[1].name}`,
         date: "Just now",
-        urls: validUrls,
+        urls: compareUrls,
         result: data,
       });
       setLoading(false);
@@ -146,14 +149,14 @@ export default function Home() {
             <URLInputGroup
               onSwipeStart={() => setScrollEnabled(false)}
               onSwipeEnd={() => setScrollEnabled(true)}
-              onCompare={handleCompare}
+              onCompare={() => handleCompare()}
               isLoading={isLoading}
               canCompare={canCompare}
             />
           )}
           {inputMode === "name" && <NameSearchGroup />}
           {inputMode === "upc" && <ComingSoonPanel mode="upc" />}
-          {inputMode === "qr" && <ComingSoonPanel mode="qr" />}
+          {inputMode === "qr" && <QRInputGroup onCompare={handleCompare} isLoading={isLoading} />}
         </Animated.View>
 
         <RecentComparisons />
