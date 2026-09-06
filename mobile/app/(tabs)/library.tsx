@@ -1,26 +1,23 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useComparisonStore, Product } from '../../store/useComparisonStore';
-import { useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
-import { ProductCard } from '../../components/comparison/ProductCard';
-import { useThemeColors } from '../../constants/Colors';
-import { Typography } from '../../constants/Typography';
+import React, { useMemo } from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { useComparisonStore, Product } from "../../store/useComparisonStore";
+import { ProductCard } from "../../components/comparison/ProductCard";
+import { useThemeColors } from "../../constants/Colors";
+import { Typography } from "../../constants/Typography";
+import { space } from "../../constants/Layout";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LibraryScreen() {
   const { recentComparisons } = useComparisonStore();
-  const router = useRouter();
   const { colors } = useThemeColors();
+  const insets = useSafeAreaInsets();
 
-  // Extract all unique products from past comparisons
   const allProducts = useMemo(() => {
     const map = new Map<string, Product>();
-    recentComparisons.forEach(comp => {
+    recentComparisons.forEach((comp) => {
       if (comp.result) {
-        comp.result.products.forEach(p => {
-          if (!map.has(p.id)) {
-            map.set(p.id, p);
-          }
+        comp.result.products.forEach((p) => {
+          if (!map.has(p.id)) map.set(p.id, p);
         });
       }
     });
@@ -28,17 +25,26 @@ export default function LibraryScreen() {
   }, [recentComparisons]);
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Tech Library</Text>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 16 }]}>
+        <Text style={[styles.headerTitle, { color: colors.ink }]}>Library</Text>
+        {allProducts.length > 0 && (
+          <Text style={[styles.count, { color: colors.stone }]}>
+            {allProducts.length} saved product{allProducts.length === 1 ? "" : "s"}
+          </Text>
+        )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]}
+        showsVerticalScrollIndicator={false}
+      >
         {allProducts.length === 0 ? (
           <View style={styles.emptyState}>
-            <Feather name="folder" size={48} color={colors.textTertiary} />
-            <Text style={[styles.emptyText, { color: colors.text }]}>Your library is empty.</Text>
-            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Products you compare will automatically be saved here.</Text>
+            <Text style={[styles.emptyText, { color: colors.ink }]}>No saved products</Text>
+            <Text style={[styles.emptySubtext, { color: colors.stone }]}>
+              Products you compare will show up here.
+            </Text>
           </View>
         ) : (
           <View style={styles.grid}>
@@ -55,20 +61,17 @@ export default function LibraryScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0A0A0A' },
+  root: { flex: 1 },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingHorizontal: space.gutter,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1A1A1A',
   },
-  headerTitle: { ...Typography.display, fontSize: 28 },
-  scroll: { padding: 16 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 },
-  cardWrapper: { width: '50%', paddingBottom: 16 },
-  
-  emptyState: { alignItems: 'center', justifyContent: 'center', marginTop: 100, padding: 24 },
-  emptyText: { ...Typography.headline, color: 'rgba(255,255,255,0.8)', fontSize: 18, marginTop: 16, marginBottom: 8 },
-  emptySubtext: { ...Typography.body, color: 'rgba(255,255,255,0.5)', fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  headerTitle: { ...Typography.display },
+  count: { ...Typography.caption, marginTop: 6 },
+  scroll: { paddingHorizontal: space.gutter },
+  grid: { flexDirection: "row", flexWrap: "wrap", marginHorizontal: -6 },
+  cardWrapper: { width: "50%", paddingBottom: 12 },
+  emptyState: { alignItems: "flex-start", marginTop: 48 },
+  emptyText: { ...Typography.productName, fontSize: 18, marginBottom: 8 },
+  emptySubtext: { ...Typography.body },
 });

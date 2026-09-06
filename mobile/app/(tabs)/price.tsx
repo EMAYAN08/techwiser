@@ -3,27 +3,23 @@ import { View, Text, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Tag } from "lucide-react-native";
 import { useThemeColors } from "../../constants/Colors";
-import { Typography } from "../../constants/Typography";
+import { type } from "../../constants/Typography";
+import { radii, space } from "../../constants/Layout";
 
 export default function PriceScreen() {
   const { colors } = useThemeColors();
   const insets = useSafeAreaInsets();
 
   return (
-    <View
-      style={[
-        styles.root,
-        { backgroundColor: colors.background, paddingBottom: insets.bottom + 100 },
-      ]}
-    >
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.text }]}>Price Tracking</Text>
+    <View style={[styles.root, { backgroundColor: colors.bg, paddingBottom: insets.bottom + 100 }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 16 }]}>
+        <Text style={[styles.title, { color: colors.ink }]}>Price</Text>
       </View>
 
-      <View style={[styles.center, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
-        <Tag size={48} color={colors.textTertiary} strokeWidth={1.5} style={{ marginBottom: 16 }} />
-        <Text style={[styles.comingSoon, { color: colors.text }]}>Coming Soon</Text>
-        <Text style={[styles.description, { color: colors.textSecondary }]}>
+      <View style={[styles.center, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+        <Tag size={36} color={colors.stone} strokeWidth={1.5} style={{ marginBottom: 16 }} />
+        <Text style={[styles.comingSoon, { color: colors.ink }]}>Coming soon</Text>
+        <Text style={[styles.description, { color: colors.stone }]}>
           Price matching, tracking, and drop alerts are currently in development. Check back later!
         </Text>
       </View>
@@ -32,37 +28,29 @@ export default function PriceScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
+  root: { flex: 1 },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingHorizontal: space.gutter,
     paddingBottom: 16,
-    borderBottomWidth: 1,
   },
-  title: {
-    ...Typography.display,
-    fontSize: 28,
-  },
+  title: { ...type.screenTitle },
   center: {
     flex: 1,
-    borderRadius: 24,
+    borderRadius: radii.card,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 32,
-    marginHorizontal: 16,
-    marginTop: 32,
-    maxHeight: 400,
+    marginHorizontal: space.gutter,
+    marginTop: 24,
+    maxHeight: 360,
   },
   comingSoon: {
-    ...Typography.headline,
+    ...type.sectionTitle,
     marginBottom: 12,
   },
   description: {
-    ...Typography.body,
+    ...type.body,
     textAlign: "center",
-    lineHeight: 24,
   },
 });
