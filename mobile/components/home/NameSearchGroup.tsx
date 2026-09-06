@@ -1,22 +1,20 @@
-import { Typography } from '../../constants/Typography';
+import { type, fonts } from "../../constants/Typography";
 import React, { useState, useRef, useEffect } from "react";
-import {
-  View, Text, TextInput, StyleSheet, Pressable, Animated, ScrollView,
-} from "react-native";
+import { View, Text, TextInput, StyleSheet, Pressable, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from '../../utils/haptics';
+import * as Haptics from "../../utils/haptics";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { useThemeColors } from "../../constants/Colors";
+import { radii, size } from "../../constants/Layout";
 
-// Mock autocomplete suggestions for demo
 const MOCK_SUGGESTIONS: Record<string, string[]> = {
-  mac: ["MacBook Pro 14\" M3 Pro", "MacBook Air 15\" M3", "MacBook Pro 16\" M3 Max"],
+  mac: ['MacBook Pro 14" M3 Pro', 'MacBook Air 15" M3', 'MacBook Pro 16" M3 Max'],
   dell: ["Dell XPS 15 9530", "Dell XPS 13 Plus", "Dell Inspiron 15"],
   iphone: ["iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus"],
   galaxy: ["Samsung Galaxy S24 Ultra", "Samsung Galaxy S24+", "Samsung Galaxy A55"],
   sony: ["Sony WH-1000XM5", "Sony WF-1000XM5", "Sony Bravia XR A95L"],
-  lg: ["LG OLED C3 55\"", "LG OLED C3 65\"", "LG UltraGear 27GN950"],
+  lg: ['LG OLED C3 55"', 'LG OLED C3 65"', "LG UltraGear 27GN950"],
 };
 
 function getSuggestions(query: string): string[] {
@@ -45,7 +43,7 @@ function NameInput({ index, value, onChange, onRemove }: NameInputProps) {
 
   const borderColor = borderAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.border, colors.primary],
+    outputRange: [colors.line, colors.ink],
   });
 
   useEffect(() => {
@@ -55,7 +53,7 @@ function NameInput({ index, value, onChange, onRemove }: NameInputProps) {
       useNativeDriver: false,
     }).start();
     if (!isFocused) setSuggestions([]);
-  }, [isFocused]);
+  }, [isFocused, borderAnim]);
 
   const handleChange = (text: string) => {
     onChange(text);
@@ -70,54 +68,54 @@ function NameInput({ index, value, onChange, onRemove }: NameInputProps) {
 
   return (
     <View style={styles.inputBlock}>
-      <Card borderRadius={8} style={styles.cardWrap}>
-        <Animated.View style={[styles.inputRow, { borderColor }]}>
-          <Feather name="search" size={15} color={colors.textTertiary} style={styles.searchIcon} />
-          <TextInput
-            style={[styles.textInput, { color: colors.text }]}
-            placeholder={`Product ${index + 1} name`}
-            placeholderTextColor={colors.textTertiary}
-            value={value}
-            onChangeText={handleChange}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setTimeout(() => setIsFocused(false), 150)}
-            returnKeyType="next"
-            selectionColor={colors.primary}
-          />
-          {value.length > 0 && (
-            <Pressable
-              onPress={() => { onChange(""); setSuggestions([]); }}
-              hitSlop={10}
-              style={styles.clearBtn}
-            >
-              <Feather name="x" size={14} color={colors.textSecondary} />
-            </Pressable>
-          )}
-          {onRemove && (
-            <Pressable onPress={onRemove} hitSlop={10} style={styles.removeBtn}>
-              <Feather name="minus-circle" size={15} color={colors.textTertiary} />
-            </Pressable>
-          )}
-        </Animated.View>
-      </Card>
+      <Animated.View style={[styles.inputRow, { backgroundColor: colors.surface, borderColor }]}>
+        <Feather name="search" size={15} color={colors.stone} style={styles.searchIcon} />
+        <TextInput
+          style={[styles.textInput, { color: colors.ink }]}
+          placeholder={`Product ${index + 1} name`}
+          placeholderTextColor={colors.stone}
+          value={value}
+          onChangeText={handleChange}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setTimeout(() => setIsFocused(false), 150)}
+          returnKeyType="next"
+          selectionColor={colors.spotify}
+        />
+        {value.length > 0 ? (
+          <Pressable
+            onPress={() => {
+              onChange("");
+              setSuggestions([]);
+            }}
+            hitSlop={10}
+            style={styles.clearBtn}
+          >
+            <Feather name="x" size={14} color={colors.stone} />
+          </Pressable>
+        ) : null}
+        {onRemove ? (
+          <Pressable onPress={onRemove} hitSlop={10} style={styles.removeBtn}>
+            <Feather name="minus-circle" size={15} color={colors.stone} />
+          </Pressable>
+        ) : null}
+      </Animated.View>
 
-      {/* Autocomplete dropdown */}
-      {suggestions.length > 0 && (
-        <Card borderRadius={8} style={styles.dropdown}>
+      {suggestions.length > 0 ? (
+        <Card borderRadius={radii.field} style={styles.dropdown}>
           {suggestions.map((s, i) => (
             <React.Fragment key={s}>
               <Pressable
                 onPress={() => handleSuggestion(s)}
-                style={({ pressed }) => [styles.suggestion, pressed && styles.suggestionPressed]}
+                style={({ pressed }) => [styles.suggestion, pressed && { backgroundColor: colors.fog }]}
               >
-                <Feather name="package" size={12} color={colors.textTertiary} />
-                <Text style={[styles.suggestionText, { color: colors.textSecondary }]}>{s}</Text>
+                <Feather name="package" size={12} color={colors.stone} />
+                <Text style={[styles.suggestionText, { color: colors.body }]}>{s}</Text>
               </Pressable>
-              {i < suggestions.length - 1 && <View style={[styles.suggDivider, { backgroundColor: colors.border }]} />}
+              {i < suggestions.length - 1 ? <View style={[styles.suggDivider, { backgroundColor: colors.line }]} /> : null}
             </React.Fragment>
           ))}
         </Card>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -129,7 +127,7 @@ export function NameSearchGroup() {
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }).start();
-  }, []);
+  }, [fadeAnim]);
 
   const updateName = (index: number, value: string) => {
     const next = [...names];
@@ -151,11 +149,10 @@ export function NameSearchGroup() {
 
   return (
     <Animated.View style={{ opacity: fadeAnim }}>
-      {/* Info pill */}
-      <View style={[styles.infoPill, { backgroundColor: colors.primaryMuted, borderColor: colors.primary + '40' }]}>
-        <Feather name="info" size={14} color={colors.primary} />
-        <Text style={[styles.infoText, { color: colors.primary }]}>
-          Type a product name - we search across all Canadian retailers
+      <View style={[styles.infoPill, { backgroundColor: colors.fog }]}>
+        <Feather name="info" size={14} color={colors.stone} />
+        <Text style={[styles.infoText, { color: colors.body }]}>
+          Type a product name — we search across all Canadian retailers
         </Text>
       </View>
 
@@ -170,37 +167,32 @@ export function NameSearchGroup() {
       ))}
 
       <View style={{ flexDirection: "row", gap: 12, marginBottom: 16, alignItems: "center" }}>
-        {names.length < 4 && (
+        {names.length < 4 ? (
           <View style={{ flex: 1 }}>
             <Pressable
               onPress={addName}
-              style={({ pressed }) => [
-                styles.addBtn,
-                { backgroundColor: colors.primaryMuted, borderColor: colors.primary + '40' },
-                pressed && { opacity: 0.7 }
-              ]}
+              style={({ pressed }) => [styles.addBtn, { borderColor: colors.ink, opacity: pressed ? 0.72 : 1 }]}
             >
-              <Feather name="plus" size={14} color={colors.primary} />
-              <Text style={[styles.addBtnText, { color: colors.primary }]}>Add product</Text>
+              <Feather name="plus" size={16} color={colors.ink} />
+              <Text style={[styles.addBtnText, { color: colors.ink }]}>Add product</Text>
             </Pressable>
           </View>
-        )}
+        ) : null}
         <View style={{ flex: 1 }}>
           <Button
             title="Compare"
             variant="primary"
             onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
             disabled={names.filter((n) => n.trim()).length < 2}
-            style={{ width: '100%' }}
+            style={{ width: "100%" }}
           />
         </View>
       </View>
 
-      {/* Coming soon note */}
       <View style={styles.comingSoonRow}>
-        <View style={[styles.comingSoonLine, { backgroundColor: colors.border }]} />
-        <Text style={[styles.comingSoonNote, { color: colors.textTertiary }]}>Product name search - Phase 2</Text>
-        <View style={[styles.comingSoonLine, { backgroundColor: colors.border }]} />
+        <View style={[styles.comingSoonLine, { backgroundColor: colors.line }]} />
+        <Text style={[styles.comingSoonNote, { color: colors.stone }]}>Product name search — Phase 2</Text>
+        <View style={[styles.comingSoonLine, { backgroundColor: colors.line }]} />
       </View>
     </Animated.View>
   );
@@ -211,34 +203,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#141414",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#222",
+    borderRadius: radii.field,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 16,
   },
   infoText: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.38)",
+    ...type.caption,
     flex: 1,
-    lineHeight: 17,
   },
   inputBlock: {
-    marginBottom: 10,
+    marginBottom: 12,
     zIndex: 10,
-  },
-  cardWrap: {
-    marginBottom: 0,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderRadius: 8,
-    minHeight: 48,
-    paddingHorizontal: 12,
+    borderRadius: radii.field,
+    minHeight: size.field,
+    paddingHorizontal: 16,
     gap: 8,
   },
   searchIcon: {
@@ -246,8 +230,8 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    color: "rgba(255,255,255,0.90)",
     fontSize: 15,
+    fontFamily: fonts.uiRegular,
     paddingVertical: 12,
   },
   clearBtn: {
@@ -268,16 +252,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
-  suggestionPressed: {
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
   suggestionText: {
-    fontSize: 13,
-    color: "rgba(255,255,255,0.70)",
+    ...type.caption,
   },
   suggDivider: {
-    height: 1,
-    backgroundColor: "#1A1A1A",
+    height: StyleSheet.hairlineWidth,
     marginHorizontal: 14,
   },
   addBtn: {
@@ -285,32 +264,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    height: 48,
+    borderRadius: radii.pill,
+    borderWidth: 1.5,
+    height: size.button,
   },
   addBtnText: {
-    ...Typography.button,
+    ...type.button,
     fontSize: 15,
-  },
-  searchBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#2383E2",
-    borderRadius: 8,
-    height: 48,
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  searchBtnDisabled: {
-    opacity: 0.45,
-  },
-  searchBtnText: {
-    ...Typography.button,
-    fontSize: 15,
-    color: "#FFFFFF",
   },
   comingSoonRow: {
     flexDirection: "row",
@@ -320,11 +280,10 @@ const styles = StyleSheet.create({
   },
   comingSoonLine: {
     flex: 1,
-    height: 1,
-    backgroundColor: "#1E1E1E",
+    height: StyleSheet.hairlineWidth,
   },
   comingSoonNote: {
+    ...type.caption,
     fontSize: 11,
-    color: "rgba(255,255,255,0.20)",
-    },
+  },
 });
