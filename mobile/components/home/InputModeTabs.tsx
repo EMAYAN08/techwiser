@@ -1,9 +1,10 @@
 import React, { useRef } from "react";
 import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
-import { Typography } from '../../constants/Typography';
+import { Typography } from "../../constants/Typography";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from '../../utils/haptics';
+import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
+import { radii, size } from "../../constants/Layout";
 
 export type InputMode = "url" | "name" | "upc" | "qr";
 
@@ -14,10 +15,10 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { id: "url",  label: "URL",      icon: "link"    },
-  { id: "name", label: "Name",     icon: "search"  },
-  { id: "upc",  label: "Barcode",  icon: "maximize"},
-  { id: "qr",   label: "QR Code",  icon: "camera"  },
+  { id: "url", label: "URL", icon: "link" },
+  { id: "name", label: "Name", icon: "search" },
+  { id: "upc", label: "Barcode", icon: "maximize" },
+  { id: "qr", label: "QR Code", icon: "camera" },
 ];
 
 interface InputModeTabsProps {
@@ -26,12 +27,12 @@ interface InputModeTabsProps {
 }
 
 export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) {
-  const { colors } = useThemeColors();
+  const { colors, isDark } = useThemeColors();
   const scales = useRef(TABS.map(() => new Animated.Value(1))).current;
 
   const handlePress = (tab: Tab, index: number) => {
     Animated.sequence([
-      Animated.timing(scales[index], { toValue: 0.92, duration: 70, useNativeDriver: true }),
+      Animated.timing(scales[index], { toValue: 0.94, duration: 70, useNativeDriver: true }),
       Animated.spring(scales[index], { toValue: 1, useNativeDriver: true, tension: 180, friction: 7 }),
     ]).start();
 
@@ -41,8 +42,11 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
     }
   };
 
+  const selectedBg = isDark ? colors.spotify : colors.ink;
+  const selectedFg = isDark ? colors.spotifyInk : "#FFFFFF";
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+    <View style={[styles.container, { backgroundColor: colors.fog }]}>
       {TABS.map((tab, index) => {
         const isActive = activeMode === tab.id;
         return (
@@ -52,14 +56,21 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
           >
             <Pressable
               onPress={() => handlePress(tab, index)}
-              style={[styles.tab, isActive && { backgroundColor: colors.primary }]}
+              style={[styles.tab, isActive && { backgroundColor: selectedBg }]}
             >
               <Feather
                 name={tab.icon}
-                size={16}
-                color={isActive ? "#FFFFFF" : colors.textTertiary}
+                size={15}
+                color={isActive ? selectedFg : colors.stone}
               />
-              <Text style={[styles.label, { color: isActive ? "#FFFFFF" : colors.textTertiary }, isActive && styles.labelActive]}>
+              <Text
+                style={[
+                  styles.label,
+                  { color: isActive ? selectedFg : colors.stone },
+                  isActive && styles.labelActive,
+                ]}
+                numberOfLines={1}
+              >
                 {tab.label}
               </Text>
             </Pressable>
@@ -73,11 +84,10 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: "#111111",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#1E1E1E",
+    borderRadius: radii.field,
     padding: 4,
+    height: size.segment,
+    alignItems: "center",
   },
   tabWrapper: {
     flex: 1,
@@ -85,23 +95,18 @@ const styles = StyleSheet.create({
   tab: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderRadius: 9,
-    gap: 4,
-  },
-  tabActive: {
-    backgroundColor: "#2383E2",
+    paddingVertical: 6,
+    paddingHorizontal: 2,
+    borderRadius: radii.pill,
+    gap: 3,
+    height: size.segment - 8,
   },
   label: {
     ...Typography.chip,
     fontSize: 11,
-    color: "rgba(255,255,255,0.40)",
     textAlign: "center",
   },
   labelActive: {
-    color: "#FFFFFF",
     fontFamily: Typography.button.fontFamily,
   },
 });
-

@@ -1,10 +1,11 @@
-﻿import React, { useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated, Pressable } from "react-native";
-import { Typography } from '../../constants/Typography';
+import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Animated } from "react-native";
+import { type } from "../../constants/Typography";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from '../../utils/haptics';
+import * as Haptics from "../../utils/haptics";
 import { Button } from "../ui/Button";
 import { useThemeColors } from "../../constants/Colors";
+import { radii } from "../../constants/Layout";
 
 interface ErrorOverlayProps {
   visible: boolean;
@@ -28,19 +29,35 @@ export function ErrorOverlay({ visible, message, onRetry, onDismiss }: ErrorOver
     } else {
       Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
     }
-  }, [visible]);
+  }, [visible, fadeAnim, scaleAnim]);
 
   if (!visible) return null;
 
   return (
-    <Animated.View style={[styles.overlay, { backgroundColor: isDark ? "rgba(10, 10, 10, 0.85)" : "rgba(255, 255, 255, 0.85)", opacity: fadeAnim }]}>
-      <Animated.View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, transform: [{ scale: scaleAnim }] }]}>
+    <Animated.View
+      style={[
+        styles.overlay,
+        {
+          backgroundColor: isDark ? "rgba(10, 10, 10, 0.85)" : "rgba(246, 246, 244, 0.85)",
+          opacity: fadeAnim,
+        },
+      ]}
+    >
+      <Animated.View
+        style={[
+          styles.card,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.line,
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
+      >
         <View style={[styles.iconCircle, { backgroundColor: colors.errorMuted }]}>
           <Feather name="alert-triangle" size={28} color={colors.error} />
         </View>
-        <Text style={[styles.title, { color: colors.text }]}>Comparison Failed</Text>
-        <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>
-        
+        <Text style={[styles.title, { color: colors.ink }]}>Comparison Failed</Text>
+        <Text style={[styles.message, { color: colors.body }]}>{message}</Text>
         <View style={styles.buttonRow}>
           <Button variant="ghost" title="Cancel" onPress={onDismiss} style={styles.button} />
           <Button variant="primary" title="Try Again" onPress={onRetry} style={styles.button} />
@@ -53,17 +70,14 @@ export function ErrorOverlay({ visible, message, onRetry, onDismiss }: ErrorOver
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10, 10, 10, 0.85)",
     zIndex: 1000,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
   },
   card: {
-    backgroundColor: "#141414",
     borderWidth: 1,
-    borderColor: "#2A2A2A",
-    borderRadius: 16,
+    borderRadius: radii.card,
     padding: 24,
     width: "100%",
     alignItems: "center",
@@ -72,22 +86,20 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "rgba(235, 87, 87, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
   },
   title: {
+    ...type.productName,
     fontSize: 18,
-    color: "#FFFFFF",
     marginBottom: 8,
   },
   message: {
+    ...type.body,
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.6)",
     textAlign: "center",
     marginBottom: 24,
-    lineHeight: 20,
   },
   buttonRow: {
     flexDirection: "row",
@@ -96,5 +108,5 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-  }
+  },
 });

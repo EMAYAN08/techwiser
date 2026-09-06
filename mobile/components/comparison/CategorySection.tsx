@@ -8,12 +8,12 @@ import {
   UIManager,
   View,
 } from "react-native";
-import * as Haptics from '../../utils/haptics';
+import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
-import { Typography } from "../../constants/Typography";
+import { type } from "../../constants/Typography";
+import { radii } from "../../constants/Layout";
 import { SpecBarRow, type DetailedSpecRow } from "./SpecBarRow";
 
-// Enable LayoutAnimation on Android (it is on by default on iOS).
 if (
   Platform.OS === "android" &&
   UIManager.setLayoutAnimationEnabledExperimental
@@ -49,7 +49,7 @@ export function CategorySection({
 
   return (
     <View
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}
     >
       <Pressable
         onPress={handlePress}
@@ -59,14 +59,14 @@ export function CategorySection({
         accessibilityHint={expanded ? "Tap to collapse" : "Tap to expand"}
         style={({ pressed }) => [
           styles.header,
-          { borderBottomColor: expanded ? colors.border : "transparent" },
-          pressed && { opacity: 0.7 },
+          { borderBottomColor: expanded ? colors.line : "transparent" },
+          pressed && { opacity: 0.72 },
         ]}
       >
-        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+        <Text style={[styles.title, { color: colors.ink }]} numberOfLines={1}>
           {category}
         </Text>
-        <Text style={[styles.count, { color: colors.textTertiary }]}>
+        <Text style={[styles.count, { color: colors.stone }]}>
           {`${rows.length} ${specWord}`}
         </Text>
       </Pressable>
@@ -74,11 +74,7 @@ export function CategorySection({
       {expanded && (
         <View style={styles.body}>
           {rows.map((row) => (
-            <SpecBarRow
-              key={row.label}
-              row={row}
-              colors={colors}
-            />
+            <SpecBarRow key={row.label} row={row} colors={colors} />
           ))}
         </View>
       )}
@@ -88,7 +84,7 @@ export function CategorySection({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: radii.card,
     borderWidth: 1,
     marginBottom: 16,
     overflow: "hidden",
@@ -102,17 +98,12 @@ const styles = StyleSheet.create({
     minHeight: 56,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  title: { ...Typography.headline,
-    ...Typography.headline,
-    fontSize: 16,
-    
+  title: {
+    ...type.productName,
     flex: 1,
   },
-  count: { ...Typography.body,
-    ...Typography.caption,
-    fontSize: 12,
-    
-    textTransform: "none",
+  count: {
+    ...type.caption,
     marginLeft: 12,
   },
   body: {
