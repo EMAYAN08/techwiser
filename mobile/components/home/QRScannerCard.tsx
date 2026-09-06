@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, Pressable, Platform, Animated, Easing } from "react-native";
+import { View, Text, StyleSheet, Pressable, Platform } from "react-native";
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
-import { Camera, Image as ImageIcon, Check } from "lucide-react-native";
+import { Camera, Image as ImageIcon } from "lucide-react-native";
 import jsQR from "jsqr";
 import { useThemeColors, paletteTokens } from "../../constants/Colors";
 import { type } from "../../constants/Typography";
@@ -192,26 +192,6 @@ function WebQrCamera({
   return <View ref={hostRef} collapsable={false} style={StyleSheet.absoluteFillObject} />;
 }
 
-function ViewfinderCorners({ color }: { color: string }) {
-  const arm = 22;
-  const thick = 3;
-  const inset = 10;
-  const common = {
-    position: "absolute" as const,
-    width: arm,
-    height: arm,
-    borderColor: color,
-  };
-  return (
-    <>
-      <View style={[common, { top: inset, left: inset, borderTopWidth: thick, borderLeftWidth: thick }]} />
-      <View style={[common, { top: inset, right: inset, borderTopWidth: thick, borderRightWidth: thick }]} />
-      <View style={[common, { bottom: inset, left: inset, borderBottomWidth: thick, borderLeftWidth: thick }]} />
-      <View style={[common, { bottom: inset, right: inset, borderBottomWidth: thick, borderRightWidth: thick }]} />
-    </>
-  );
-}
-
 export function QRScannerCard({
   scanning,
   atCapacity,
@@ -225,10 +205,6 @@ export function QRScannerCard({
   const [live, setLive] = useState(false);
   const [guide, setGuide] = useState<ScanGuide>("seek");
   const [previewSize, setPreviewSize] = useState({ w: 1, h: 1 });
-
-  const pulse = useRef(new Animated.Value(1)).current;
-  const flash = useRef(new Animated.Value(0)).current;
-  const lockPop = useRef(new Animated.Value(1)).current;
 
   const lockedRef = useRef(false);
   const guideRef = useRef<ScanGuide>("seek");
@@ -264,15 +240,9 @@ export function QRScannerCard({
       pendingRef.current = null;
       publishGuide("lock");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      flash.setValue(0.55);
-      lockPop.setValue(0.97);
-      Animated.parallel([
-        Animated.timing(flash, { toValue: 0, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        Animated.spring(lockPop, { toValue: 1, tension: 220, friction: 12, useNativeDriver: true }),
-      ]).start();
       onScanRef.current(data);
     },
-    [flash, lockPop, publishGuide]
+    [publishGuide]
   );
 
   const consider = useCallback(
@@ -348,33 +318,7 @@ export function QRScannerCard({
     lockedRef.current = false;
     goodSinceRef.current = null;
     pendingRef.current = null;
-  }, [scanning, publishGuide]);
-
-  useEffect(() => {
-    if (!cameraLive || locked) {
-      pulse.stopAnimation();
-      pulse.setValue(1);
-      return;
-    }
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 0.42,
-          duration: 720,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 720,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [cameraLive, locked, pulse]);
+  }, [scanning]);
 
   useEffect(() => {
     if (!cameraLive || !scanning) return;
@@ -441,8 +385,6 @@ export function QRScannerCard({
     consider(geo);
   };
 
-  const copy = cameraLive ? guideCopy(guide, scannedCount) : { description: "", pill: null };
-
   let description = "From a box, shelf tag, or retailer page.";
   if (atCapacity) {
     description = `Maximum ${MAX_QR_PRODUCTS} products. Remove one to scan more.`;
@@ -451,29 +393,12 @@ export function QRScannerCard({
   } else if (camError === "missing") {
     description = "No camera here. Scan a QR from a photo.";
   } else if (live) {
-    description = copy.description;
+    description = guideCopy(guide, scannedCount);
   } else if (scannedCount === 1) {
     description = "1 scanned. Add 1 more to compare.";
   } else if (scannedCount >= 2) {
     description = `${scannedCount} of ${MAX_QR_PRODUCTS} scanned.`;
   }
-
-  const glowStyle =
-    Platform.OS === "web"
-      ? ({
-          boxShadow: locked
-            ? "0 0 0 3px rgba(29,185,84,0.28), 0 0 18px rgba(29,185,84,0.42)"
-            : "0 0 0 3px rgba(245,180,0,0.3), 0 0 16px rgba(245,180,0,0.38)",
-        } as const)
-      : {
-          shadowColor: ring,
-          shadowOpacity: locked ? 0.55 : 0.4,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 0 },
-        };
-
-  const pillBg = locked ? colors.spotify : colors.scannerAmber;
-  const pillFg = paletteTokens.spotifyInk;
 
   return (
     <View
@@ -486,72 +411,41 @@ export function QRScannerCard({
       ]}
     >
       {cameraLive ? (
-        <Animated.View
+        <View
           testID="qr-viewfinder"
           onLayout={(e) => {
             const { width, height } = e.nativeEvent.layout;
             if (width > 0 && height > 0) setPreviewSize({ w: width, h: height });
           }}
           style={[
-            styles.previewWrap,
-            glowStyle,
-            { transform: [{ scale: lockPop }] },
+            styles.preview,
+            {
+              backgroundColor: paletteTokens.ink,
+              borderColor: ring,
+            },
           ]}
         >
-          <View
-            style={[
-              styles.preview,
-              {
-                backgroundColor: paletteTokens.ink,
-                borderColor: ring,
-              },
-            ]}
-          >
-            {nativeReady ? (
-              <CameraView
-                facing="back"
-                style={StyleSheet.absoluteFillObject}
-                barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-                onBarcodeScanned={scanning ? handleNativeBarcode : undefined}
-                onMountError={() => setCamError("missing")}
-              />
-            ) : null}
-            {webReady ? (
-              <WebQrCamera
-                active
-                observing={scanning}
-                onObserve={consider}
-                onError={(reason) => {
-                  setCamError(reason);
-                  setLive(false);
-                }}
-              />
-            ) : null}
-
-            <Animated.View
-              pointerEvents="none"
-              style={[styles.chrome, { opacity: locked ? 1 : pulse }]}
-            >
-              <ViewfinderCorners color={ring} />
-            </Animated.View>
-
-            <Animated.View
-              pointerEvents="none"
-              style={[styles.flash, { opacity: flash }]}
+          {nativeReady ? (
+            <CameraView
+              facing="back"
+              style={StyleSheet.absoluteFillObject}
+              barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+              onBarcodeScanned={scanning ? handleNativeBarcode : undefined}
+              onMountError={() => setCamError("missing")}
             />
-
-            {copy.pill ? (
-              <View
-                testID="qr-guide-pill"
-                pointerEvents="none"
-                style={[styles.pill, { backgroundColor: pillBg }]}
-              >
-                {locked ? <Check size={14} color={pillFg} strokeWidth={3} /> : null}
-                <Text style={[styles.pillText, { color: pillFg }]}>{copy.pill}</Text>
-              </View>
-            ) : null}
-          </View>
-        </Animated.View>
+          ) : null}
+          {webReady ? (
+            <WebQrCamera
+              active
+              observing={scanning}
+              onObserve={consider}
+              onError={(reason) => {
+                setCamError(reason);
+                setLive(false);
+              }}
+            />
+          ) : null}
+        </View>
       ) : null}
 
       <Text style={[styles.title, { color: colors.ink }]}>Scan a product QR</Text>
@@ -617,38 +511,12 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     gap: 8,
   },
-  previewWrap: {
-    marginBottom: 8,
-    borderRadius: radii.field,
-  },
   preview: {
     height: 220,
     borderRadius: radii.field,
     overflow: "hidden",
-    borderWidth: 3,
-  },
-  chrome: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  flash: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#FFFFFF",
-  },
-  pill: {
-    position: "absolute",
-    alignSelf: "center",
-    bottom: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: radii.pill,
-  },
-  pillText: {
-    ...type.button,
-    fontSize: 13,
-    letterSpacing: 0.1,
+    borderWidth: 2,
+    marginBottom: 8,
   },
   title: {
     ...type.productName,

@@ -99,24 +99,19 @@ export function pickBestObservation(list: QrObservation[]): QrObservation | null
   return list.slice().sort((a, b) => Math.abs(a.fill - SWEET_FILL) - Math.abs(b.fill - SWEET_FILL))[0];
 }
 
-export function guideCopy(
-  guide: ScanGuide,
-  scannedCount = 0
-): { description: string; pill: string | null } {
+export function guideCopy(guide: ScanGuide, scannedCount = 0): string {
   switch (guide) {
     case "closer":
-      return { description: "Move closer", pill: "Move closer" };
+      return "Move closer";
     case "farther":
-      return { description: "Move a little bit away", pill: "Move a little bit away" };
+      return "Move a little bit away";
     case "hold":
-      return { description: "Hold steady", pill: "Hold steady" };
+      return "Hold steady";
     case "lock":
-      return { description: "Captured", pill: "Captured" };
+      return "Captured";
     default:
-      return {
-        description:
-          scannedCount > 0 ? "Point at the next product QR." : "Hold the product QR in the frame.",
-        pill: null,
-      };
+      return scannedCount > 0
+        ? "Point at the next product QR."
+        : "Hold the product QR in the frame.";
   }
 }

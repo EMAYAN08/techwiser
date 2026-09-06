@@ -17,7 +17,7 @@ export const paletteTokens = {
   bodyDark: "#A8A8A4",
   tabBarLight: "#1A1A1A",
   tabBarDark: "#141414",
-  scannerAmber: "#F5B400",
+  scannerAmber: "#C9B896",
 } as const;
 
 export const palette = {
