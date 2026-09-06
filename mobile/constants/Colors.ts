@@ -17,6 +17,7 @@ export const paletteTokens = {
   bodyDark: "#A8A8A4",
   tabBarLight: "#1A1A1A",
   tabBarDark: "#141414",
+  scannerAmber: "#F5B400",
 } as const;
 
 export const palette = {
@@ -58,6 +59,7 @@ export const palette = {
     verdictBg: paletteTokens.ink,
     verdictFg: "#FFFFFF",
     overlay: "rgba(10,10,10,0.08)",
+    scannerAmber: paletteTokens.scannerAmber,
   },
   dark: {
     background: paletteTokens.ink,
@@ -73,7 +75,7 @@ export const palette = {
     success: paletteTokens.spotify,
     successMuted: "rgba(29,185,84,0.12)",
     error: "#EB5757",
-    errorMuted: "rgba(235, 87, 87, 0.1)",
+    errorMuted: "rgba(235,87,87, 0.1)",
     ai: paletteTokens.spotify,
     aiMuted: paletteTokens.fogDark,
     // Exact theme.ts match
@@ -97,6 +99,7 @@ export const palette = {
     verdictBg: paletteTokens.ink,
     verdictFg: "#FFFFFF",
     overlay: "rgba(255,255,255,0.06)",
+    scannerAmber: paletteTokens.scannerAmber,
   },
 };
 
@@ -141,4 +144,3 @@ export function formatRetailerName(retailerName?: string): string {
   // Fallback to capitalizing whatever they gave us
   return retailerName.toUpperCase();
 }
-
