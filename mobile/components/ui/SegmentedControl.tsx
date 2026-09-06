@@ -26,7 +26,7 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
   onChange,
   style,
 }) => {
-  const { colors, isDark } = useThemeColors();
+  const { colors } = useThemeColors();
   const [containerWidth, setContainerWidth] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
 
@@ -54,8 +54,8 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
     }
   };
 
-  const thumbBackgroundColor = isDark ? colors.spotify : colors.ink;
-  const thumbTextColor = isDark ? colors.spotifyInk : "#FFFFFF";
+  const thumbBackgroundColor = colors.segmentSelectedBg;
+  const thumbTextColor = colors.segmentSelectedFg;
 
   return (
     <View

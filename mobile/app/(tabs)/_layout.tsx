@@ -132,7 +132,7 @@ function TabItem({
 
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const { colors } = useThemeColors();
+  const { colors, isDark } = useThemeColors();
   const path = useActivePath();
   const hidden = !isTabPath(path);
 
@@ -154,15 +154,31 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
   if (hidden) return null;
 
+  const elevationStyle =
+    Platform.OS === "web"
+      ? ({
+          boxShadow: isDark
+            ? "0 8px 24px rgba(0,0,0,0.38)"
+            : "0 10px 30px rgba(10,10,10,0.08), 0 1px 0 rgba(10,10,10,0.04)",
+        } as const)
+      : {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: isDark ? 8 : 4 },
+          shadowOpacity: isDark ? 0.22 : 0.08,
+          shadowRadius: isDark ? 16 : 14,
+          elevation: isDark ? 8 : 3,
+        };
+
   return (
     <Animated.View
       pointerEvents="box-none"
       style={[
         styles.container,
+        elevationStyle,
         {
           bottom: insets.bottom + 12,
           backgroundColor: colors.tabBar,
-          borderColor: "rgba(255,255,255,0.08)",
+          borderColor: colors.tabBarBorder,
           opacity: mountAnim,
           transform: [
             {
@@ -197,7 +213,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             def={def}
             focused={focused}
             onPress={onPress}
-            pillBg="rgba(255,255,255,0.08)"
+            pillBg={colors.tabPill}
             activeColor={colors.tabSelectedIcon}
             activeLabel={colors.tabSelectedLabel}
             inactiveColor={colors.tabUnselected}
@@ -243,11 +259,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 8,
     gap: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
     zIndex: 4,
   },
   tab: {

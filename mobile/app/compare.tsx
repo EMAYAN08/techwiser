@@ -19,7 +19,7 @@ import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info, Share, X, AlertT
 import { BlurView } from "expo-blur";
 
 import { useComparisonStore } from "../store/useComparisonStore";
-import { useThemeColors, getRetailerColor, paletteTokens } from "../constants/Colors";
+import { useThemeColors, getRetailerColor } from "../constants/Colors";
 import { type } from "../constants/Typography";
 import { radii } from "../constants/Layout";
 import { Button } from "../components/ui/Button";
@@ -360,13 +360,13 @@ function CategoryPill({ label, isSelected, onPress }: CategoryPillProps) {
         style={[
           styles.pill,
           isSelected
-            ? { backgroundColor: paletteTokens.ink, borderColor: paletteTokens.ink }
+            ? { backgroundColor: colors.segmentSelectedBg, borderColor: colors.segmentSelectedBg }
             : { backgroundColor: "transparent", borderColor: colors.line },
         ]}
       >
-        <Icon size={14} strokeWidth={2} color={isSelected ? "#FFFFFF" : colors.ink} />
+        <Icon size={14} strokeWidth={2} color={isSelected ? colors.segmentSelectedFg : colors.ink} />
         <Text
-          style={[styles.pillLabel, { color: isSelected ? "#FFFFFF" : colors.body }]}
+          style={[styles.pillLabel, { color: isSelected ? colors.segmentSelectedFg : colors.body }]}
           numberOfLines={1}
         >
           {label}

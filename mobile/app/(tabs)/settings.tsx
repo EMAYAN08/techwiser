@@ -6,7 +6,7 @@ import * as Haptics from "../../utils/haptics";
 import { useThemeStore, ThemePreference } from "../../store/useThemeStore";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { useComparisonStore } from "../../store/useComparisonStore";
-import { paletteTokens, useThemeColors } from "../../constants/Colors";
+import { useThemeColors } from "../../constants/Colors";
 import { radii, space } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Constants from "expo-constants";
@@ -68,9 +68,16 @@ export default function SettingsScreen() {
             <Pressable
               key={opt.id}
               onPress={() => handleSelect(opt.id)}
-              style={[styles.segmentButton, isActive && { backgroundColor: paletteTokens.ink }]}
+              style={[
+                styles.segmentButton,
+                isActive && { backgroundColor: colors.segmentSelectedBg },
+              ]}
             >
-              <Feather name={opt.icon} size={15} color={isActive ? "#FFFFFF" : colors.stone} />
+              <Feather
+                name={opt.icon}
+                size={15}
+                color={isActive ? colors.segmentSelectedFg : colors.stone}
+              />
             </Pressable>
           );
         })}

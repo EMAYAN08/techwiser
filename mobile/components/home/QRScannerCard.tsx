@@ -406,7 +406,7 @@ export function QRScannerCard({
         styles.card,
         {
           backgroundColor: colors.surface,
-          borderColor: colors.spotify,
+          borderColor: colors.line,
         },
       ]}
     >

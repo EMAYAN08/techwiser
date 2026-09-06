@@ -7,7 +7,7 @@ import {
   ViewStyle,
   StyleProp,
 } from "react-native";
-import { useThemeColors, paletteTokens } from "../../constants/Colors";
+import { useThemeColors } from "../../constants/Colors";
 import { type } from "../../constants/Typography";
 import * as Haptics from "../../utils/haptics";
 import { radii, size } from "../../constants/Layout";
@@ -37,12 +37,16 @@ export const Chip: React.FC<ChipProps> = ({
 
   const backgroundColor =
     variant === "selected"
-      ? paletteTokens.ink
+      ? colors.segmentSelectedBg
       : variant === "overflow"
         ? colors.fog
         : "transparent";
   const textColor =
-    variant === "selected" ? "#FFFFFF" : variant === "overflow" ? colors.stone : colors.ink;
+    variant === "selected"
+      ? colors.segmentSelectedFg
+      : variant === "overflow"
+        ? colors.stone
+        : colors.ink;
   const borderColor = variant === "tag" ? colors.spotify : "transparent";
   const borderWidth = variant === "tag" ? 1.5 : 0;
 

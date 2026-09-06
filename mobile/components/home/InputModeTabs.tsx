@@ -27,7 +27,7 @@ interface InputModeTabsProps {
 }
 
 export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) {
-  const { colors, isDark } = useThemeColors();
+  const { colors } = useThemeColors();
   const scales = useRef(TABS.map(() => new Animated.Value(1))).current;
 
   const handlePress = (tab: Tab, index: number) => {
@@ -42,8 +42,8 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
     }
   };
 
-  const selectedBg = isDark ? colors.spotify : colors.ink;
-  const selectedFg = isDark ? colors.spotifyInk : "#FFFFFF";
+  const selectedBg = colors.segmentSelectedBg;
+  const selectedFg = colors.segmentSelectedFg;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.fog }]}>
