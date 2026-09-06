@@ -1,22 +1,20 @@
-import { Typography } from '../../constants/Typography';
-import React, { useEffect, useRef } from "react";
+import { Typography } from "../../constants/Typography";
+import React, { useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   Animated,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
 } from "react-native";
-import { Tabs } from "expo-router";
+import { Tabs, usePathname } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Zap, BookOpen, Settings as SettingsIcon, Tag, LucideIcon } from "lucide-react-native";
-import * as Haptics from '../../utils/haptics';
+import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
-
-// ---------------------------------------------------------------------------
-// Tab definitions
-// ---------------------------------------------------------------------------
+import { radii, size } from "../../constants/Layout";
 
 interface TabDef {
   name: string;
@@ -31,9 +29,36 @@ const TABS: TabDef[] = [
   { name: "settings", label: "Settings", Icon: SettingsIcon },
 ];
 
-// ---------------------------------------------------------------------------
-// Single tab item — pill button with active sub-pill background
-// ---------------------------------------------------------------------------
+function isTabPath(path: string) {
+  const p = (path || "/").replace(/\/$/, "") || "/";
+  return p === "/" || p === "/library" || p === "/price" || p === "/settings";
+}
+
+function useActivePath() {
+  const pathname = usePathname();
+  const [path, setPath] = useState(pathname);
+
+  useEffect(() => {
+    setPath(pathname);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
+    const read = () => {
+      const next = window.location.pathname;
+      setPath((cur) => (cur === next ? cur : next));
+    };
+    read();
+    const id = setInterval(read, 200);
+    window.addEventListener("popstate", read);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("popstate", read);
+    };
+  }, []);
+
+  return path;
+}
 
 interface TabItemProps {
   def: TabDef;
@@ -42,6 +67,7 @@ interface TabItemProps {
   pillBg: string;
   activeColor: string;
   inactiveColor: string;
+  activeLabel: string;
 }
 
 function TabItem({
@@ -51,31 +77,20 @@ function TabItem({
   pillBg,
   activeColor,
   inactiveColor,
+  activeLabel,
 }: TabItemProps) {
   const { Icon, label } = def;
   const color = focused ? activeColor : inactiveColor;
-
-  // Press-in scale (matches Button.tsx pattern).
+  const labelColor = focused ? activeLabel : inactiveColor;
   const scale = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
-    Animated.spring(scale, {
-      toValue: 0.97,
-      useNativeDriver: true,
-      speed: 30,
-      bounciness: 0,
-    }).start();
+    Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 30, bounciness: 0 }).start();
   };
   const handlePressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      useNativeDriver: true,
-      speed: 20,
-      bounciness: 6,
-    }).start();
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 0 }).start();
   };
 
-  // Selection haptic when this tab becomes the focused one.
   const wasFocused = useRef(focused);
   useEffect(() => {
     if (focused && !wasFocused.current) {
@@ -94,19 +109,17 @@ function TabItem({
       accessibilityState={{ selected: focused }}
       accessibilityHint={`Go to ${label} tab`}
       hitSlop={4}
-      style={[
-        styles.tab,
-        focused && { backgroundColor: pillBg },
-      ]}
+      style={[styles.tab, focused && { backgroundColor: pillBg }]}
     >
-      <Animated.View
-        style={[styles.tabInner, { transform: [{ scale }] }]}
-      >
-        <Icon size={20} color={color} strokeWidth={focused ? 2.25 : 1.75} />
+      <Animated.View style={[styles.tabInner, { transform: [{ scale }] }]}>
+        <Icon size={20} color={color} strokeWidth={focused ? 2.4 : 1.75} />
         <Text
           style={[
             styles.tabLabel,
-            { color, fontFamily: focused ? Typography.button.fontFamily : Typography.chip.fontFamily },
+            {
+              color: labelColor,
+              fontFamily: focused ? Typography.button.fontFamily : Typography.chip.fontFamily,
+            },
           ]}
           numberOfLines={1}
         >
@@ -117,23 +130,17 @@ function TabItem({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Custom floating-pill tab bar
-// ---------------------------------------------------------------------------
-
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const { colors, isDark } = useThemeColors();
+  const { colors } = useThemeColors();
+  const path = useActivePath();
+  const hidden = !isTabPath(path);
 
-  // Mount fade-in (gated by reduce-motion).
   const mountAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     let cancelled = false;
     AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
       if (cancelled) return;
-      // When reduce-motion is on, jump straight to the resting value with
-      // a 0ms duration so the translateY/transform resolves to its final
-      // state without animating.
       Animated.timing(mountAnim, {
         toValue: 1,
         duration: enabled ? 0 : 220,
@@ -145,21 +152,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     };
   }, [mountAnim]);
 
-  const shadow = isDark
-    ? {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 18,
-        elevation: 12,
-      }
-    : {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 14,
-        elevation: 8,
-      };
+  if (hidden) return null;
 
   return (
     <Animated.View
@@ -168,8 +161,8 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         styles.container,
         {
           bottom: insets.bottom + 12,
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
+          backgroundColor: colors.tabBar,
+          borderColor: "rgba(255,255,255,0.08)",
           opacity: mountAnim,
           transform: [
             {
@@ -180,10 +173,9 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             },
           ],
         },
-        shadow,
       ]}
     >
-      {state.routes.map((route: BottomTabBarProps["state"]["routes"][number], index: number) => {
+      {state.routes.map((route, index) => {
         const def = TABS.find((t) => t.name === route.name);
         if (!def) return null;
         const focused = state.index === index;
@@ -205,9 +197,10 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             def={def}
             focused={focused}
             onPress={onPress}
-            pillBg={colors.surfaceHighlight}
-            activeColor={colors.text}
-            inactiveColor={colors.textTertiary}
+            pillBg="rgba(255,255,255,0.08)"
+            activeColor={colors.tabSelectedIcon}
+            activeLabel={colors.tabSelectedLabel}
+            inactiveColor={colors.tabUnselected}
           />
         );
       })}
@@ -215,16 +208,11 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Layout
-// ---------------------------------------------------------------------------
-
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        // Hide the built-in tab bar; we render a custom floating pill below.
         tabBarStyle: { display: "none" },
       }}
       screenListeners={{
@@ -242,28 +230,30 @@ export default function TabLayout() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    left: 16,
-    right: 16,
-    height: 64,
-    borderRadius: 32,
+    left: 12,
+    right: 12,
+    height: size.tabBar,
+    borderRadius: radii.pill,
     borderWidth: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 8,
     gap: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
+    zIndex: 4,
   },
   tab: {
     flex: 1,
     height: 48,
-    borderRadius: 24,
+    borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
