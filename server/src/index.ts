@@ -5,6 +5,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { scrapeUrl } from './services/scraper';
 import { generateComparison, explainSpec, findAlternatives } from './services/llm';
+import { lookupBarcode } from './services/barcode';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +15,21 @@ app.use(express.json());
 
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', message: 'Backend is running!' });
+});
+
+app.post('/api/barcode', async (req: Request, res: Response) => {
+  try {
+    const code = String(req.body?.code || req.body?.upc || req.body?.ean || '').trim();
+    if (!code) {
+      res.status(400).json({ error: 'A UPC or EAN code is required.' });
+      return;
+    }
+    const data = await lookupBarcode(code);
+    res.json({ data });
+  } catch (error: unknown) {
+    console.error('Unexpected error in /api/barcode:', error);
+    res.status(500).json({ error: 'Failed to look up that barcode.' });
+  }
 });
 
 app.post('/api/compare', async (req: Request, res: Response) => {

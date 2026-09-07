@@ -1,2 +1,5 @@
 *.js
+!mobile/babel.config.js
+!mobile/metro.config.js
+!mobile/metro.barcode-api.js
 api-tests.http

@@ -8,6 +8,7 @@ import { type } from "../../constants/Typography";
 import { radii, size } from "../../constants/Layout";
 import * as Haptics from "../../utils/haptics";
 import { MAX_QR_PRODUCTS } from "../../utils/qr";
+import { MAX_BARCODE_PRODUCTS } from "../../utils/barcode";
 import {
   LOCK_HOLD_MS,
   LOST_GRACE_MS,
@@ -20,7 +21,13 @@ import {
   pickBestObservation,
   type QrObservation,
   type ScanGuide,
+  type ScanKind,
 } from "../../utils/qrGuide";
+import {
+  decodeBarcodeFromImageData,
+  makeWebBarcodeDetector,
+  NATIVE_BARCODE_TYPES,
+} from "../../utils/decodeBarcode";
 
 type Props = {
   scanning: boolean;
@@ -29,6 +36,7 @@ type Props = {
   scannedCount: number;
   onScan: (data: string) => void;
   onGallery: () => void;
+  kind?: ScanKind;
 };
 
 type CamError = "denied" | "missing" | null;
@@ -43,11 +51,7 @@ type BarcodeDetectorCtor = new (o: { formats: string[] }) => {
   >;
 };
 
-function observationsFromJsQR(
-  imageData: ImageData,
-  dw: number,
-  dh: number
-): QrObservation | null {
+function observationsFromJsQR(imageData: ImageData, dw: number, dh: number): QrObservation | null {
   const code = jsQR(imageData.data, dw, dh, { inversionAttempts: "dontInvert" });
   if (!code?.data) return null;
   return (
@@ -65,14 +69,37 @@ function observationsFromJsQR(
   );
 }
 
+function ScanFrame({ kind, color }: { kind: ScanKind; color: string }) {
+  const landscape = kind === "barcode";
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+      <View
+        style={[
+          styles.frame,
+          {
+            left: landscape ? "7%" : "16%",
+            right: landscape ? "7%" : "16%",
+            top: landscape ? "30%" : "12%",
+            bottom: landscape ? "30%" : "12%",
+            borderRadius: landscape ? 12 : 18,
+            borderColor: color,
+          },
+        ]}
+      />
+    </View>
+  );
+}
+
 function WebQrCamera({
   active,
   observing,
+  kind,
   onObserve,
   onError,
 }: {
   active: boolean;
   observing: boolean;
+  kind: ScanKind;
   onObserve: (obs: QrObservation | null) => void;
   onError: (reason: CamError) => void;
 }) {
@@ -92,6 +119,7 @@ function WebQrCamera({
     let stream: MediaStream | null = null;
     let raf = 0;
     let stopped = false;
+    let missFrames = 0;
     const video = document.createElement("video");
     video.setAttribute("playsinline", "true");
     video.setAttribute("autoplay", "true");
@@ -105,7 +133,9 @@ function WebQrCamera({
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     const Detector = (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector;
     let detector: InstanceType<BarcodeDetectorCtor> | null = null;
-    if (typeof Detector === "function") {
+    if (kind === "barcode") {
+      detector = makeWebBarcodeDetector();
+    } else if (typeof Detector === "function") {
       try {
         detector = new Detector({ formats: ["qr_code"] });
       } catch {
@@ -134,8 +164,22 @@ function WebQrCamera({
                   observationFromDataOnly(code.rawValue);
                 mapped.push(geo);
               }
-              found = pickBestObservation(mapped);
-            } else {
+              found = pickBestObservation(mapped, kind);
+            }
+            if (!found && kind === "barcode") {
+              missFrames += 1;
+              if (missFrames % 4 === 0) {
+                const max = 640;
+                const scale = Math.min(1, max / Math.max(w, h));
+                const dw = Math.max(1, Math.round(w * scale));
+                const dh = Math.max(1, Math.round(h * scale));
+                canvas.width = dw;
+                canvas.height = dh;
+                ctx.drawImage(video, 0, 0, dw, dh);
+                const imageData = ctx.getImageData(0, 0, dw, dh);
+                found = decodeBarcodeFromImageData(imageData, false);
+              }
+            } else if (!found && kind === "qr" && !detector) {
               const max = 480;
               const scale = Math.min(1, max / Math.max(w, h));
               const dw = Math.max(1, Math.round(w * scale));
@@ -187,7 +231,7 @@ function WebQrCamera({
       video.srcObject = null;
       if (host.contains(video)) host.removeChild(video);
     };
-  }, [active]);
+  }, [active, kind]);
 
   return <View ref={hostRef} collapsable={false} style={StyleSheet.absoluteFillObject} />;
 }
@@ -198,6 +242,7 @@ export function QRScannerCard({
   scannedCount,
   onScan,
   onGallery,
+  kind = "qr",
 }: Props) {
   const { colors } = useThemeColors();
   const [permission, requestPermission] = useCameraPermissions();
@@ -224,6 +269,7 @@ export function QRScannerCard({
   const cameraLive = live && !camError && !atCapacity;
   const locked = guide === "lock";
   const ring = locked ? colors.spotify : colors.scannerAmber;
+  const maxProducts = kind === "barcode" ? MAX_BARCODE_PRODUCTS : MAX_QR_PRODUCTS;
 
   const publishGuide = useCallback((next: ScanGuide) => {
     if (guideRef.current === next) return;
@@ -250,8 +296,7 @@ export function QRScannerCard({
       const now = Date.now();
       if (obs) lastHitRef.current = { obs, at: now };
       const hit = lastHitRef.current;
-      const effective =
-        obs || (hit && now - hit.at < LOST_GRACE_MS ? hit.obs : null);
+      const effective = obs || (hit && now - hit.at < LOST_GRACE_MS ? hit.obs : null);
 
       if (lastLockedDataRef.current && effective?.data === lastLockedDataRef.current) {
         goodSinceRef.current = null;
@@ -268,7 +313,7 @@ export function QRScannerCard({
         return;
       }
 
-      const assessed = assessGuide(effective);
+      const assessed = assessGuide(effective, kind);
 
       if (assessed === "hold" && effective) {
         if (goodSinceRef.current == null) goodSinceRef.current = now;
@@ -308,7 +353,7 @@ export function QRScannerCard({
         pendingRef.current = null;
       }
     },
-    [captureLock, publishGuide]
+    [captureLock, publishGuide, kind]
   );
 
   useEffect(() => {
@@ -385,19 +430,21 @@ export function QRScannerCard({
     consider(geo);
   };
 
-  let description = "From a box, shelf tag, or retailer page.";
+  let description =
+    kind === "barcode" ? "From a box, shelf tag, or receipt." : "From a box, shelf tag, or retailer page.";
   if (atCapacity) {
-    description = `Maximum ${MAX_QR_PRODUCTS} products. Remove one to scan more.`;
+    description = `Maximum ${maxProducts} products. Remove one to scan more.`;
   } else if (camError === "denied") {
     description = "Camera permission denied. Try a photo instead.";
   } else if (camError === "missing") {
-    description = "No camera here. Scan a QR from a photo.";
+    description =
+      kind === "barcode" ? "No camera here. Scan a barcode from a photo." : "No camera here. Scan a QR from a photo.";
   } else if (live) {
-    description = guideCopy(guide, scannedCount);
+    description = guideCopy(guide, scannedCount, kind);
   } else if (scannedCount === 1) {
     description = "1 scanned. Add 1 more to compare.";
   } else if (scannedCount >= 2) {
-    description = `${scannedCount} of ${MAX_QR_PRODUCTS} scanned.`;
+    description = `${scannedCount} of ${maxProducts} scanned.`;
   }
 
   return (
@@ -429,7 +476,9 @@ export function QRScannerCard({
             <CameraView
               facing="back"
               style={StyleSheet.absoluteFillObject}
-              barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+              barcodeScannerSettings={{
+                barcodeTypes: kind === "barcode" ? [...NATIVE_BARCODE_TYPES] : ["qr"],
+              }}
               onBarcodeScanned={scanning ? handleNativeBarcode : undefined}
               onMountError={() => setCamError("missing")}
             />
@@ -437,6 +486,7 @@ export function QRScannerCard({
           {webReady ? (
             <WebQrCamera
               active
+              kind={kind}
               observing={scanning}
               onObserve={consider}
               onError={(reason) => {
@@ -445,10 +495,13 @@ export function QRScannerCard({
               }}
             />
           ) : null}
+          <ScanFrame kind={kind} color={ring} />
         </View>
       ) : null}
 
-      <Text style={[styles.title, { color: colors.ink }]}>Scan a product QR</Text>
+      <Text style={[styles.title, { color: colors.ink }]}>
+        {kind === "barcode" ? "Scan a product barcode" : "Scan a product QR"}
+      </Text>
       <Text
         testID="qr-guide-text"
         accessibilityLiveRegion="polite"
@@ -473,9 +526,7 @@ export function QRScannerCard({
           accessibilityLabel={cameraLive ? "Close camera" : "Open camera"}
         >
           <Camera size={16} color={colors.primaryBtnFg} strokeWidth={2.2} />
-          <Text style={[styles.btnText, { color: colors.primaryBtnFg }]}>
-            {cameraLive ? "Close" : "Camera"}
-          </Text>
+          <Text style={[styles.btnText, { color: colors.primaryBtnFg }]}>{cameraLive ? "Close" : "Camera"}</Text>
         </Pressable>
 
         <Pressable
@@ -493,7 +544,7 @@ export function QRScannerCard({
               transform: [{ scale: pressed && !atCapacity ? 0.96 : 1 }],
             },
           ]}
-          accessibilityLabel="Scan QR from photo"
+          accessibilityLabel={kind === "barcode" ? "Scan barcode from photo" : "Scan QR from photo"}
         >
           <ImageIcon size={16} color={colors.ink} strokeWidth={2.2} />
           <Text style={[styles.btnText, { color: colors.ink }]}>Photo</Text>
@@ -517,6 +568,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 2,
     marginBottom: 8,
+  },
+  frame: {
+    position: "absolute",
+    borderWidth: 2,
   },
   title: {
     ...type.productName,

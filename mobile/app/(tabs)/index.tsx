@@ -7,9 +7,9 @@ import { URLInputGroup } from "../../components/home/URLInputGroup";
 import { RecentComparisons } from "../../components/home/RecentComparisons";
 import { LoadingOverlay } from "../../components/home/LoadingOverlay";
 import { InputModeTabs, InputMode } from "../../components/home/InputModeTabs";
-import { ComingSoonPanel } from "../../components/home/ComingSoonPanel";
 import { NameSearchGroup } from "../../components/home/NameSearchGroup";
 import { QRInputGroup } from "../../components/home/QRInputGroup";
+import { BarcodeInputGroup } from "../../components/home/BarcodeInputGroup";
 import { useComparisonStore } from "../../store/useComparisonStore";
 import { useThemeColors } from "../../constants/Colors";
 import { space } from "../../constants/Layout";
@@ -155,7 +155,7 @@ export default function Home() {
             />
           )}
           {inputMode === "name" && <NameSearchGroup />}
-          {inputMode === "upc" && <ComingSoonPanel mode="upc" />}
+          {inputMode === "upc" && <BarcodeInputGroup onCompare={handleCompare} isLoading={isLoading} />}
           {inputMode === "qr" && <QRInputGroup onCompare={handleCompare} isLoading={isLoading} />}
         </Animated.View>
 

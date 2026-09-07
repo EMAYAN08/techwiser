@@ -10,8 +10,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "Compare uses the camera to scan product QR codes from boxes, shelf tags, and retailer pages.",
-        "NSPhotoLibraryUsageDescription": "Compare reads a photo so you can scan a product QR code from your camera roll."
+        "NSCameraUsageDescription": "Compare uses the camera to scan product barcodes and QR codes from boxes, shelf tags, and retailer pages.",
+        "NSPhotoLibraryUsageDescription": "Compare reads a photo so you can scan a product barcode or QR code from your camera roll."
       }
     },
     "android": {
@@ -44,7 +44,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Compare to scan product QR codes.",
+          "cameraPermission": "Allow Compare to scan product barcodes and QR codes.",
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
@@ -52,7 +52,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Compare to read a QR code from a photo."
+          "photosPermission": "Allow Compare to read a barcode or QR code from a photo."
         }
       ]
     ]

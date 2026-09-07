@@ -6,6 +6,7 @@ import { useThemeColors } from "../../constants/Colors";
 import { type } from "../../constants/Typography";
 import { radii } from "../../constants/Layout";
 import * as Haptics from "../../utils/haptics";
+import { formatGtin } from "../../utils/barcode";
 
 const FLOW = Easing.bezier(0.16, 1, 0.3, 1);
 
@@ -21,6 +22,7 @@ export type QrItem = {
   imageCandidates?: string[];
   description?: string | null;
   error?: string;
+  upc?: string;
 };
 
 function retailerLetter(retailer: string, domain: string) {
@@ -141,6 +143,7 @@ export function QRFlashCard({
   const removing = useRef(false);
   const lastStatus = useRef(item.status);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copyValue = item.url || item.upc || "";
 
   useEffect(() => {
     Animated.spring(life, {
@@ -223,8 +226,9 @@ export function QRFlashCard({
   };
 
   const handleCopy = async () => {
+    if (!copyValue) return;
     try {
-      await Clipboard.setStringAsync(item.url);
+      await Clipboard.setStringAsync(copyValue);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setCopied(true);
       copyPop.setValue(0.25);
@@ -256,6 +260,12 @@ export function QRFlashCard({
       : item.imageUrl
         ? [item.imageUrl]
         : [];
+
+  const metaLine = item.upc
+    ? item.domain && item.domain !== formatGtin(item.upc)
+      ? `${item.domain} · ${formatGtin(item.upc)}`
+      : `UPC ${formatGtin(item.upc)}`
+    : item.domain || item.url;
 
   return (
     <Animated.View
@@ -298,20 +308,22 @@ export function QRFlashCard({
               </Text>
             </View>
             <View style={styles.iconRow}>
-              <Pressable
-                onPress={handleCopy}
-                hitSlop={8}
-                style={[styles.iconBtn, { backgroundColor: copied ? colors.spotifyWash : colors.fog }]}
-                accessibilityLabel="Copy product URL"
-              >
-                <Animated.View style={{ transform: [{ scale: copyPop }] }}>
-                  {copied ? (
-                    <Check size={13} color={colors.spotify} strokeWidth={2.6} />
-                  ) : (
-                    <Copy size={13} color={colors.body} strokeWidth={2.4} />
-                  )}
-                </Animated.View>
-              </Pressable>
+              {copyValue ? (
+                <Pressable
+                  onPress={handleCopy}
+                  hitSlop={8}
+                  style={[styles.iconBtn, { backgroundColor: copied ? colors.spotifyWash : colors.fog }]}
+                  accessibilityLabel={item.url ? "Copy product URL" : "Copy barcode"}
+                >
+                  <Animated.View style={{ transform: [{ scale: copyPop }] }}>
+                    {copied ? (
+                      <Check size={13} color={colors.spotify} strokeWidth={2.6} />
+                    ) : (
+                      <Copy size={13} color={colors.body} strokeWidth={2.4} />
+                    )}
+                  </Animated.View>
+                </Pressable>
+              ) : null}
               <Pressable
                 onPress={handleRemove}
                 hitSlop={8}
@@ -327,7 +339,7 @@ export function QRFlashCard({
             {item.title || "Product link"}
           </Text>
           <Text style={[styles.domain, { color: colors.stone }]} numberOfLines={1}>
-            {item.domain || item.url}
+            {metaLine}
           </Text>
 
           <View style={styles.statusRow}>
@@ -354,7 +366,7 @@ export function QRFlashCard({
               <AlertTriangle size={13} color={statusColor} strokeWidth={2.4} />
             )}
             <Text style={[styles.statusText, { color: statusColor }]} numberOfLines={1}>
-              {copied ? "URL copied" : statusLabel}
+              {copied ? (item.url ? "URL copied" : "Barcode copied") : statusLabel}
             </Text>
           </View>
         </View>
