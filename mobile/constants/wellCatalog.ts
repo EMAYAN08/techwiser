@@ -43,15 +43,12 @@ export const TYPE_WELLS: WellDef[] = [
 ];
 
 export const RETAIL_WELLS: Record<string, WellDef> = {
-  bestbuy: { id: "bestbuy", label: "Best Buy", icon: require("../assets/icons/retail-bestbuy.png"), tint: TINT.gold },
-  amazon: { id: "amazon", label: "Amazon", icon: require("../assets/icons/retail-amazon.png"), tint: TINT.sand },
-  canadacomputers: { id: "canadacomputers", label: "Canada Comp.", icon: require("../assets/icons/retail-canada.png"), tint: TINT.ice },
-  costco: { id: "costco", label: "Costco", icon: require("../assets/icons/retail-costco.png"), tint: TINT.peach },
-  walmart: { id: "walmart", label: "Walmart", icon: require("../assets/icons/retail-walmart.png"), tint: TINT.blue },
-  staples: { id: "staples", label: "Staples", icon: require("../assets/icons/retail-staples.png"), tint: TINT.rose },
-  memoryexpress: { id: "memoryexpress", label: "Memory Ex", icon: require("../assets/icons/retail-other.png"), tint: TINT.slate },
-  newegg: { id: "newegg", label: "Newegg", icon: require("../assets/icons/retail-other.png"), tint: TINT.peach },
-  thesource: { id: "thesource", label: "Source", icon: require("../assets/icons/retail-other.png"), tint: TINT.mint },
+  bestbuy: { id: "bestbuy", label: "Best Buy", icon: require("../assets/logos/bestbuy.png"), tint: TINT.gold },
+  amazon: { id: "amazon", label: "Amazon", icon: require("../assets/logos/amazon.png"), tint: TINT.sand },
+  canadacomputers: { id: "canadacomputers", label: "Canada Comp.", icon: require("../assets/logos/canadacomputers.jpg"), tint: TINT.ice },
+  costco: { id: "costco", label: "Costco", icon: require("../assets/logos/costco.png"), tint: TINT.peach },
+  walmart: { id: "walmart", label: "Walmart", icon: require("../assets/logos/walmart.png"), tint: TINT.blue },
+  staples: { id: "staples", label: "Staples", icon: require("../assets/logos/staples.png"), tint: TINT.rose },
   other: { id: "other", label: "Other", icon: require("../assets/icons/retail-other.png"), tint: TINT.slate },
 };
 

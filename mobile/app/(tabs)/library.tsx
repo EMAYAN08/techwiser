@@ -46,19 +46,17 @@ export default function LibraryScreen() {
   }, [recentComparisons]);
 
   const retailerWells = useMemo(() => {
-    const present = new Set(allProducts.map((p) => getRetailerKey(p.retailer)));
     const wells: WellDef[] = [ALL_WELL];
     RETAIL_ORDER.forEach((key) => {
-      if (present.has(key) && RETAIL_WELLS[key]) wells.push(RETAIL_WELLS[key]);
+      if (RETAIL_WELLS[key]) wells.push(RETAIL_WELLS[key]);
     });
     return wells;
   }, [allProducts]);
 
   const typeWells = useMemo(() => {
-    const present = new Set(allProducts.map(classifyProduct));
     const wells: WellDef[] = [ALL_WELL];
     TYPE_WELLS.forEach((w) => {
-      if (present.has(w.id as ReturnType<typeof classifyProduct>)) wells.push(w);
+      wells.push(w);
     });
     return wells;
   }, [allProducts]);
@@ -215,6 +213,7 @@ export default function LibraryScreen() {
               onSelect={handleSelectWell}
               layout="scroll"
               allowDeselectToAll
+              shape={filterBy === "retailer" ? "squircle" : "circle"}
             />
           </View>
         ) : null}

@@ -9,8 +9,11 @@ import {
   Text,
   View,
 } from "react-native";
-import { Tabs, usePathname } from "expo-router";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { withLayoutContext, usePathname } from "expo-router";
+import { createMaterialTopTabNavigator, MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
+
+const { Navigator } = createMaterialTopTabNavigator();
+const MaterialTopTabs = withLayoutContext(Navigator);
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { Zap, BookOpen, Settings as SettingsIcon, Tag, LucideIcon } from "lucide-react-native";
@@ -134,7 +137,7 @@ function TabItem({
   );
 }
 
-function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+function CustomTabBar({ state, navigation }: MaterialTopTabBarProps) {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useThemeColors();
   const path = useActivePath();
@@ -273,24 +276,23 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
 export default function TabLayout() {
   return (
-    <Tabs
+    <MaterialTopTabs
+      tabBarPosition="bottom"
       screenOptions={{
-        headerShown: false,
-        tabBarStyle: { display: "none" },
-        animation: "fade",
+        swipeEnabled: true,
       }}
       screenListeners={{
         tabPress: () => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         },
       }}
-      tabBar={(props: BottomTabBarProps) => <CustomTabBar {...props} />}
+      tabBar={(props: MaterialTopTabBarProps) => <CustomTabBar {...props} />}
     >
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="library" options={{ title: "Library" }} />
-      <Tabs.Screen name="price" options={{ title: "Price" }} />
-      <Tabs.Screen name="settings" options={{ title: "Settings" }} />
-    </Tabs>
+      <MaterialTopTabs.Screen name="index" options={{ title: "Home" }} />
+      <MaterialTopTabs.Screen name="library" options={{ title: "Library" }} />
+      <MaterialTopTabs.Screen name="price" options={{ title: "Price" }} />
+      <MaterialTopTabs.Screen name="settings" options={{ title: "Settings" }} />
+    </MaterialTopTabs>
   );
 }
 

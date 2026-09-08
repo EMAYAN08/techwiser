@@ -20,6 +20,7 @@ interface CircularWellsProps {
   onSelect: (id: string) => void;
   layout?: "spread" | "scroll";
   allowDeselectToAll?: boolean;
+  shape?: "circle" | "squircle";
 }
 
 export function CircularWells({
@@ -28,6 +29,7 @@ export function CircularWells({
   onSelect,
   layout = "spread",
   allowDeselectToAll = false,
+  shape = "circle",
 }: CircularWellsProps) {
   const { colors, isDark } = useThemeColors();
   const anims = useRef<Record<string, { scale: Animated.Value; wobble: Animated.Value }>>({}).current;
@@ -68,7 +70,7 @@ export function CircularWells({
 
   const nodes = items.map((item) => {
     const isActive = selectedId === item.id;
-    const wellBg = isActive ? (isDark ? item.tint.wellDark : item.tint.wash) : colors.modeWell;
+    const wellBg = isActive ? item.tint.wash : (isDark ? "#EBEBEB" : colors.modeWell);
     const a = ensure(item.id);
     return (
       <Pressable
@@ -79,7 +81,7 @@ export function CircularWells({
         accessibilityState={{ selected: isActive }}
         style={[styles.item, layout === "scroll" ? styles.itemScroll : styles.itemSpread]}
       >
-        <View style={[styles.well, { backgroundColor: wellBg }]}>
+        <View style={[styles.well, { backgroundColor: wellBg, borderRadius: shape === 'squircle' ? 16 : size.modeWell / 2 }]}>
           <Animated.View
             style={{
               transform: [
@@ -167,8 +169,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   icon: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
   },
   label: {
     fontSize: 12,
