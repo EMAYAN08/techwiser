@@ -29,7 +29,7 @@ function uniqueProducts(products: Product[]): Product[] {
 }
 
 export default function LibraryScreen() {
-  const { recentComparisons } = useComparisonStore();
+  const { recentComparisons, removeProductFromHistory } = useComparisonStore();
   const { colors, isDark } = useThemeColors();
   const insets = useSafeAreaInsets();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -173,11 +173,11 @@ export default function LibraryScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Filter library"
                   accessibilityState={{ expanded: menuOpen }}
-                  style={iconActive ? { backgroundColor: colors.ink } : undefined}
+                  style={iconActive ? { backgroundColor: isDark ? colors.surfaceHighlight : colors.ink } : undefined}
                 >
                   <SlidersHorizontal
                     size={18}
-                    color={iconActive ? colors.bg : colors.ink}
+                    color={iconActive ? (isDark ? colors.ink : colors.bg) : colors.ink}
                     strokeWidth={2}
                   />
                 </NavCircle>
@@ -277,7 +277,10 @@ export default function LibraryScreen() {
             <View style={styles.grid}>
               {filtered.map((p, index) => (
                 <View key={p.id} style={styles.cardWrapper}>
-                  <ProductCard product={p} index={index} />
+                  <ProductCard product={p} index={index} onDelete={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    removeProductFromHistory(p.id);
+                  }} />
                 </View>
               ))}
             </View>

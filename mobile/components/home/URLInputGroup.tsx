@@ -223,26 +223,7 @@ export function URLInputGroup({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={[styles.headerLabel, { color: colors.stone }]}>Product URLs</Text>
-        <View style={styles.headerRight}>
-          {urls.length > 2 ? (
-            <Text style={[styles.swipeHint, { color: colors.stone }]}>Swipe left to remove</Text>
-          ) : null}
-          {hasAnyContent ? (
-            <Animated.View style={{ transform: [{ scale: clearScale }] }}>
-              <Pressable
-                onPress={handleClearAll}
-                style={[styles.clearAllBtn, { backgroundColor: colors.fog }]}
-                hitSlop={8}
-              >
-                <Feather name="trash-2" size={12} color={colors.body} />
-                <Text style={[styles.clearAllText, { color: colors.body }]}>Clear all</Text>
-              </Pressable>
-            </Animated.View>
-          ) : null}
-        </View>
-      </View>
+      {/* Header removed */}
 
       {urls.map((url, index) => (
         <Animated.View
@@ -307,7 +288,7 @@ export function URLInputGroup({
 }
 
 const styles = StyleSheet.create({
-  container: { marginBottom: 16, marginTop: 4 },
+  container: { marginBottom: 8, marginTop: 4 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -353,3 +334,44 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 });
+
+export function URLInputHeader() {
+  const { colors } = useThemeColors();
+  const { urls, setUrls } = useComparisonStore();
+  const clearScale = useRef(new Animated.Value(1)).current;
+
+  const handleClearAll = () => {
+    if (!urls.some((u) => u.trim())) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Animated.sequence([
+      Animated.timing(clearScale, { toValue: 0.85, duration: 80, useNativeDriver: true }),
+      Animated.spring(clearScale, { toValue: 1, useNativeDriver: true, tension: 180, friction: 7 }),
+    ]).start();
+    setUrls(urls.map(() => ""));
+  };
+
+  const hasAnyContent = urls.some((u) => u.trim().length > 0);
+
+  return (
+    <View style={[{ backgroundColor: colors.bg, paddingBottom: 12, paddingTop: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+      <Text style={[{ color: colors.stone, ...type.eyebrow }]}>PRODUCT URLS</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        {urls.length > 2 ? (
+          <Text style={[{ color: colors.stone, ...type.caption, fontSize: 11, marginRight: 8, opacity: 0.6 }]}>Swipe left to remove</Text>
+        ) : null}
+        {hasAnyContent ? (
+          <Animated.View style={{ transform: [{ scale: clearScale }] }}>
+            <Pressable
+              onPress={handleClearAll}
+              style={[{ backgroundColor: colors.fog, flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }]}
+              hitSlop={8}
+            >
+              <Feather name="trash-2" size={12} color={colors.body} />
+              <Text style={[{ color: colors.body, ...type.caption, fontWeight: "600" }]}>Clear all</Text>
+            </Pressable>
+          </Animated.View>
+        ) : null}
+      </View>
+    </View>
+  );
+}

@@ -44,7 +44,7 @@ export function CircularWells({
 
   const nodes = items.map((item) => {
     const isActive = selectedId === item.id;
-    const wellBg = isDark ? "#EBEBEB" : colors.modeWell;
+    const wellBg = shape === 'squircle' ? (isDark ? "#EBEBEB" : "#FFFFFF") : colors.modeWell;
 
     return (
       <Pressable
@@ -62,8 +62,8 @@ export function CircularWells({
               backgroundColor: wellBg, 
               borderRadius: shape === 'squircle' ? 16 : size.modeWell / 2, 
               overflow: 'hidden',
-              borderWidth: isActive ? 2 : 0,
-              borderColor: isActive ? colors.primary : "transparent"
+              borderWidth: isActive ? 2 : (shape === 'squircle' && !isDark ? 1 : 0),
+              borderColor: isActive ? colors.primary : (shape === 'squircle' && !isDark ? 'rgba(0,0,0,0.12)' : "transparent")
             }
           ]}
         >

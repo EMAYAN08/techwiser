@@ -64,3 +64,9 @@ export const RETAIL_ORDER = [
   "thesource",
   "other",
 ] as const;
+
+export const ALL_IMAGE_ASSETS = [
+  ALL_WELL.icon,
+  ...TYPE_WELLS.map((w) => w.icon),
+  ...Object.values(RETAIL_WELLS).map((w) => w.icon),
+];

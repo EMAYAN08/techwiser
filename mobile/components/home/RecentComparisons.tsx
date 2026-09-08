@@ -99,7 +99,7 @@ export function RecentComparisons() {
 
   return (
     <View style={styles.container}>
-      <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.stone }]}>Recent</Animated.Text>
+      {/* Header removed and exported */}
       {recentComparisons.length === 0 ? (
         <Text style={[styles.empty, { color: colors.stone }]}>No comparisons yet</Text>
       ) : (
@@ -138,3 +138,13 @@ const styles = StyleSheet.create({
   cardTitle: { ...type.productName, fontSize: 15, marginBottom: 4 },
   cardDate: { ...type.caption },
 });
+
+export function RecentHeader() {
+  const { colors } = useThemeColors();
+  return (
+    <View style={{ backgroundColor: colors.bg, paddingBottom: 8, paddingTop: 4 }}>
+      <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 16 }} />
+      <Text style={[styles.header, { color: colors.stone, marginBottom: 0 }]}>RECENT</Text>
+    </View>
+  );
+}

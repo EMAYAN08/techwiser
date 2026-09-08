@@ -292,8 +292,7 @@ export function QRInputGroup({
   return (
     <View style={{ marginBottom: 8 }}>
       <Animated.View style={fadeUp(scannerEnter, 14)}>
-        <View style={styles.header}>
-          <Text style={[styles.headerLabel, { color: colors.stone }]}>QR scanner</Text>
+        <View style={[styles.header, { justifyContent: "flex-end", height: items.length > 0 ? undefined : 0, marginBottom: items.length > 0 ? 10 : 0 }]}>
           {items.length > 0 ? (
             <Pressable
               onPress={handleClearAll}

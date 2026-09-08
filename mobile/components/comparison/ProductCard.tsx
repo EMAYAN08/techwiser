@@ -5,10 +5,11 @@ import { useRouter } from "expo-router";
 import { Card } from "../ui/Card";
 import { Chip } from "../ui/Chip";
 import { RetailerPill } from "../ui/RetailerPill";
+import { Trash2 } from "lucide-react-native";
 import { useThemeColors } from "../../constants/Colors";
 import { radii } from "../../constants/Layout";
 
-export function ProductCard({ product, index }: { product: any; index: number }) {
+export function ProductCard({ product, index, onDelete }: { product: any; index: number; onDelete?: () => void }) {
   const { colors } = useThemeColors();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -47,6 +48,24 @@ export function ProductCard({ product, index }: { product: any; index: number })
               <Image source={{ uri: product.imageUrl }} style={styles.image} resizeMode="cover" />
             ) : (
               <View style={[styles.silhouette, { borderColor: colors.stone }]} />
+            )}
+            
+            {onDelete && (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                style={({ pressed }) => [
+                  styles.deleteBtn,
+                  { backgroundColor: colors.surfaceHighlight, opacity: pressed ? 0.7 : 1 }
+                ]}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel="Delete item"
+              >
+                <Trash2 size={16} color={colors.ink} strokeWidth={2} />
+              </Pressable>
             )}
           </View>
           <RetailerPill retailer={product.retailer} />
@@ -90,4 +109,15 @@ const styles = StyleSheet.create({
   productPrice: { ...type.price },
   badgesContainer: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: "auto" },
   chip: { height: 26, paddingHorizontal: 8 },
+  deleteBtn: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+  },
 });

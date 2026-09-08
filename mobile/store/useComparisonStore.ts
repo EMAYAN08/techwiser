@@ -59,6 +59,7 @@ interface ComparisonStore {
   setActiveComparison: (result: ComparisonResult | null) => void;
   addRecentComparison: (comparison: Comparison) => void;
   clearRecentComparisons: () => void;
+  removeProductFromHistory: (productId: string) => void;
   // Dev helpers — only for the in-app mock-data dev tools.
   seedMockComparison: (variant: "two" | "three") => void;
   clearActiveComparison: () => void;
@@ -339,6 +340,41 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
       urls: [],
       result: MOCK_LIBRARY_MIX,
     },
+    {
+      id: "4",
+      title: "MacBook Air M3 vs XPS 13",
+      date: "2 weeks ago",
+      urls: [],
+      result: MOCK_RESULT,
+    },
+    {
+      id: "5",
+      title: "Sony WH-1000XM5 vs AirPods Max",
+      date: "3 weeks ago",
+      urls: [],
+      result: MOCK_RESULT_3_PRODUCT,
+    },
+    {
+      id: "6",
+      title: "LG C3 OLED vs Samsung S90C",
+      date: "Last month",
+      urls: [],
+      result: MOCK_LIBRARY_MIX,
+    },
+    {
+      id: "7",
+      title: "Dyson V15 Detect vs LG CordZero",
+      date: "Last month",
+      urls: [],
+      result: MOCK_RESULT,
+    },
+    {
+      id: "8",
+      title: "iPad Pro M4 vs Galaxy Tab S9 Ultra",
+      date: "2 months ago",
+      urls: [],
+      result: MOCK_RESULT_3_PRODUCT,
+    },
   ],
   updateUrl: (index, url) =>
     set((state) => {
@@ -363,6 +399,21 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
       recentComparisons: [comparison, ...state.recentComparisons].slice(0, 10),
     })),
   clearRecentComparisons: () => set({ recentComparisons: [] }),
+  removeProductFromHistory: (productId) =>
+    set((state) => {
+      const newRecent = state.recentComparisons.map(comp => {
+        if (!comp.result) return comp;
+        return {
+          ...comp,
+          result: {
+            ...comp.result,
+            products: comp.result.products.filter(p => p.id !== productId)
+          }
+        };
+      }).filter(comp => comp.result && comp.result.products.length > 0);
+      
+      return { recentComparisons: newRecent };
+    }),
   // Dev helpers
   seedMockComparison: (variant) =>
     set({

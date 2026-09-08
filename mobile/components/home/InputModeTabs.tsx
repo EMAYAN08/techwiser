@@ -17,9 +17,9 @@ type ModeTint = {
 
 const TINTS: Record<InputMode, ModeTint> = {
   url: { icon: "#3B6EA5", accent: "#7FA3C9", wash: "#DCE6F0", wellDark: "#2A3340" },
-  name: { icon: "#3A7A5C", accent: "#7FB396", wash: "#DDEBE4", wellDark: "#2A3832" },
+  name: { icon: "#B85C5C", accent: "#D68F8F", wash: "#F5E6E6", wellDark: "#3D2B2B" },
   upc: { icon: "#8A6A3B", accent: "#C4A574", wash: "#F3E9D6", wellDark: "#3A3328" },
-  qr: { icon: "#1E7A45", accent: "#5BC87A", wash: "#D9F0E2", wellDark: "#26382C" },
+  qr: { icon: "#7A5C99", accent: "#A38FC4", wash: "#EBE6F2", wellDark: "#302B3D" },
 };
 
 interface Tab {
@@ -71,18 +71,23 @@ function GlyphName({ color, accent }: { color: string; accent: string }) {
 
 function GlyphBarcode({ color, accent }: { color: string; accent: string }) {
   const bars = [
-    { x: 5, w: 2.2, h: 22, c: color },
-    { x: 9, w: 1.4, h: 18, c: accent },
-    { x: 12.2, w: 3, h: 22, c: color },
-    { x: 16.4, w: 1.4, h: 16, c: accent },
-    { x: 19.2, w: 2.2, h: 22, c: color },
-    { x: 23, w: 1.4, h: 19, c: accent },
-    { x: 26, w: 3, h: 22, c: color },
+    { x: 8.5, w: 2.2, h: 16, c: color },
+    { x: 12.7, w: 1.5, h: 16, c: accent },
+    { x: 16.2, w: 3, h: 16, c: color },
+    { x: 21.2, w: 1.5, h: 16, c: accent },
+    { x: 24.7, w: 2.2, h: 16, c: color },
   ];
   return (
     <Svg width={34} height={34} viewBox="0 0 34 34" fill="none">
+      {/* Viewfinder Corners */}
+      <Path d="M5 12V7a2 2 0 0 1 2-2h4" stroke={color} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M29 12V7a2 2 0 0 0-2-2h-4" stroke={color} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M5 22v5a2 2 0 0 0 2 2h4" stroke={color} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M29 22v5a2 2 0 0 1-2 2h-4" stroke={color} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+      
+      {/* Barcode Lines */}
       {bars.map((b, i) => (
-        <Rect key={i} x={b.x} y={17 - b.h / 2} width={b.w} height={b.h} rx={0.8} fill={b.c} />
+        <Rect key={i} x={b.x} y={17 - b.h / 2} width={b.w} height={b.h} rx={0.5} fill={b.c} />
       ))}
     </Svg>
   );
@@ -175,7 +180,16 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
             accessibilityState={{ selected: isActive }}
             style={styles.item}
           >
-            <View style={[styles.well, { backgroundColor: wellBg }]}>
+            <View 
+              style={[
+                styles.well, 
+                { 
+                  backgroundColor: wellBg,
+                  borderWidth: isActive ? 2 : 0,
+                  borderColor: isActive ? colors.primary : "transparent"
+                }
+              ]}
+            >
               <Animated.View
                 style={{
                   transform: [

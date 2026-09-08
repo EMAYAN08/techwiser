@@ -3,8 +3,8 @@ import { ScrollView, StyleSheet, View, Text, Animated } from "react-native";
 import { Typography } from "../../constants/Typography";
 import { useRouter } from "expo-router";
 import * as Haptics from "../../utils/haptics";
-import { URLInputGroup } from "../../components/home/URLInputGroup";
-import { RecentComparisons } from "../../components/home/RecentComparisons";
+import { URLInputGroup, URLInputHeader } from "../../components/home/URLInputGroup";
+import { RecentComparisons, RecentHeader } from "../../components/home/RecentComparisons";
 import { LoadingOverlay } from "../../components/home/LoadingOverlay";
 import { InputModeTabs, InputMode } from "../../components/home/InputModeTabs";
 import { NameSearchGroup } from "../../components/home/NameSearchGroup";
@@ -113,38 +113,76 @@ export default function Home() {
     }
   };
 
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const TITLE_HEIGHT = 104;
+  const TABS_HEIGHT = 104;
+  const HEADER_HEIGHT = TITLE_HEIGHT + TABS_HEIGHT;
+
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, TITLE_HEIGHT],
+    outputRange: [0, -TITLE_HEIGHT],
+    extrapolate: "clamp",
+  });
+
   return (
-    <View style={[styles.root, { backgroundColor: colors.bg }]}>
+    <View style={[styles.root, { backgroundColor: colors.bg, paddingTop: Math.max(insets.top, 20) }]}>
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: Math.max(insets.top, 20), backgroundColor: colors.bg, zIndex: 999, elevation: 99 }} />
       <LoadingOverlay visible={isLoading} onCancel={handleCancel} />
 
-      <View
+      <Animated.View
         style={{
-          paddingHorizontal: space.gutter,
-          paddingTop: Math.max(insets.top, 20) + 16,
-          paddingBottom: 8,
-          zIndex: 10,
+          position: "absolute",
+          top: Math.max(insets.top, 20),
+          left: 0,
+          right: 0,
+          zIndex: 100,
           backgroundColor: colors.bg,
+          transform: [{ translateY: headerTranslateY }],
         }}
       >
-        <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.ink }]}>
-          Compare
-        </Animated.Text>
-        <Text style={[styles.subheader, { color: colors.stone }]}>Any 2–3 tech products.</Text>
-        <InputModeTabs activeMode={inputMode} onModeChange={handleModeChange} />
-      </View>
+        <View style={{ height: TITLE_HEIGHT, paddingHorizontal: space.gutter, paddingTop: 16 }}>
+          <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.ink }]}>
+            Compare
+          </Animated.Text>
+          <Text style={[styles.subheader, { color: colors.stone }]}>Any 2–3 tech products.</Text>
+        </View>
 
-      <ScrollView
+        <View style={{ height: TABS_HEIGHT, paddingHorizontal: space.gutter, paddingBottom: 8, backgroundColor: colors.bg }}>
+          <InputModeTabs activeMode={inputMode} onModeChange={handleModeChange} />
+        </View>
+      </Animated.View>
+
+      <Animated.ScrollView
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        scrollEventThrottle={16}
         style={styles.container}
+        stickyHeaderIndices={[0, 2]}
         contentContainerStyle={{
-          paddingHorizontal: space.gutter,
-          paddingTop: 12,
+          paddingTop: TITLE_HEIGHT,
           paddingBottom: 120,
         }}
         keyboardShouldPersistTaps="handled"
         scrollEnabled={scrollEnabled}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View style={{ opacity: panelFade }}>
+        {/* Sticky Header 0: Dynamic Input Header */}
+        <View style={{ zIndex: 10 }} pointerEvents="box-none">
+          <View style={{ height: TABS_HEIGHT }} />
+          <Animated.View style={{ opacity: panelFade, paddingHorizontal: space.gutter, backgroundColor: colors.bg }}>
+            {inputMode === "url" && <URLInputHeader />}
+            {/* Other modes */}
+            {inputMode !== "url" && (
+              <View style={{ backgroundColor: colors.bg, paddingBottom: 12, paddingTop: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={[{ color: colors.stone, ...Typography.eyebrow, textTransform: 'uppercase' }]}>
+                  {inputMode === "name" ? "PRODUCT NAMES" : inputMode === "upc" ? "BARCODE SCANNER" : "QR SCANNER"}
+                </Text>
+              </View>
+            )}
+          </Animated.View>
+        </View>
+
+        {/* Content 1: Input Group */}
+        <Animated.View style={{ opacity: panelFade, paddingHorizontal: space.gutter, backgroundColor: colors.bg }}>
           {inputMode === "url" && (
             <URLInputGroup
               onSwipeStart={() => setScrollEnabled(false)}
@@ -159,8 +197,18 @@ export default function Home() {
           {inputMode === "qr" && <QRInputGroup onCompare={handleCompare} isLoading={isLoading} />}
         </Animated.View>
 
-        <RecentComparisons />
-      </ScrollView>
+        {/* Sticky Header 2: Recent Header */}
+        <View style={{ zIndex: 10, marginTop: -TABS_HEIGHT, paddingTop: TABS_HEIGHT }} pointerEvents="box-none">
+          <View style={{ paddingHorizontal: space.gutter, backgroundColor: colors.bg }}>
+             <RecentHeader />
+          </View>
+        </View>
+
+        {/* Content 3: Recent List */}
+        <View style={{ paddingHorizontal: space.gutter }}>
+          <RecentComparisons />
+        </View>
+      </Animated.ScrollView>
     </View>
   );
 }

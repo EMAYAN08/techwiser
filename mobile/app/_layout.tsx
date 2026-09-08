@@ -1,9 +1,10 @@
 import React from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { View } from "react-native";
+import { View, Image } from "react-native";
 import { useFonts } from "expo-font";
 import { useThemeColors } from "../constants/Colors";
+import { ALL_IMAGE_ASSETS } from "../constants/wellCatalog";
 
 export default function Layout() {
   const { colors, isDark } = useThemeColors();
@@ -30,6 +31,12 @@ export default function Layout() {
           animation: "fade",
         }}
       />
+      {/* GPU Preload Cache for high-resolution logos/icons to prevent flicker */}
+      <View style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}>
+        {ALL_IMAGE_ASSETS.map((asset, i) => (
+          <Image key={i} source={asset} style={{ width: 1, height: 1 }} />
+        ))}
+      </View>
     </View>
   );
 }
