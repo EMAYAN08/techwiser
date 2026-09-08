@@ -81,21 +81,28 @@ export function CircularWells({
         accessibilityState={{ selected: isActive }}
         style={[styles.item, layout === "scroll" ? styles.itemScroll : styles.itemSpread]}
       >
-        <View style={[styles.well, { backgroundColor: wellBg, borderRadius: shape === 'squircle' ? 16 : size.modeWell / 2 }]}>
+        <View style={[styles.well, { backgroundColor: wellBg, borderRadius: shape === 'squircle' ? 16 : size.modeWell / 2, overflow: 'hidden' }]}>
           <Animated.View
-            style={{
-              transform: [
-                { scale: a.scale },
-                {
-                  rotate: a.wobble.interpolate({
-                    inputRange: [-1, 1],
-                    outputRange: ["-8deg", "8deg"],
-                  }),
-                },
-              ],
-            }}
+            style={[
+              { width: "100%", height: "100%", alignItems: "center", justifyContent: "center" },
+              {
+                transform: [
+                  { scale: a.scale },
+                  {
+                    rotate: a.wobble.interpolate({
+                      inputRange: [-1, 1],
+                      outputRange: ["-8deg", "8deg"],
+                    }),
+                  },
+                ],
+              }
+            ]}
           >
-            <Image source={item.icon} style={styles.icon} resizeMode="contain" />
+            <Image 
+              source={item.icon} 
+              style={shape === 'squircle' ? styles.iconFull : styles.icon} 
+              resizeMode={shape === 'squircle' ? "cover" : "contain"} 
+            />
           </Animated.View>
         </View>
         <Text
@@ -171,6 +178,10 @@ const styles = StyleSheet.create({
   icon: {
     width: 56,
     height: 56,
+  },
+  iconFull: {
+    width: "100%",
+    height: "100%",
   },
   label: {
     fontSize: 12,
