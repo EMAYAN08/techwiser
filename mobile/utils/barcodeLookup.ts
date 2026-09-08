@@ -29,6 +29,20 @@ export type BarcodeLookup = {
 
 const cache = new Map<string, BarcodeLookup>();
 
+const NESTED_PARAMS = [
+  "murl",
+  "url",
+  "u",
+  "dest",
+  "destination",
+  "redirect",
+  "redir",
+  "to",
+  "target",
+  "link",
+  "newurl",
+];
+
 function apiBase() {
   return (process.env.EXPO_PUBLIC_API_URL || "https://techwiser.onrender.com").replace(/\/$/, "");
 }
@@ -95,6 +109,7 @@ function asOffer(url: string): BarcodeOffer | null {
     const host = parsed.host || hostOf(parsed.url);
     if (!isSupportedHost(host)) return null;
     if (/\/s\?/.test(parsed.url) || /\/search/i.test(parsed.url)) return null;
+    if (/norob|\/alink\//i.test(parsed.url)) return null;
     return {
       url: canonicalizeUrl(parsed.url),
       retailer: parsed.retailer || retailerFromHost(host),
@@ -105,13 +120,93 @@ function asOffer(url: string): BarcodeOffer | null {
   }
 }
 
+function decodeMaybe(raw: string): string {
+  let s = raw;
+  for (let i = 0; i < 2; i++) {
+    try {
+      const next = decodeURIComponent(s);
+      if (next === s) break;
+      s = next;
+    } catch {
+      break;
+    }
+  }
+  return s;
+}
+
+function candidateUrls(raw: string): string[] {
+  if (!raw) return [];
+  const out: string[] = [];
+  const push = (value?: string | null) => {
+    if (!value) return;
+    const s = decodeMaybe(value.trim());
+    if (/^https?:\/\//i.test(s)) out.push(s);
+  };
+  push(raw);
+  try {
+    const u = new URL(raw);
+    for (const key of NESTED_PARAMS) push(u.searchParams.get(key));
+  } catch {
+    /* ignore */
+  }
+  const re = /https?:\/\/[^\s"'<>\\]+/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(raw))) push(m[0]);
+  return [...new Set(out)];
+}
+
+function pickOffer(raw: string): BarcodeOffer | null {
+  for (const url of candidateUrls(raw)) {
+    const offer = asOffer(url);
+    if (offer) return offer;
+  }
+  return null;
+}
+
+async function hopHeaders(url: string, timeoutMs = 4500): Promise<string[]> {
+  const found: string[] = [];
+  const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      redirect: "manual" as RequestRedirect,
+      headers: { Accept: "*/*" },
+      ...(ctrl ? { signal: ctrl.signal } : {}),
+    });
+    const loc = res.headers.get("location") || res.headers.get("Location");
+    if (loc) found.push(loc);
+    if (res.url) found.push(res.url);
+  } catch {
+    /* CORS / RN / timeout */
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+  return found;
+}
+
+async function resolveOfferUrl(url: string): Promise<BarcodeOffer | null> {
+  if (!url) return null;
+  const direct = pickOffer(url);
+  if (direct) return direct;
+  const hops = await hopHeaders(url);
+  for (const hop of hops) {
+    const offer = pickOffer(hop);
+    if (offer) return offer;
+  }
+  return null;
+}
+
 function amazonFromAsin(asin?: string | null): BarcodeOffer | null {
   if (!asin || !/^[A-Z0-9]{10}$/i.test(asin)) return null;
   return asOffer(`https://www.amazon.ca/dp/${asin.toUpperCase()}`);
 }
 
-function amazonScore(o: BarcodeOffer): number {
-  return o.domain.includes("amazon.ca") && /\/dp\//i.test(o.url) ? 0 : 1;
+function offerRank(o: BarcodeOffer): number {
+  if (o.domain.includes("amazon.ca") && /\/dp\//i.test(o.url)) return 0;
+  if (o.domain.includes("bestbuy.ca") && /\/product\//i.test(o.url)) return 1;
+  if (o.domain.includes("walmart.ca") && /\/ip\//i.test(o.url)) return 2;
+  return 3;
 }
 
 function uniqueOffers(list: BarcodeOffer[]): BarcodeOffer[] {
@@ -122,7 +217,7 @@ function uniqueOffers(list: BarcodeOffer[]): BarcodeOffer[] {
     seen.add(o.url);
     out.push(o);
   }
-  return out.sort((a, b) => amazonScore(a) - amazonScore(b));
+  return out.sort((a, b) => offerRank(a) - offerRank(b));
 }
 
 function titleFromMicrolink(raw: string | undefined, code: string): string {
@@ -154,16 +249,15 @@ async function fetchJson(url: string, timeoutMs = 5000): Promise<any | null> {
   }
 }
 
-function lookupFromPayload(code: string, data: any, source: string): BarcodeLookup | null {
+async function lookupFromPayload(code: string, data: any, source: string): Promise<BarcodeLookup | null> {
   if (!data || typeof data !== "object") return null;
   const asin = data.asin || harvestAsin(data.title, JSON.stringify(data.urls || []));
+  const incoming = Array.isArray(data.urls) ? data.urls : [];
+  const resolved = await Promise.all(
+    incoming.map((u: any) => resolveOfferUrl(typeof u === "string" ? u : u?.url || ""))
+  );
   const urls = uniqueOffers(
-    [
-      ...(Array.isArray(data.urls) ? data.urls : [])
-        .map((u: any) => (typeof u === "string" ? asOffer(u) : asOffer(u?.url)))
-        .filter(Boolean) as BarcodeOffer[],
-      amazonFromAsin(asin),
-    ].filter(Boolean) as BarcodeOffer[]
+    [...resolved, amazonFromAsin(asin)].filter(Boolean) as BarcodeOffer[]
   );
   const title = data.title || "";
   if (!urls.length && !title) return null;
@@ -203,7 +297,7 @@ async function postBarcode(url: string, code: string): Promise<any | null> {
 async function fromServer(code: string): Promise<BarcodeLookup | null> {
   for (const endpoint of serverEndpoints()) {
     const json = await postBarcode(endpoint, code);
-    const parsed = lookupFromPayload(
+    const parsed = await lookupFromPayload(
       code,
       json?.data,
       endpoint.includes("onrender.com") ? "server" : "local"
@@ -226,13 +320,11 @@ async function fromUpcItemDb(code: string): Promise<Partial<BarcodeLookup> | nul
       ? item.images.filter((x: unknown) => typeof x === "string")
       : [];
     const asin = item.asin || harvestAsin(item.title, item.description, JSON.stringify(item.offers || []));
+    const resolved = await Promise.all(
+      ((item.offers || []) as any[]).map((o) => resolveOfferUrl(o?.link || o?.url || ""))
+    );
     const urls = uniqueOffers(
-      [
-        amazonFromAsin(asin),
-        ...((item.offers || []) as any[])
-          .map((o) => asOffer(o?.link || o?.url || ""))
-          .filter(Boolean) as BarcodeOffer[],
-      ].filter(Boolean) as BarcodeOffer[]
+      [amazonFromAsin(asin), ...resolved].filter(Boolean) as BarcodeOffer[]
     );
     return {
       title: item.title || "",
@@ -250,13 +342,18 @@ async function fromUpcItemDb(code: string): Promise<Partial<BarcodeLookup> | nul
 const STOP = new Set([
   "the", "and", "for", "with", "pack", "pk", "can", "cans", "oz", "fl", "ml",
   "soda", "drink", "soft", "bottle", "bottles", "count", "ct", "size", "new", "from",
+  "each", "item", "free", "live",
 ]);
 
 function tokens(s: string): string[] {
   return s
     .toLowerCase()
     .split(/[^a-z0-9]+/)
-    .filter((t) => t.length > 2 && !STOP.has(t) && !/^\d+$/.test(t));
+    .filter((t) => t.length > 2 && !STOP.has(t));
+}
+
+function isModelToken(t: string): boolean {
+  return /[a-z]/.test(t) && /\d/.test(t) && t.length >= 4;
 }
 
 function similarName(query: string, candidate: string): boolean {
@@ -264,13 +361,25 @@ function similarName(query: string, candidate: string): boolean {
   const cList = tokens(candidate);
   const c = new Set(cList);
   if (q.length === 0 || cList.length === 0) return false;
-  const qModels = q.filter((t) => /[a-z]/.test(t) && /\d/.test(t) && t.length >= 4);
-  const cModels = new Set(cList.filter((t) => /[a-z]/.test(t) && /\d/.test(t) && t.length >= 4));
+
+  const qYears = q.filter((t) => /^20\d{2}$/.test(t));
+  const cYears = new Set(cList.filter((t) => /^20\d{2}$/.test(t)));
+  if (qYears.length > 0 && !qYears.some((y) => cYears.has(y))) return false;
+
+  const qModels = q.filter(isModelToken);
+  const cModels = new Set(cList.filter(isModelToken));
   if (qModels.length > 0) return qModels.some((t) => cModels.has(t));
+
   const hits = q.filter((t) => c.has(t));
   const need = Math.min(2, q.length);
   if (hits.length < need) return false;
-  return hits.length / q.length >= 0.5;
+  return hits.length / q.length >= 0.45;
+}
+
+function searchQueryFromTitle(title: string): string {
+  const t = title.replace(/[®™]/g, " ").replace(/\s+/g, " ").trim();
+  const head = t.split(/\s*[-|–—,:]\s*/)[0].trim();
+  return (head.split(/\s+/).length >= 3 ? head : t).slice(0, 80);
 }
 
 async function fromBestBuy(query: string, expectedTitle?: string): Promise<BarcodeOffer[]> {
@@ -347,73 +456,70 @@ async function fromMicrolinkPages(code: string): Promise<Partial<BarcodeLookup> 
   return null;
 }
 
+function toLookup(
+  code: string,
+  parts: Array<Partial<BarcodeLookup> | null | undefined>,
+  extraUrls: BarcodeOffer[] = []
+): BarcodeLookup {
+  const title =
+    parts.find((p) => p?.title && !/^UPC\s/i.test(p.title))?.title ||
+    parts.find((p) => p?.title)?.title ||
+    `UPC ${formatGtin(code)}`;
+  const brand = parts.find((p) => p?.brand)?.brand || null;
+  const imageUrl = parts.find((p) => p?.imageUrl)?.imageUrl || null;
+  const imageCandidates =
+    parts.find((p) => p?.imageCandidates && p.imageCandidates.length)?.imageCandidates ||
+    (imageUrl ? [imageUrl] : []);
+  const asin = parts.find((p) => p?.asin)?.asin || harvestAsin(title) || null;
+  const urls = uniqueOffers(
+    [
+      amazonFromAsin(asin),
+      ...extraUrls,
+      ...parts.flatMap((p) => p?.urls || []),
+    ].filter(Boolean) as BarcodeOffer[]
+  );
+  const source = parts.find((p) => p?.urls && p.urls.length)?.source || parts.find((p) => p?.source)?.source || "none";
+  return { code, title, brand, imageUrl, imageCandidates, urls, source, asin };
+}
+
 export async function lookupBarcode(rawCode: string): Promise<BarcodeLookup> {
   const code = normalizeGtin(rawCode) || onlyKeepDigits(rawCode);
   const cached = cache.get(code);
   if (cached) return cached;
 
-  const server = await fromServer(code);
-  if (server && server.urls.length > 0) {
-    cache.set(code, server);
-    return server;
+  // Native can call upcitemdb directly. Web is CORS-blocked, so Metro /api/barcode goes first.
+  const firstFn = Platform.OS === "web" ? fromServer : fromUpcItemDb;
+  const secondFn = Platform.OS === "web" ? fromUpcItemDb : fromServer;
+
+  const first = await firstFn(code);
+  const firstLookup = first
+    ? toLookup(code, [first])
+    : null;
+  if (firstLookup && firstLookup.urls.length > 0) {
+    cache.set(code, firstLookup);
+    return firstLookup;
   }
 
-  const upc = await fromUpcItemDb(code);
-  const asin = upc?.asin || server?.asin || null;
-  if (asin && amazonFromAsin(asin)) {
-    const offer = amazonFromAsin(asin)!;
-    const result: BarcodeLookup = {
-      code,
-      title: upc?.title || server?.title || `UPC ${formatGtin(code)}`,
-      brand: upc?.brand || server?.brand || null,
-      imageUrl: upc?.imageUrl || server?.imageUrl || null,
-      imageCandidates: upc?.imageCandidates || (upc?.imageUrl ? [upc.imageUrl] : []),
-      urls: uniqueOffers([offer, ...(upc?.urls || []), ...(server?.urls || [])]),
-      source: upc?.source || server?.source || "upcitemdb",
-      asin,
-    };
-    cache.set(code, result);
-    return result;
+  const second = await secondFn(code);
+  const merged = toLookup(code, [first, second]);
+  if (merged.urls.length > 0) {
+    cache.set(code, merged);
+    return merged;
   }
 
+  const title = merged.title;
   const [facts, micro] = await Promise.all([fromOpenFacts(code), fromMicrolinkPages(code)]);
-  const title = upc?.title || server?.title || facts?.title || micro?.title || `UPC ${formatGtin(code)}`;
-  const brand = upc?.brand || server?.brand || facts?.brand || null;
-  const imageUrl = upc?.imageUrl || server?.imageUrl || facts?.imageUrl || micro?.imageUrl || null;
-  const resolvedAsin = asin || micro?.asin || harvestAsin(title) || null;
-
+  const named = toLookup(code, [first, second, facts, micro]);
   let bb: BarcodeOffer[] = [];
-  if (!resolvedAsin && title) {
-    bb = await fromBestBuy(code, title);
-    if (bb.length === 0) {
-      const q = title.replace(/\b(\d+\s?pk|\d+\s?pack|fridge pack|cans?|fl oz|ml)\b/gi, " ").replace(/\s+/g, " ").trim().slice(0, 80);
-      if (q) bb = await fromBestBuy(q, title);
-    }
-  } else if (!resolvedAsin) {
+  if (!named.asin && named.title && !/^UPC\s/i.test(named.title)) {
+    bb = await fromBestBuy(searchQueryFromTitle(named.title), named.title);
+    if (bb.length === 0) bb = await fromBestBuy(named.title.slice(0, 80), named.title);
+  } else if (!named.asin) {
     bb = await fromBestBuy(code);
   }
 
-  const urls = uniqueOffers(
-    [
-      amazonFromAsin(resolvedAsin),
-      ...(upc?.urls || []),
-      ...(server?.urls || []),
-      ...(micro?.urls || []),
-      ...bb,
-    ].filter(Boolean) as BarcodeOffer[]
-  );
-
-  const result: BarcodeLookup = {
-    code,
-    title,
-    brand,
-    imageUrl,
-    imageCandidates: imageUrl ? [imageUrl] : [],
-    urls,
-    source: upc?.source || server?.source || facts?.source || micro?.source || "none",
-    asin: resolvedAsin,
-  };
-  if (urls.length > 0) cache.set(code, result);
+  const result = toLookup(code, [named, facts, micro], bb);
+  if (result.urls.length > 0) cache.set(code, result);
   return result;
 }
 
