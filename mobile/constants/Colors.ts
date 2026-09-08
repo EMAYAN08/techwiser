@@ -125,8 +125,16 @@ export function useThemeColors() {
   };
 }
 
-export function getRetailerColor(retailerName?: string, fallback?: string) {
-  return fallback || paletteTokens.stone;
+export function getRetailerColor(retailerName?: string, isDark?: boolean) {
+  if (!retailerName) return isDark ? "#A8A8A4" : "#5A5A58";
+  const normalized = retailerName.toLowerCase().replace(/[^a-z]/g, "");
+  if (normalized.includes("bestbuy")) return isDark ? "#60A5FA" : "#0046BE";
+  if (normalized.includes("walmart")) return isDark ? "#FDE047" : "#D97706";
+  if (normalized.includes("canadacomputers") || normalized.includes("candacomp")) return isDark ? "#F87171" : "#DC2626";
+  if (normalized.includes("staples")) return isDark ? "#FDA4AF" : "#9F1239";
+  if (normalized.includes("costco")) return isDark ? "#F472B6" : "#DB2777";
+  if (normalized.includes("amazon")) return isDark ? "#FDBA74" : "#EA580C";
+  return isDark ? "#A8A8A4" : "#5A5A58";
 }
 
 export const RETAILER_NAMES: Record<string, string> = {

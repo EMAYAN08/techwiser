@@ -66,7 +66,8 @@ interface ProductHeaderCardProps {
 }
 
 function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: ProductHeaderCardProps) {
-  const { colors } = useThemeColors();
+  const { colors, isDark } = useThemeColors();
+  const retColor = getRetailerColor(product.retailer, isDark);
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(8)).current;
 
@@ -98,25 +99,45 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
           borderRadius={radii.card}
           style={[
             styles.headerCard,
-            { flexGrow: 1 },
+            { flexGrow: 1, paddingTop: compact ? 6 : 10 },
             compact && styles.headerCardCompact,
             isRecommended && { borderColor: colors.spotify, borderWidth: 2 },
           ]}
         >
-          <View style={styles.infoWrap}>
-            <Info size={14} color={colors.stone} strokeWidth={2.5} />
-          </View>
-          {isRecommended && (
-            <View style={[styles.crownWrap, { backgroundColor: colors.spotifyWash }]}>
-              <Crown size={12} color={colors.spotify} strokeWidth={2.5} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'stretch', alignItems: 'flex-start', minHeight: 22, width: '100%', marginBottom: 0 }}>
+            <View>
+              {isRecommended && (
+                <View style={[styles.crownWrap, { backgroundColor: colors.spotifyWash }]}>
+                  <Crown size={12} color={colors.spotify} strokeWidth={2.5} />
+                </View>
+              )}
             </View>
-          )}
+            <BlurView
+              intensity={isDark ? 30 : 60}
+              tint={isDark ? "dark" : "light"}
+              style={[
+                styles.topRightBadge,
+                compact && styles.topRightBadgeCompact,
+                { 
+                  backgroundColor: `${retColor}26`, 
+                  borderColor: `${retColor}4D`, 
+                  borderWidth: StyleSheet.hairlineWidth,
+                  overflow: "hidden" 
+                }
+              ]}
+            >
+              <Text style={[styles.retailerText, { color: retColor }]} numberOfLines={1} ellipsizeMode="tail">
+                {product.retailer}
+              </Text>
+              <Info size={10} color={retColor} strokeWidth={2.5} />
+            </BlurView>
+          </View>
 
           <View
             style={[
               styles.headerImageWrap,
               compact && styles.headerImageWrapCompact,
-              { backgroundColor: colors.fog },
+              { backgroundColor: colors.fog, marginTop: 0 },
             ]}
           >
             {product.imageUrl ? (
@@ -139,15 +160,15 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
           </Text>
 
           {product.price && product.price !== "N/A" && (
-            <Text
-              style={[styles.productPrice, compact && styles.productPriceCompact, { color: colors.stone }]}
-              numberOfLines={1}
-            >
-              {product.price}
-            </Text>
+            <View style={{ backgroundColor: '#FEF08A', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4, transform: [{ rotate: '-1deg' }] }}>
+              <Text
+                style={[styles.productPrice, compact && styles.productPriceCompact, { color: '#1C1C1C', fontWeight: '700' }]}
+                numberOfLines={1}
+              >
+                {product.price}
+              </Text>
+            </View>
           )}
-
-          <RetailerPill retailer={product.retailer} />
         </Card>
       </Pressable>
     </Animated.View>
@@ -187,7 +208,7 @@ function KeyDifferencesCard({
 
   return (
     <Card borderRadius={radii.card} style={styles.diffCard}>
-      <Text style={[styles.diffHeading, { color: colors.stone }]}>KEY DIFFERENCES</Text>
+      <Text style={[styles.diffHeading, { color: colors.body }]}>KEY DIFFERENCES</Text>
       {differences.map((diff, i) => (
         <View
           key={`${diff.label}-${i}`}
@@ -199,7 +220,7 @@ function KeyDifferencesCard({
             },
           ]}
         >
-          <Text style={[styles.diffLabel, { color: colors.body }]}>{diff.label}</Text>
+          <Text style={[styles.diffLabel, { color: colors.ink, opacity: 0.9 }]}>{diff.label}</Text>
           <Pressable style={styles.diffValuesRow} onPress={() => onSpecPress(diff.label, diff.values)}>
             {diff.values.map((val, idx) => {
               const win = diff.isDraw || diff.winnerIndex === idx;
@@ -210,8 +231,8 @@ function KeyDifferencesCard({
                     styles.diffCol,
                     {
                       backgroundColor: win ? colors.spotifyWash : colors.fog,
-                      borderColor: win ? colors.spotify : "transparent",
-                      borderWidth: win ? 1.5 : 0,
+                      borderColor: win ? colors.spotify : colors.stone,
+                      borderWidth: win ? 1.5 : 1,
                     },
                   ]}
                 >
@@ -220,7 +241,7 @@ function KeyDifferencesCard({
                       <Trophy size={9} color={colors.spotifyInk} strokeWidth={2.5} />
                     </View>
                   )}
-                  <Text style={[styles.diffValue, { color: win ? colors.ink : colors.stone }]} numberOfLines={3}>
+                  <Text style={[styles.diffValue, { color: colors.ink, fontWeight: win ? "700" : "400" }]}>
                     {val || "—"}
                   </Text>
                 </View>
@@ -248,7 +269,8 @@ function ValueCard({ value, colors, width }: ValueCardProps) {
         {
           width,
           backgroundColor: isWinner ? colors.spotifyWash : colors.fog,
-          borderColor: isWinner ? colors.spotify : "transparent",
+          borderColor: isWinner ? colors.spotify : colors.stone,
+          borderWidth: isWinner ? 1.5 : 1,
         },
       ]}
       accessible={false}
@@ -259,10 +281,7 @@ function ValueCard({ value, colors, width }: ValueCardProps) {
         </View>
       )}
       <Text
-        style={[styles.valueCardText, { color: isWinner ? colors.ink : colors.stone }]}
-        numberOfLines={2}
-        adjustsFontSizeToFit
-        minimumFontScale={0.7}
+        style={[styles.valueCardText, { color: colors.ink, fontWeight: isWinner ? "700" : "400" }]}
       >
         {value.displayValue}
       </Text>
@@ -619,6 +638,26 @@ export default function CompareScreen() {
     );
   };
 
+  const AltImage = ({ uri, colors }: { uri?: string; colors: any }) => {
+    const [error, setError] = useState(false);
+    const isValid = uri && uri.trim().startsWith("http");
+    if (!isValid || error) {
+      return (
+        <View style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: colors.fog, alignItems: "center", justifyContent: "center" }}>
+          <PackageOpen size={32} color={colors.stone} />
+        </View>
+      );
+    }
+    return (
+      <Image
+        source={{ uri }}
+        style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: colors.fog }}
+        resizeMode="contain"
+        onError={() => setError(true)}
+      />
+    );
+  };
+
   const renderAlternatives = () => {
     if (!alternativesData) return null;
 
@@ -692,26 +731,7 @@ export default function CompareScreen() {
               }}
             >
               <Card borderRadius={radii.card} style={{ padding: 16, flexDirection: "row", gap: 16 }}>
-                {alt.imageUrl ? (
-                  <Image
-                    source={{ uri: alt.imageUrl }}
-                    style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: colors.fog }}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <View
-                    style={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: 12,
-                      backgroundColor: colors.fog,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <PackageOpen size={32} color={colors.stone} />
-                  </View>
-                )}
+                <AltImage uri={alt.imageUrl} colors={colors} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ ...type.productName, fontSize: 17, color: colors.ink, marginBottom: 4 }}>
                     {alt.name}
@@ -896,22 +916,30 @@ const styles = StyleSheet.create({
     minHeight: 0,
     gap: 6,
   },
-  infoWrap: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    zIndex: 2,
-  },
   crownWrap: {
-    position: "absolute",
-    top: 10,
-    right: 10,
     width: 22,
     height: 22,
     borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 2,
+  },
+  topRightBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: radii.pill,
+    flexShrink: 1,
+  },
+  topRightBadgeCompact: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  retailerText: {
+    ...type.caption,
+    fontSize: 10,
+    fontWeight: "600",
   },
   headerImageWrap: {
     width: 72,

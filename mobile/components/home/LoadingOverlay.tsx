@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, Animated, StyleSheet } from "react-native";
+import { View, Text, Animated, StyleSheet, Easing } from "react-native";
 import { type } from "../../constants/Typography";
 import { useThemeColors } from "../../constants/Colors";
 import { Button } from "../ui/Button";
@@ -11,13 +11,89 @@ const MESSAGES = [
   "Calculating the winner...",
 ];
 
+function ServerStack({ colors }: { colors: any }) {
+  const progress = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(progress, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 500, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [progress, pulse]);
+
+  const translateY = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -36],
+  });
+
+  const topOpacity = progress.interpolate({
+    inputRange: [0, 0.8, 1],
+    outputRange: [1, 0, 0],
+  });
+  const topScale = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.85],
+  });
+
+  const bottomOpacity = progress.interpolate({
+    inputRange: [0, 0.2, 1],
+    outputRange: [0, 1, 1],
+  });
+  const bottomScale = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.85, 1],
+  });
+
+  const led = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] });
+
+  const renderBlock = (opacity: any, scale: any) => (
+    <Animated.View
+      style={[
+        styles.serverBlock,
+        {
+          borderColor: colors.spotify,
+          backgroundColor: colors.spotifyWash,
+          opacity,
+          transform: [{ scale }],
+        },
+      ]}
+    >
+      <View style={{ flexDirection: "row", gap: 6 }}>
+        <View style={[styles.serverLine, { width: 24, backgroundColor: colors.spotify }]} />
+        <View style={[styles.serverLine, { width: 12, backgroundColor: colors.spotify }]} />
+      </View>
+      <Animated.View style={[styles.serverLed, { backgroundColor: colors.spotify, opacity: led }]} />
+    </Animated.View>
+  );
+
+  return (
+    <View style={styles.serverContainer}>
+      <Animated.View style={{ transform: [{ translateY }] }}>
+        {renderBlock(topOpacity, topScale)}
+        {renderBlock(1, 1)}
+        {renderBlock(1, 1)}
+        {renderBlock(bottomOpacity, bottomScale)}
+      </Animated.View>
+    </View>
+  );
+}
+
 export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCancel?: () => void }) {
   const { colors, isDark } = useThemeColors();
   const [msgIndex, setMsgIndex] = useState(0);
   const msgOpacity = useRef(new Animated.Value(1)).current;
-  const dot1 = useRef(new Animated.Value(0.3)).current;
-  const dot2 = useRef(new Animated.Value(0.3)).current;
-  const dot3 = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
     if (!visible) return;
@@ -38,28 +114,6 @@ export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCanc
     return () => clearInterval(interval);
   }, [visible, msgOpacity]);
 
-  useEffect(() => {
-    if (!visible) return;
-    let cancelled = false;
-    const pulse = () => {
-      if (cancelled) return;
-      Animated.sequence([
-        Animated.timing(dot1, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(dot2, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(dot3, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(dot1, { toValue: 0.3, duration: 300, useNativeDriver: true }),
-        Animated.timing(dot2, { toValue: 0.3, duration: 300, useNativeDriver: true }),
-        Animated.timing(dot3, { toValue: 0.3, duration: 300, useNativeDriver: true }),
-      ]).start(({ finished }) => {
-        if (finished && !cancelled) pulse();
-      });
-    };
-    pulse();
-    return () => {
-      cancelled = true;
-    };
-  }, [visible, dot1, dot2, dot3]);
-
   if (!visible) return null;
 
   return (
@@ -70,11 +124,7 @@ export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCanc
       ]}
     >
       <View style={styles.content}>
-        <View style={styles.dots}>
-          <Animated.View style={[styles.dot, { opacity: dot1, backgroundColor: colors.spotify }]} />
-          <Animated.View style={[styles.dot, { opacity: dot2, backgroundColor: colors.spotify }]} />
-          <Animated.View style={[styles.dot, { opacity: dot3, backgroundColor: colors.spotify }]} />
-        </View>
+        <ServerStack colors={colors} />
         <Animated.Text style={[styles.message, { opacity: msgOpacity, color: colors.ink }]}>
           {MESSAGES[msgIndex]}
         </Animated.Text>
@@ -96,13 +146,33 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     zIndex: 100,
   },
-  content: { alignItems: "center", width: "100%", paddingHorizontal: 40 },
-  dots: { flexDirection: "row", marginBottom: 24 },
-  dot: {
+  content: { alignItems: "center", width: "100%", paddingHorizontal: 40, marginTop: 72 },
+  serverContainer: {
+    height: 100,
+    overflow: "hidden",
+    marginBottom: 32,
+    justifyContent: "flex-start",
+  },
+  serverBlock: {
+    width: 80,
+    height: 28,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  serverLine: {
+    height: 4,
+    borderRadius: 2,
+    opacity: 0.6,
+  },
+  serverLed: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    marginHorizontal: 4,
   },
   message: {
     ...type.body,

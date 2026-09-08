@@ -155,19 +155,20 @@ export default function Home() {
       <Animated.ScrollView
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
         scrollEventThrottle={16}
-        style={styles.container}
-        stickyHeaderIndices={[0, 2]}
+        style={[styles.container, { marginTop: TITLE_HEIGHT }]}
+        stickyHeaderIndices={[1, 3]}
         contentContainerStyle={{
-          paddingTop: TITLE_HEIGHT,
           paddingBottom: 120,
         }}
         keyboardShouldPersistTaps="handled"
         scrollEnabled={scrollEnabled}
         showsVerticalScrollIndicator={false}
       >
-        {/* Sticky Header 0: Dynamic Input Header */}
-        <View style={{ zIndex: 10 }} pointerEvents="box-none">
-          <View style={{ height: TABS_HEIGHT }} />
+        {/* Content 0: Dummy spacer to sit behind the Tabs initially */}
+        <View style={{ height: TABS_HEIGHT }} />
+
+        {/* Sticky Header 1: Dynamic Input Header */}
+        <View style={{ zIndex: 10, backgroundColor: colors.bg }} pointerEvents="box-none">
           <Animated.View style={{ opacity: panelFade, paddingHorizontal: space.gutter, backgroundColor: colors.bg }}>
             {inputMode === "url" && <URLInputHeader />}
             {/* Other modes */}
@@ -181,7 +182,7 @@ export default function Home() {
           </Animated.View>
         </View>
 
-        {/* Content 1: Input Group */}
+        {/* Content 2: Input Group */}
         <Animated.View style={{ opacity: panelFade, paddingHorizontal: space.gutter, backgroundColor: colors.bg }}>
           {inputMode === "url" && (
             <URLInputGroup
@@ -197,14 +198,12 @@ export default function Home() {
           {inputMode === "qr" && <QRInputGroup onCompare={handleCompare} isLoading={isLoading} />}
         </Animated.View>
 
-        {/* Sticky Header 2: Recent Header */}
-        <View style={{ zIndex: 10, marginTop: -TABS_HEIGHT, paddingTop: TABS_HEIGHT }} pointerEvents="box-none">
-          <View style={{ paddingHorizontal: space.gutter, backgroundColor: colors.bg }}>
-             <RecentHeader />
-          </View>
+        {/* Sticky Header 3: Recent Header */}
+        <View style={{ zIndex: 10, paddingHorizontal: space.gutter, backgroundColor: colors.bg }} pointerEvents="box-none">
+           <RecentHeader />
         </View>
 
-        {/* Content 3: Recent List */}
+        {/* Content 4: Recent List */}
         <View style={{ paddingHorizontal: space.gutter }}>
           <RecentComparisons />
         </View>

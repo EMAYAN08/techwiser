@@ -387,9 +387,13 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
       state.urls.length < 3 ? { urls: [...state.urls, ""] } : state
     ),
   removeUrl: (index) =>
-    set((state) => ({
-      urls: state.urls.filter((_, i) => i !== index),
-    })),
+    set((state) => {
+      const newUrls = state.urls.filter((_, i) => i !== index);
+      while (newUrls.length < 2) {
+        newUrls.push("");
+      }
+      return { urls: newUrls };
+    }),
   setUrls: (urls) => set({ urls }),
   setLoading: (isLoading, message) =>
     set({ isLoading, loadingMessage: message ?? "Analyzing products..." }),

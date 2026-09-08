@@ -53,21 +53,32 @@ function ComparisonCard({ comparison, index }: { comparison: Comparison; index: 
             {products.slice(0, 3).map((p, i) => (
               <View
                 key={p.id}
-                style={[
-                  styles.thumb,
-                  {
-                    marginLeft: i === 0 ? 0 : -10,
-                    zIndex: 4 - i,
-                    backgroundColor: colors.fog,
-                    borderColor: colors.surface,
-                  },
-                ]}
+                style={{
+                  marginLeft: i === 0 ? 0 : -10,
+                  zIndex: 4 - i,
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: colors.surface,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
-                {p.imageUrl ? (
-                  <Image source={{ uri: p.imageUrl }} style={styles.thumbImage} resizeMode="cover" />
-                ) : (
-                  <View style={[styles.thumbSilhouette, { borderColor: colors.stone }]} />
-                )}
+                <View
+                  style={[
+                    styles.thumb,
+                    {
+                      backgroundColor: colors.fog,
+                      borderColor: colors.stone,
+                    },
+                  ]}
+                >
+                  {p.imageUrl ? (
+                    <Image source={{ uri: p.imageUrl }} style={styles.thumbImage} resizeMode="cover" />
+                  ) : (
+                    <View style={[styles.thumbSilhouette, { borderColor: colors.stone }]} />
+                  )}
+                </View>
               </View>
             ))}
           </View>
@@ -112,7 +123,7 @@ export function RecentComparisons() {
 }
 
 const styles = StyleSheet.create({
-  container: { marginTop: 32 },
+  container: { marginTop: 12 },
   header: { ...type.eyebrow, marginBottom: 16 },
   empty: { ...type.body },
   cardWrapper: { marginBottom: 12 },
@@ -122,7 +133,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    borderWidth: 2,
+    borderWidth: 1,
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",

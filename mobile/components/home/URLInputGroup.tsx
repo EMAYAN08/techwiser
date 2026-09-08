@@ -93,7 +93,11 @@ function SwipeableRow({
       Animated.timing(translateX, { toValue: -360, duration: 220, useNativeDriver: true }),
       Animated.timing(rowOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
     ]).start(() => {
-      Animated.timing(rowHeight, { toValue: 0, duration: 180, useNativeDriver: false }).start(() => onDelete());
+      onDelete();
+      // Reset state instantly since index keys cause this instance to be reused by the next row
+      translateX.setValue(0);
+      rowOpacity.setValue(1);
+      deleting.current = false;
     });
   };
 
@@ -240,7 +244,7 @@ export function URLInputGroup({
           <SwipeableRow
             index={index}
             url={url}
-            canDelete={index >= 2}
+            canDelete={true}
             onPaste={() => handlePaste(index)}
             onUpdate={(text) => updateUrl(index, text)}
             onDelete={() => removeUrl(index)}
