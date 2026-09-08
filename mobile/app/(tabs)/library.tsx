@@ -146,7 +146,7 @@ export default function LibraryScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg, paddingTop: Math.max(insets.top, 20) }]}>
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: Math.max(insets.top, 20), backgroundColor: colors.bg, zIndex: 999 }} />
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: Math.max(insets.top, 20), backgroundColor: colors.bg, zIndex: 999, elevation: 99 }} />
       <Animated.View
         style={{
           position: "absolute",
@@ -250,6 +250,7 @@ export default function LibraryScreen() {
 
       <Animated.ScrollView
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        onScrollBeginDrag={() => { if (menuOpen) setMenuOpen(false); }}
         scrollEventThrottle={16}
         contentContainerStyle={[styles.scroll, { paddingTop: HEADER_HEIGHT, paddingBottom: 120 }]}
         showsVerticalScrollIndicator={false}
