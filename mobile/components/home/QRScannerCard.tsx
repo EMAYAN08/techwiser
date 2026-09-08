@@ -52,7 +52,7 @@ type BarcodeDetectorCtor = new (o: { formats: string[] }) => {
 };
 
 function observationsFromJsQR(imageData: ImageData, dw: number, dh: number): QrObservation | null {
-  const code = jsQR(imageData.data, dw, dh, { inversionAttempts: "dontInvert" });
+  const code = jsQR(imageData.data, dw, dh, { inversionAttempts: "attemptBoth" });
   if (!code?.data) return null;
   return (
     geometryFromCorners(
@@ -77,10 +77,10 @@ function ScanFrame({ kind, color }: { kind: ScanKind; color: string }) {
         style={[
           styles.frame,
           {
-            left: landscape ? "7%" : "16%",
-            right: landscape ? "7%" : "16%",
-            top: landscape ? "30%" : "12%",
-            bottom: landscape ? "30%" : "12%",
+            left: landscape ? "5%" : "10%",
+            right: landscape ? "5%" : "10%",
+            top: landscape ? "24%" : "8%",
+            bottom: landscape ? "24%" : "8%",
             borderRadius: landscape ? 12 : 18,
             borderColor: color,
           },
@@ -88,6 +88,24 @@ function ScanFrame({ kind, color }: { kind: ScanKind; color: string }) {
       />
     </View>
   );
+}
+
+function grabFrame(
+  video: HTMLVideoElement,
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  max: number
+): ImageData | null {
+  const w = video.videoWidth;
+  const h = video.videoHeight;
+  if (!w || !h) return null;
+  const scale = Math.min(1, max / Math.max(w, h));
+  const dw = Math.max(1, Math.round(w * scale));
+  const dh = Math.max(1, Math.round(h * scale));
+  if (canvas.width !== dw) canvas.width = dw;
+  if (canvas.height !== dh) canvas.height = dh;
+  ctx.drawImage(video, 0, 0, dw, dh);
+  return ctx.getImageData(0, 0, dw, dh);
 }
 
 function WebQrCamera({
@@ -120,6 +138,7 @@ function WebQrCamera({
     let raf = 0;
     let stopped = false;
     let missFrames = 0;
+    let busy = false;
     const video = document.createElement("video");
     video.setAttribute("playsinline", "true");
     video.setAttribute("autoplay", "true");
@@ -145,10 +164,15 @@ function WebQrCamera({
 
     const tick = async () => {
       if (stopped) return;
+      if (busy) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       if (video.readyState >= 2 && ctx && observingRef.current) {
         const w = video.videoWidth;
         const h = video.videoHeight;
         if (w && h) {
+          busy = true;
           try {
             let found: QrObservation | null = null;
             if (detector) {
@@ -166,39 +190,32 @@ function WebQrCamera({
               }
               found = pickBestObservation(mapped, kind);
             }
-            if (!found && kind === "barcode") {
+            if (!found) {
               missFrames += 1;
-              if (missFrames % 4 === 0) {
-                const max = 640;
-                const scale = Math.min(1, max / Math.max(w, h));
-                const dw = Math.max(1, Math.round(w * scale));
-                const dh = Math.max(1, Math.round(h * scale));
-                canvas.width = dw;
-                canvas.height = dh;
-                ctx.drawImage(video, 0, 0, dw, dh);
-                const imageData = ctx.getImageData(0, 0, dw, dh);
-                found = decodeBarcodeFromImageData(imageData, false);
+              const shouldFallback = !detector || missFrames % 2 === 0;
+              if (shouldFallback) {
+                if (kind === "barcode") {
+                  const imageData = grabFrame(video, canvas, ctx, 800);
+                  if (imageData) found = decodeBarcodeFromImageData(imageData, false);
+                } else {
+                  const imageData = grabFrame(video, canvas, ctx, 640);
+                  if (imageData) found = observationsFromJsQR(imageData, imageData.width, imageData.height);
+                }
               }
-            } else if (!found && kind === "qr" && !detector) {
-              const max = 480;
-              const scale = Math.min(1, max / Math.max(w, h));
-              const dw = Math.max(1, Math.round(w * scale));
-              const dh = Math.max(1, Math.round(h * scale));
-              canvas.width = dw;
-              canvas.height = dh;
-              ctx.drawImage(video, 0, 0, dw, dh);
-              const imageData = ctx.getImageData(0, 0, dw, dh);
-              found = observationsFromJsQR(imageData, dw, dh);
+            } else {
+              missFrames = 0;
             }
             onObserveRef.current(found);
           } catch {
             /* frame skipped */
+          } finally {
+            busy = false;
           }
         }
       } else if (observingRef.current) {
         onObserveRef.current(null);
       }
-      raf = requestAnimationFrame(tick);
+      if (!stopped) raf = requestAnimationFrame(tick);
     };
 
     (async () => {
@@ -209,7 +226,11 @@ function WebQrCamera({
         }
         stream = await navigator.mediaDevices.getUserMedia({
           audio: false,
-          video: { facingMode: { ideal: "environment" } },
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
         });
         video.srcObject = stream;
         await video.play();
@@ -249,7 +270,6 @@ export function QRScannerCard({
   const [camError, setCamError] = useState<CamError>(null);
   const [live, setLive] = useState(false);
   const [guide, setGuide] = useState<ScanGuide>("seek");
-  const [previewSize, setPreviewSize] = useState({ w: 1, h: 1 });
 
   const lockedRef = useRef(false);
   const guideRef = useRef<ScanGuide>("seek");
@@ -313,24 +333,27 @@ export function QRScannerCard({
         return;
       }
 
-      const assessed = assessGuide(effective, kind);
-
-      if (assessed === "hold" && effective) {
+      // Decoder already read a payload — capture immediately. Size is not a gate.
+      if (effective?.data) {
+        if (!sawCodeRef.current) {
+          sawCodeRef.current = true;
+          Haptics.selectionAsync();
+        }
+        if (LOCK_HOLD_MS <= 0) {
+          captureLock(effective.data);
+          return;
+        }
         if (goodSinceRef.current == null) goodSinceRef.current = now;
         if (now - goodSinceRef.current >= LOCK_HOLD_MS) {
           captureLock(effective.data);
           return;
         }
-      } else {
-        goodSinceRef.current = null;
+        publishGuide("hold");
+        return;
       }
 
-      if (assessed === "closer" || assessed === "farther") {
-        if (!sawCodeRef.current) {
-          sawCodeRef.current = true;
-          Haptics.selectionAsync();
-        }
-      }
+      goodSinceRef.current = null;
+      const assessed = assessGuide(effective, kind);
 
       const published = guideRef.current;
       if (published === "lock" && assessed !== "seek") {
@@ -367,7 +390,7 @@ export function QRScannerCard({
 
   useEffect(() => {
     if (!cameraLive || !scanning) return;
-    const id = setInterval(() => consider(null), 120);
+    const id = setInterval(() => consider(null), 80);
     return () => clearInterval(id);
   }, [cameraLive, scanning, consider]);
 
@@ -411,22 +434,7 @@ export function QRScannerCard({
     if (!scanning) return;
     const data = result?.data;
     if (!data) return;
-    const fw = previewSize.w;
-    const fh = previewSize.h;
-    const geo =
-      geometryFromCorners(result.cornerPoints || [], fw, fh, data) ||
-      (result.bounds
-        ? geometryFromBox(
-            result.bounds.origin.x,
-            result.bounds.origin.y,
-            result.bounds.size.width,
-            result.bounds.size.height,
-            fw,
-            fh,
-            data
-          )
-        : null) ||
-      observationFromDataOnly(data);
+    const geo = observationFromDataOnly(data);
     consider(geo);
   };
 
@@ -460,10 +468,6 @@ export function QRScannerCard({
       {cameraLive ? (
         <View
           testID="qr-viewfinder"
-          onLayout={(e) => {
-            const { width, height } = e.nativeEvent.layout;
-            if (width > 0 && height > 0) setPreviewSize({ w: width, h: height });
-          }}
           style={[
             styles.preview,
             {
@@ -475,6 +479,7 @@ export function QRScannerCard({
           {nativeReady ? (
             <CameraView
               facing="back"
+              autofocus="off"
               style={StyleSheet.absoluteFillObject}
               barcodeScannerSettings={{
                 barcodeTypes: kind === "barcode" ? [...NATIVE_BARCODE_TYPES] : ["qr"],
