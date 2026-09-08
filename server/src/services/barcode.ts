@@ -36,6 +36,18 @@ function digits(raw: string): string {
   return (raw || "").replace(/\D/g, "");
 }
 
+function gtinVariants(code: string): string[] {
+  const d = digits(code);
+  const out = new Set<string>();
+  if (!d) return [];
+  out.add(d);
+  if (d.length === 13 && d.startsWith("0")) out.add(d.slice(1));
+  if (d.length === 12) out.add("0" + d);
+  if (d.length === 14 && d.startsWith("0")) out.add(d.slice(1));
+  if (d.length === 14) out.add(d.slice(-13));
+  return [...out];
+}
+
 function hostOf(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
@@ -115,31 +127,34 @@ async function lookupUpcItemDb(code: string): Promise<{
   asin: string | null;
   urls: BarcodeOffer[];
 } | null> {
-  const json = await fetchJson(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(code)}`);
-  if (!json || json.code === "TOO_FAST") return null;
-  const item = json?.items?.[0];
-  if (!item) return null;
-  const urls: BarcodeOffer[] = [];
-  if (item.asin) {
-    const amazon = offerFromUrl(`https://www.amazon.ca/dp/${String(item.asin).toUpperCase()}`);
-    if (amazon) urls.push(amazon);
-  }
-  for (const offer of item.offers || []) {
-    const link = offer?.link || offer?.url;
-    if (typeof link === "string") {
-      const o = offerFromUrl(link);
-      if (o) urls.push(o);
+  for (const id of gtinVariants(code)) {
+    const json = await fetchJson(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(id)}`);
+    if (!json || json.code === "TOO_FAST") continue;
+    const item = json?.items?.[0];
+    if (!item) continue;
+    const urls: BarcodeOffer[] = [];
+    if (item.asin) {
+      const amazon = offerFromUrl(`https://www.amazon.ca/dp/${String(item.asin).toUpperCase()}`);
+      if (amazon) urls.push(amazon);
     }
+    for (const offer of item.offers || []) {
+      const link = offer?.link || offer?.url;
+      if (typeof link === "string") {
+        const o = offerFromUrl(link);
+        if (o) urls.push(o);
+      }
+    }
+    const images: string[] = Array.isArray(item.images) ? item.images.filter((x: unknown) => typeof x === "string") : [];
+    return {
+      title: item.title || "",
+      brand: item.brand || null,
+      imageUrl: images[0] || null,
+      images,
+      asin: item.asin || null,
+      urls,
+    };
   }
-  const images: string[] = Array.isArray(item.images) ? item.images.filter((x: unknown) => typeof x === "string") : [];
-  return {
-    title: item.title || "",
-    brand: item.brand || null,
-    imageUrl: images[0] || null,
-    images,
-    asin: item.asin || null,
-    urls,
-  };
+  return null;
 }
 
 const STOP = new Set([

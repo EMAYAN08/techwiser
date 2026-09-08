@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, Pressable, Platform } from "react-native";
+import { View, Text, StyleSheet, Pressable, Platform, AppState } from "react-native";
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
+import { useIsFocused } from "@react-navigation/native";
 import { Camera, Image as ImageIcon } from "lucide-react-native";
 import jsQR from "jsqr";
 import { useThemeColors, paletteTokens } from "../../constants/Colors";
@@ -37,6 +38,8 @@ type Props = {
   onScan: (data: string) => void;
   onGallery: () => void;
   kind?: ScanKind;
+  /** When false, the camera is forced off (Compare, leaving the screen). */
+  allowed?: boolean;
 };
 
 type CamError = "denied" | "missing" | null;
@@ -264,8 +267,10 @@ export function QRScannerCard({
   onScan,
   onGallery,
   kind = "qr",
+  allowed = true,
 }: Props) {
   const { colors } = useThemeColors();
+  const focused = useIsFocused();
   const [permission, requestPermission] = useCameraPermissions();
   const [camError, setCamError] = useState<CamError>(null);
   const [live, setLive] = useState(false);
@@ -395,7 +400,7 @@ export function QRScannerCard({
   }, [cameraLive, scanning, consider]);
 
   const startCamera = async () => {
-    if (atCapacity) return;
+    if (atCapacity || !allowed || !focused) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setCamError(null);
     lockedRef.current = false;
@@ -421,14 +426,24 @@ export function QRScannerCard({
     }
   };
 
-  const stopCamera = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const stopCamera = useCallback(() => {
     setLive(false);
     setCamError(null);
     lockedRef.current = false;
     lastLockedDataRef.current = "";
     publishGuide("seek");
-  };
+  }, [publishGuide]);
+
+  useEffect(() => {
+    if (!allowed || !focused) stopCamera();
+  }, [allowed, focused, stopCamera]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state !== "active") stopCamera();
+    });
+    return () => sub.remove();
+  }, [stopCamera]);
 
   const handleNativeBarcode = (result: BarcodeScanningResult) => {
     if (!scanning) return;
@@ -518,7 +533,14 @@ export function QRScannerCard({
       <View style={styles.actions}>
         <Pressable
           testID="qr-camera-btn"
-          onPress={cameraLive ? stopCamera : startCamera}
+          onPress={() => {
+            if (cameraLive) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              stopCamera();
+            } else {
+              void startCamera();
+            }
+          }}
           disabled={atCapacity && !cameraLive}
           style={({ pressed }) => [
             styles.btn,

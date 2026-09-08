@@ -306,12 +306,13 @@ export function QRInputGroup({
         </View>
 
         <QRScannerCard
-          scanning={!paused && items.length < MAX_QR_PRODUCTS}
+          scanning={!paused && items.length < MAX_QR_PRODUCTS && !isLoading}
           atCapacity={items.length >= MAX_QR_PRODUCTS}
           flashTick={flashTick}
           scannedCount={items.length}
           onScan={handleScan}
           onGallery={handleGallery}
+          allowed={!isLoading}
         />
       </Animated.View>
 

@@ -8,6 +8,18 @@ function digits(raw) {
   return String(raw || "").replace(/\D/g, "");
 }
 
+function gtinVariants(code) {
+  const d = digits(code);
+  const out = new Set();
+  if (!d) return [];
+  out.add(d);
+  if (d.length === 13 && d.startsWith("0")) out.add(d.slice(1));
+  if (d.length === 12) out.add("0" + d);
+  if (d.length === 14 && d.startsWith("0")) out.add(d.slice(1));
+  if (d.length === 14) out.add(d.slice(-13));
+  return [...out];
+}
+
 async function fetchJson(url, timeoutMs = 7000) {
   try {
     const res = await fetch(url, {
@@ -32,22 +44,25 @@ function amazonOffer(asin) {
 }
 
 async function lookupUpcItemDb(code) {
-  const json = await fetchJson(
-    `https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(code)}`
-  );
-  if (!json || json.code === "TOO_FAST") return null;
-  const item = json.items && json.items[0];
-  if (!item) return null;
-  const images = Array.isArray(item.images)
-    ? item.images.filter((x) => typeof x === "string")
-    : [];
-  return {
-    title: item.title || "",
-    brand: item.brand || null,
-    imageUrl: images[0] || null,
-    images,
-    asin: item.asin || null,
-  };
+  for (const id of gtinVariants(code)) {
+    const json = await fetchJson(
+      `https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(id)}`
+    );
+    if (!json || json.code === "TOO_FAST") continue;
+    const item = json.items && json.items[0];
+    if (!item) continue;
+    const images = Array.isArray(item.images)
+      ? item.images.filter((x) => typeof x === "string")
+      : [];
+    return {
+      title: item.title || "",
+      brand: item.brand || null,
+      imageUrl: images[0] || null,
+      images,
+      asin: item.asin || null,
+    };
+  }
+  return null;
 }
 
 async function lookupOpenFacts(code) {
