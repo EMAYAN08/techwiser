@@ -45,9 +45,9 @@ export const TYPE_WELLS: WellDef[] = [
 export const RETAIL_WELLS: Record<string, WellDef> = {
   bestbuy: { id: "bestbuy", label: "Best Buy", icon: require("../assets/logos/bestbuy.png"), tint: TINT.gold },
   amazon: { id: "amazon", label: "Amazon", icon: require("../assets/logos/amazon.png"), tint: TINT.sand },
-  canadacomputers: { id: "canadacomputers", label: "Canada Comp.", icon: require("../assets/logos/canadacomputers.jpg"), tint: TINT.ice },
+  canadacomputers: { id: "canadacomputers", label: "Canada Comp.", icon: require("../assets/logos/canadacomputers.png"), tint: TINT.ice },
   costco: { id: "costco", label: "Costco", icon: require("../assets/logos/costco.png"), tint: TINT.peach },
-  walmart: { id: "walmart", label: "Walmart", icon: require("../assets/logos/walmart.png"), tint: TINT.blue },
+  walmart: { id: "walmart", label: "Walmart", icon: require("../assets/logos/walmart.jpg"), tint: TINT.blue },
   staples: { id: "staples", label: "Staples", icon: require("../assets/logos/staples.png"), tint: TINT.rose },
   other: { id: "other", label: "Other", icon: require("../assets/icons/retail-other.png"), tint: TINT.slate },
 };

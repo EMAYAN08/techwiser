@@ -279,7 +279,7 @@ export default function TabLayout() {
     <MaterialTopTabs
       tabBarPosition="bottom"
       screenOptions={{
-        swipeEnabled: true,
+        swipeEnabled: false,
       }}
       screenListeners={{
         tabPress: () => {

@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from "react-native";
+import React, { useMemo, useState, useRef } from "react";
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Animated } from "react-native";
 import { SlidersHorizontal, Check } from "lucide-react-native";
 import { useComparisonStore, Product } from "../../store/useComparisonStore";
 import { ProductCard } from "../../components/comparison/ProductCard";
@@ -130,127 +130,158 @@ export default function LibraryScreen() {
           elevation: 8,
         };
 
-  return (
-    <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 16 }]}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerText}>
-            <Text style={[styles.headerTitle, { color: colors.ink }]}>Library</Text>
-            {allProducts.length > 0 && (
-              <Text style={[styles.count, { color: colors.stone }]}>{countLabel}</Text>
-            )}
-          </View>
-          {allProducts.length > 0 && (
-            <View style={styles.iconWrap}>
-              <NavCircle
-                onPress={onIconPress}
-                accessibilityRole="button"
-                accessibilityLabel="Filter library"
-                accessibilityState={{ expanded: menuOpen }}
-                style={iconActive ? { backgroundColor: colors.ink } : undefined}
-              >
-                <SlidersHorizontal
-                  size={18}
-                  color={iconActive ? colors.bg : colors.ink}
-                  strokeWidth={2}
-                />
-              </NavCircle>
-              {isFiltered && !menuOpen ? (
-                <View style={[styles.dot, { backgroundColor: colors.spotify }]} />
-              ) : null}
+  const isWellsSticky = wellsOpen && allProducts.length > 0;
+  const scrollY = useRef(new Animated.Value(0)).current;
 
-              {menuOpen ? (
-                <View
-                  style={[
-                    styles.menu,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.line,
-                    },
-                    menuShadow,
-                  ]}
+  // Measure constants for smooth translation
+  const TITLE_HEIGHT = 90; 
+  const WELLS_HEIGHT = isWellsSticky ? 130 : 16;
+  const HEADER_HEIGHT = TITLE_HEIGHT + WELLS_HEIGHT;
+
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, TITLE_HEIGHT],
+    outputRange: [0, isWellsSticky ? -TITLE_HEIGHT : 0],
+    extrapolate: "clamp",
+  });
+
+  return (
+    <View style={[styles.root, { backgroundColor: colors.bg, paddingTop: Math.max(insets.top, 20) }]}>
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: Math.max(insets.top, 20), backgroundColor: colors.bg, zIndex: 999 }} />
+      <Animated.View
+        style={{
+          position: "absolute",
+          top: Math.max(insets.top, 20),
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          transform: [{ translateY: headerTranslateY }],
+        }}
+      >
+        {/* Child 0: Title and Menu */}
+        <View style={{ width: "100%", backgroundColor: colors.bg, zIndex: menuOpen ? 20 : 9, height: TITLE_HEIGHT }}>
+          <View style={[styles.headerRow, { paddingHorizontal: space.gutter, paddingTop: 16, paddingBottom: 8 }]}>
+            <View style={styles.headerText}>
+              <Text style={[styles.headerTitle, { color: colors.ink }]}>Library</Text>
+              {allProducts.length > 0 && (
+                <Text style={[styles.count, { color: colors.stone }]}>{countLabel}</Text>
+              )}
+            </View>
+            {allProducts.length > 0 && (
+              <View style={styles.iconWrap}>
+                <NavCircle
+                  onPress={onIconPress}
+                  accessibilityRole="button"
+                  accessibilityLabel="Filter library"
+                  accessibilityState={{ expanded: menuOpen }}
+                  style={iconActive ? { backgroundColor: colors.ink } : undefined}
                 >
-                  {FILTER_OPTIONS.map((opt) => {
-                    const active = wellsOpen && opt.id === filterBy;
-                    return (
-                      <Pressable
-                        key={opt.id}
-                        onPress={() => handleFilterBy(opt.id)}
-                        accessibilityRole="menuitem"
-                        accessibilityState={{ selected: active }}
-                        style={({ pressed }) => [
-                          styles.menuRow,
-                          active && { backgroundColor: colors.fog },
-                          pressed && { backgroundColor: colors.fog },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.menuLabel,
-                            {
-                              color: colors.ink,
-                              fontFamily: active ? fonts.uiBold : fonts.uiMedium,
-                            },
+                  <SlidersHorizontal
+                    size={18}
+                    color={iconActive ? colors.bg : colors.ink}
+                    strokeWidth={2}
+                  />
+                </NavCircle>
+                {isFiltered && !menuOpen ? (
+                  <View style={[styles.dot, { backgroundColor: colors.spotify }]} />
+                ) : null}
+
+                {menuOpen ? (
+                  <View
+                    style={[
+                      styles.menu,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.line,
+                      },
+                      menuShadow,
+                    ]}
+                  >
+                    {FILTER_OPTIONS.map((opt) => {
+                      const active = wellsOpen && opt.id === filterBy;
+                      return (
+                        <Pressable
+                          key={opt.id}
+                          onPress={() => handleFilterBy(opt.id)}
+                          accessibilityRole="menuitem"
+                          accessibilityState={{ selected: active }}
+                          style={({ pressed }) => [
+                            styles.menuRow,
+                            { opacity: pressed ? 0.6 : 1 },
                           ]}
                         >
-                          {opt.label}
-                        </Text>
-                        {active ? <Check size={15} color={colors.spotify} strokeWidth={2.4} /> : null}
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              ) : null}
-            </View>
-          )}
+                          <Text
+                            style={[
+                              styles.menuLabel,
+                              {
+                                color: colors.ink,
+                                fontFamily: active ? fonts.uiBold : fonts.uiMedium,
+                              },
+                            ]}
+                          >
+                            {opt.label}
+                          </Text>
+                          {active ? <Check size={15} color={colors.spotify} strokeWidth={2.4} /> : null}
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                ) : null}
+              </View>
+            )}
+          </View>
         </View>
 
-        {wellsOpen && allProducts.length > 0 ? (
-          <View style={styles.wells}>
-            <CircularWells
-              items={activeWells}
-              selectedId={activeWells.some((w) => w.id === selectedId) ? selectedId : "all"}
-              onSelect={handleSelectWell}
-              layout="scroll"
-              allowDeselectToAll
-              shape={filterBy === "retailer" ? "squircle" : "circle"}
-            />
-          </View>
-        ) : null}
-      </View>
+        {/* Child 1: Sticky Wells */}
+        <View style={{ backgroundColor: colors.bg, zIndex: 10, height: WELLS_HEIGHT }}>
+          {isWellsSticky ? (
+            <View style={[styles.wells, { paddingHorizontal: space.gutter, paddingBottom: 16 }]}>
+              <CircularWells
+                items={activeWells}
+                selectedId={activeWells.some((w) => w.id === selectedId) ? selectedId : "all"}
+                onSelect={handleSelectWell}
+                layout="scroll"
+                allowDeselectToAll
+                shape={filterBy === "retailer" ? "squircle" : "circle"}
+              />
+            </View>
+          ) : null}
+        </View>
+      </Animated.View>
 
-      <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]}
+      <Animated.ScrollView
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        scrollEventThrottle={16}
+        contentContainerStyle={[styles.scroll, { paddingTop: HEADER_HEIGHT, paddingBottom: 120 }]}
         showsVerticalScrollIndicator={false}
       >
-        {filtered.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={[styles.emptyText, { color: colors.ink }]}>{emptyTitle}</Text>
-            <Text style={[styles.emptySubtext, { color: colors.stone }]}>{emptySub}</Text>
-            {isFiltered ? (
-              <Pressable
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setSelectedId("all");
-                }}
-                style={[styles.clearBtn, { borderColor: colors.ink }]}
-                accessibilityRole="button"
-                accessibilityLabel="Clear filter"
-              >
-                <Text style={[styles.clearText, { color: colors.ink }]}>Clear filter</Text>
-              </Pressable>
-            ) : null}
-          </View>
-        ) : (
-          <View style={styles.grid}>
-            {filtered.map((p, index) => (
-              <View key={p.id} style={styles.cardWrapper}>
-                <ProductCard product={p} index={index} />
-              </View>
-            ))}
-          </View>
-        )}
-      </ScrollView>
+          {filtered.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={[styles.emptyText, { color: colors.ink }]}>{emptyTitle}</Text>
+              <Text style={[styles.emptySubtext, { color: colors.stone }]}>{emptySub}</Text>
+              {isFiltered ? (
+                <Pressable
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSelectedId("all");
+                  }}
+                  style={[styles.clearBtn, { borderColor: colors.ink }]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear filter"
+                >
+                  <Text style={[styles.clearText, { color: colors.ink }]}>Clear filter</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : (
+            <View style={styles.grid}>
+              {filtered.map((p, index) => (
+                <View key={p.id} style={styles.cardWrapper}>
+                  <ProductCard product={p} index={index} />
+                </View>
+              ))}
+            </View>
+          )}
+      </Animated.ScrollView>
     </View>
   );
 }

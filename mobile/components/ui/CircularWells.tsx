@@ -32,34 +32,8 @@ export function CircularWells({
   shape = "circle",
 }: CircularWellsProps) {
   const { colors, isDark } = useThemeColors();
-  const anims = useRef<Record<string, { scale: Animated.Value; wobble: Animated.Value }>>({}).current;
-
-  const ensure = (id: string) => {
-    if (!anims[id]) {
-      anims[id] = { scale: new Animated.Value(1), wobble: new Animated.Value(0) };
-    }
-    return anims[id];
-  };
-
-  const bounce = (id: string) => {
-    const a = ensure(id);
-    a.scale.setValue(1);
-    a.wobble.setValue(0);
-    Animated.parallel([
-      Animated.sequence([
-        Animated.timing(a.scale, { toValue: 0.82, duration: 70, useNativeDriver: true }),
-        Animated.spring(a.scale, { toValue: 1, useNativeDriver: true, friction: 4, tension: 260 }),
-      ]),
-      Animated.sequence([
-        Animated.timing(a.wobble, { toValue: 1, duration: 80, useNativeDriver: true }),
-        Animated.timing(a.wobble, { toValue: -0.7, duration: 90, useNativeDriver: true }),
-        Animated.spring(a.wobble, { toValue: 0, useNativeDriver: true, friction: 5, tension: 220 }),
-      ]),
-    ]).start();
-  };
 
   const handlePress = (item: WellDef) => {
-    bounce(item.id);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (allowDeselectToAll && item.id === selectedId && item.id !== "all") {
       onSelect("all");
@@ -70,8 +44,8 @@ export function CircularWells({
 
   const nodes = items.map((item) => {
     const isActive = selectedId === item.id;
-    const wellBg = isActive ? item.tint.wash : (isDark ? "#EBEBEB" : colors.modeWell);
-    const a = ensure(item.id);
+    const wellBg = isDark ? "#EBEBEB" : colors.modeWell;
+
     return (
       <Pressable
         key={item.id}
@@ -81,29 +55,25 @@ export function CircularWells({
         accessibilityState={{ selected: isActive }}
         style={[styles.item, layout === "scroll" ? styles.itemScroll : styles.itemSpread]}
       >
-        <View style={[styles.well, { backgroundColor: wellBg, borderRadius: shape === 'squircle' ? 16 : size.modeWell / 2, overflow: 'hidden' }]}>
-          <Animated.View
-            style={[
-              { width: "100%", height: "100%", alignItems: "center", justifyContent: "center" },
-              {
-                transform: [
-                  { scale: a.scale },
-                  {
-                    rotate: a.wobble.interpolate({
-                      inputRange: [-1, 1],
-                      outputRange: ["-8deg", "8deg"],
-                    }),
-                  },
-                ],
-              }
-            ]}
-          >
+        <View 
+          style={[
+            styles.well, 
+            { 
+              backgroundColor: wellBg, 
+              borderRadius: shape === 'squircle' ? 16 : size.modeWell / 2, 
+              overflow: 'hidden',
+              borderWidth: isActive ? 2 : 0,
+              borderColor: isActive ? colors.primary : "transparent"
+            }
+          ]}
+        >
+          <View style={{ width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}>
             <Image 
               source={item.icon} 
               style={shape === 'squircle' ? styles.iconFull : styles.icon} 
               resizeMode={shape === 'squircle' ? "cover" : "contain"} 
             />
-          </Animated.View>
+          </View>
         </View>
         <Text
           style={[
