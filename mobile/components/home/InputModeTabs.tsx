@@ -29,9 +29,9 @@ interface Tab {
 
 const TABS: Tab[] = [
   { id: "url", label: "URL" },
+  { id: "qr", label: "QR Code" },
   { id: "name", label: "Name" },
   { id: "upc", label: "Barcode" },
-  { id: "qr", label: "QR Code" },
 ];
 
 function GlyphUrl({ color, accent }: { color: string; accent: string }) {
