@@ -1,16 +1,10 @@
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from curl_cffi import requests as curl_requests
+from scrapling import Fetcher
 from bs4 import BeautifulSoup
 import json
 import re
-from typing import Optional
-
-try:
-    from playwright.async_api import async_playwright
-    HAS_PLAYWRIGHT = True
-except ImportError:
-    HAS_PLAYWRIGHT = False
 
 app = FastAPI(title="SpecMatch Scraper API")
 
@@ -28,17 +22,13 @@ def extract_json_ld(soup):
                 data = json.loads(script.string)
                 if isinstance(data, list):
                     for item in data:
-                        if item.get("@type") == "Product":
-                            return item
+                        if item.get("@type") == "Product": return item
                 elif isinstance(data, dict):
-                    if data.get("@type") == "Product":
-                        return data
+                    if data.get("@type") == "Product": return data
                     elif "@graph" in data:
                         for item in data["@graph"]:
-                            if item.get("@type") == "Product":
-                                return item
-            except:
-                pass
+                            if item.get("@type") == "Product": return item
+            except: pass
     return None
 
 def extract_meta_tags(soup):
@@ -62,10 +52,14 @@ def extract_inline_state(html):
     if init_match:
         try: return json.loads(init_match.group(1))
         except: pass
+    apollo_match = re.search(r'window\.__APOLLO_STATE__\s*=\s*(\{.*?\});', html)
+    if apollo_match:
+        try: return json.loads(apollo_match.group(1))
+        except: pass
     return None
 
 def parse_html_content(html):
-    soup = BeautifulSoup(html, 'html.parser')
+    soup = BeautifulSoup(html, "html.parser")
     result = {
         "name": "", "price": "", "imageUrl": "", "description": "",
         "overview": "", "whatsIncluded": "", "specs": [], "raw_text": "",
@@ -99,79 +93,23 @@ def parse_html_content(html):
     for script in soup(["script", "style", "noscript", "svg"]):
         script.extract()
     text = soup.get_text(separator=" ", strip=True)
-    result["raw_text"] = re.sub(r'\s+', ' ', text)
+    result["raw_text"] = re.sub(r'\s+', " ", text)
     
     return result
-
-async def layer2_scrape(url: str):
-    if not HAS_PLAYWRIGHT: return None
-    try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            )
-            page = await context.new_page()
-            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-            await page.wait_for_timeout(3000)
-            html = await page.content()
-            await browser.close()
-            return html
-    except Exception as e:
-        print(f"Layer 2 failed: {e}")
-        return None
 
 @app.post("/scrape")
 @app.post("/scrape/")
 async def scrape_endpoint(req: ScrapeRequest):
     try:
-        print(f"Scraping URL (Layer 1): {req.url}")
+        print(f"Scraping URL (Scrapling): {req.url}")
         
-        # BestBuy API Bypass
-        if "bestbuy.ca" in req.url:
-            sku_match = re.search(r'/(\d+)(?:\?|$)', req.url)
-            if sku_match:
-                sku = sku_match.group(1)
-                api_url = f"https://www.bestbuy.ca/api/v2/json/product/{sku}"
-                api_resp = curl_requests.get(api_url, impersonate="safari17_0", timeout=15)
-                if api_resp.status_code == 200:
-                    data = api_resp.json()
-                    long_desc = data.get("longDescription", "")
-                    if long_desc:
-                        long_desc = BeautifulSoup(long_desc, "html.parser").get_text(separator=" ", strip=True)
-                    payload = {
-                        "name": data.get("name", ""),
-                        "price": data.get("salePrice") or data.get("regularPrice"),
-                        "overview": BeautifulSoup(data.get("shortDescription", ""), "html.parser").get_text(separator=" ", strip=True) if data.get("shortDescription") else "",
-                        "description": long_desc,
-                        "whatsIncluded": data.get("whatsInTheBox", ""),
-                        "specs": data.get("specs", [])
-                    }
-                    return {
-                        "status": "success",
-                        "data": json.dumps(payload)[:30000],
-                        "imageUrl": data.get("highResImage") or data.get("thumbnailImage") or ""
-                    }
-
-        response = curl_requests.get(req.url, impersonate="safari17_0", timeout=15)
+        # Scrapling Fetcher configures curl_cffi optimally to bypass TLS fingerprinting
+        fetcher = Fetcher(auto_match=True)
+        response = fetcher.get(req.url, timeout=15)
         html = response.text
         
-        is_blocked = "Access Denied" in html or "Just a moment" in html or response.status_code in [403, 429]
-        
-        if is_blocked:
-            print("Layer 1 Blocked. Falling back to Layer 2.")
-            html_l2 = await layer2_scrape(req.url)
-            if html_l2: html = html_l2
-                
         parsed = parse_html_content(html)
         
-        if not is_blocked and (not parsed["name"] and not parsed["price"] and not parsed.get("inline_state_found")):
-            print("Layer 1 yielded poor data. Falling back to Layer 2.")
-            html_l2 = await layer2_scrape(req.url)
-            if html_l2:
-                html = html_l2
-                parsed = parse_html_content(html)
-                
         payload = {
             "name": parsed["name"],
             "price": parsed["price"],
@@ -191,3 +129,4 @@ async def scrape_endpoint(req: ScrapeRequest):
     except Exception as e:
         print(f"Scrape failed: {e}")
         return {"status": "error", "message": str(e)}
+

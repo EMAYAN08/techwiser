@@ -114,6 +114,27 @@ export function QRInputGroup({
       if (isShortenerHost(host)) {
         url = await expandShortUrl(url);
       }
+      
+      // Intercept Best Buy Scan and Collect URLs
+      if (host.includes("bestbuy.ca") && url.includes("/scan-and-collect")) {
+        const skuMatch = url.match(/\/products\/(\d+)\/scan-and-collect/);
+        if (skuMatch) {
+          const sku = skuMatch[1];
+          try {
+            const res = await fetch(`https://www.bestbuy.ca/api/v2/json/product/${sku}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.altLangSeoText) {
+                const lang = url.includes("/fr-ca/") ? "fr-ca" : "en-ca";
+                url = `https://www.bestbuy.ca/${lang}/product/${data.altLangSeoText}/${sku}`;
+              }
+            }
+          } catch (e) {
+            console.warn("Failed to resolve scan and collect URL", e);
+          }
+        }
+      }
+
       const parsed = parseProductUrl(url);
       const canon = canonicalizeUrl(parsed.url || url);
       if (itemsRef.current.some((i) => i.canon === canon)) {
