@@ -2,6 +2,7 @@ import React, { useMemo, useState, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Animated } from "react-native";
 import { SlidersHorizontal, Check } from "lucide-react-native";
 import { useComparisonStore, Product } from "../../store/useComparisonStore";
+import { handleScroll } from "../../store/uiStore";
 import { ProductCard } from "../../components/comparison/ProductCard";
 import { CircularWells } from "../../components/ui/CircularWells";
 import { NavCircle } from "../../components/ui/NavCircle";
@@ -249,7 +250,10 @@ export default function LibraryScreen() {
       </Animated.View>
 
       <Animated.ScrollView
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }], 
+          { useNativeDriver: true, listener: handleScroll }
+        )}
         onScrollBeginDrag={() => { if (menuOpen) setMenuOpen(false); }}
         scrollEventThrottle={16}
         contentContainerStyle={[styles.scroll, { paddingTop: HEADER_HEIGHT, paddingBottom: 120 }]}

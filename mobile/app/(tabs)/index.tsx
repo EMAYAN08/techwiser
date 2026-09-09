@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View, Text, Animated } from "react-native";
 import { Typography } from "../../constants/Typography";
 import { useRouter } from "expo-router";
 import * as Haptics from "../../utils/haptics";
+import { handleScroll } from "../../store/uiStore";
 import { URLInputGroup, URLInputHeader } from "../../components/home/URLInputGroup";
 import { RecentComparisons, RecentHeader } from "../../components/home/RecentComparisons";
 import { LoadingOverlay } from "../../components/home/LoadingOverlay";
@@ -153,7 +154,10 @@ export default function Home() {
       </Animated.View>
 
       <Animated.ScrollView
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }], 
+          { useNativeDriver: true, listener: handleScroll }
+        )}
         scrollEventThrottle={16}
         style={[styles.container, { marginTop: TITLE_HEIGHT }]}
         stickyHeaderIndices={[1, 3]}

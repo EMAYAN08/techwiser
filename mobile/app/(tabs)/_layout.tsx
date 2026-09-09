@@ -10,13 +10,14 @@ import {
   View,
 } from "react-native";
 import { usePathname, Tabs } from "expo-router";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { Zap, BookOpen, Settings as SettingsIcon, Tag, LucideIcon } from "lucide-react-native";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { radii, size } from "../../constants/Layout";
+import { tabBarAnim } from "../../store/uiStore";
 
 interface TabDef {
   name: string;
@@ -134,7 +135,7 @@ function TabItem({
   );
 }
 
-function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+function CustomTabBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useThemeColors();
   const path = useActivePath();
@@ -192,12 +193,24 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         liquidShadow,
         {
           bottom: Math.max(insets.bottom, 10) + 8,
-          opacity: mountAnim,
+          opacity: Animated.multiply(mountAnim, tabBarAnim),
           transform: [
             {
-              translateY: mountAnim.interpolate({
+              translateY: Animated.add(
+                mountAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [16, 0],
+                }),
+                tabBarAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [120, 0], // Slides down 120px completely out of screen
+                })
+              ),
+            },
+            {
+              scale: tabBarAnim.interpolate({
                 inputRange: [0, 1],
-                outputRange: [16, 0],
+                outputRange: [0.85, 1], // Smoothly shrinks down like Instagram
               }),
             },
           ],
@@ -215,7 +228,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           <BlurView
             intensity={isDark ? 48 : 64}
             tint={isDark ? "dark" : "light"}
-            experimentalBlurMethod="dimezisBlurView"
+            blurMethod="dimezisBlurView"
             style={StyleSheet.absoluteFill}
           />
         ) : null}
@@ -228,7 +241,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             },
           ]}
         />
-        {state.routes.map((route, index) => {
+        {state?.routes?.map((route: any, index: number) => {
           const def = TABS.find((t) => t.name === route.name);
           if (!def) return null;
           const focused = state.index === index;
@@ -282,7 +295,7 @@ export default function TabLayout() {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         },
       }}
-      tabBar={(props: BottomTabBarProps) => <CustomTabBar {...props} />}
+      tabBar={(props) => <CustomTabBar {...props as any} />}
     >
       <Tabs.Screen name="index" options={{ title: "Home" }} />
       <Tabs.Screen name="library" options={{ title: "Library" }} />

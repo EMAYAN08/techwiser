@@ -88,7 +88,7 @@ function PreviewThumb({
   return (
     <View style={[styles.thumb, { backgroundColor: colors.fog }]}>
       {showImage ? (
-        <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: imgOp }]}>
+        <Animated.View style={[{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }, { opacity: imgOp }]}>
           <Image
             source={{ uri: src as string }}
             style={styles.thumbImg}
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   thumbImg: {
-    ...StyleSheet.absoluteFillObject,
+    ...{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 },
     width: 96,
     height: "100%",
   },

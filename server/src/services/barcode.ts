@@ -379,15 +379,20 @@ export async function lookupBarcode(raw: string): Promise<BarcodeLookupResult> {
   const cached = cache.get(code);
   if (cached && Date.now() - cached.at < TTL) return cached.value;
 
-  const [upc, facts] = await Promise.all([lookupUpcItemDb(code), lookupOpenFacts(code)]);
-  const title = upc?.title || facts?.title || "";
+  const [upc, facts, micro] = await Promise.all([
+    lookupUpcItemDb(code), 
+    lookupOpenFacts(code),
+    typeof lookupMicrolinkPages !== 'undefined' ? lookupMicrolinkPages(code) : Promise.resolve(null)
+  ]);
+  const title = upc?.title || micro?.title || facts?.title || "";
   const brand = upc?.brand || facts?.brand || null;
-  const imageUrl = upc?.imageUrl || facts?.imageUrl || null;
+  const imageUrl = upc?.imageUrl || micro?.imageUrl || facts?.imageUrl || null;
   const images = upc?.images || (imageUrl ? [imageUrl] : []);
-  const asin = upc?.asin || null;
+  const asin = upc?.asin || micro?.asin || null;
 
-  let bb: BarcodeOffer[] = [];
-  if (!asin && (!upc?.urls || upc.urls.length === 0) && title) {
+  let bb: BarcodeOffer[] = await searchBestBuy(code);
+  
+  if (bb.length === 0 && title && !/^UPC\s/i.test(title)) {
     bb = await searchBestBuy(searchQueryFromTitle(title), title);
     if (bb.length === 0) bb = await searchBestBuy(cleanQuery(title), title);
   }
@@ -409,4 +414,30 @@ export async function lookupBarcode(raw: string): Promise<BarcodeLookupResult> {
   };
   if (urls.length > 0) cache.set(code, { at: Date.now(), value });
   return value;
+}
+
+async function lookupMicrolinkPages(code: string): Promise<any | null> {
+  const pages = [`https://www.upcitemdb.com/upc/${code}`, `https://go-upc.com/search?q=${code}`];
+  for (const page of pages) {
+    try {
+      const json = await fetchJson(`https://api.microlink.io/?url=${encodeURIComponent(page)}`, 5000);
+      if (json?.status !== "success" || !json.data) continue;
+      const title = json.data.title || "";
+      const desc = typeof json.data.description === "string" ? json.data.description : "";
+      let image = (typeof json.data.image === "string" ? json.data.image : json.data.image?.url) || null;
+      if (image && /favicon|upcitemdb\.com\/favicon/i.test(image)) image = null;
+      
+      let asin = null;
+      const m = (title + desc + (json.data.url||"")).match(/[A-Z0-9]{10}/);
+      if (m) asin = m[0];
+
+      if (!title && !image && !asin) continue;
+      return {
+        title: title.replace(/\s*\|\s*upcitemdb\.com/i, "").replace(/\s*-?\s*UPC\s+\d+.*$/i, ""),
+        imageUrl: image,
+        asin: asin
+      };
+    } catch { }
+  }
+  return null;
 }

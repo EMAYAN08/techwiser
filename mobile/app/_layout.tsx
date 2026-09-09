@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { View, Image } from "react-native";
+import { View } from "react-native";
 import { useFonts } from "expo-font";
+import { Asset } from "expo-asset";
 import { useThemeColors } from "../constants/Colors";
 import { ALL_IMAGE_ASSETS } from "../constants/wellCatalog";
 
@@ -16,6 +17,12 @@ export default function Layout() {
     "Satoshi-Medium": require("../assets/fonts/Satoshi-Medium.ttf"),
     "Satoshi-Bold": require("../assets/fonts/Satoshi-Bold.ttf"),
   });
+
+  useEffect(() => {
+    // Non-blocking GPU Preload Cache for high-resolution logos/icons
+    // This efficiently caches assets natively without freezing the React render tree
+    Asset.loadAsync(ALL_IMAGE_ASSETS as number[]).catch(() => {});
+  }, []);
 
   if (!loaded) {
     return <View style={{ flex: 1, backgroundColor: colors.background }} />;
@@ -31,12 +38,6 @@ export default function Layout() {
           animation: "fade",
         }}
       />
-      {/* GPU Preload Cache for high-resolution logos/icons to prevent flicker */}
-      <View style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}>
-        {ALL_IMAGE_ASSETS.map((asset, i) => (
-          <Image key={i} source={asset} style={{ width: 1, height: 1 }} />
-        ))}
-      </View>
     </View>
   );
 }

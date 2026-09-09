@@ -510,12 +510,15 @@ export async function lookupBarcode(rawCode: string): Promise<BarcodeLookup> {
   const title = merged.title;
   const [facts, micro] = await Promise.all([fromOpenFacts(code), fromMicrolinkPages(code)]);
   const named = toLookup(code, [first, second, facts, micro]);
-  let bb: BarcodeOffer[] = [];
-  if (!named.asin && named.title && !/^UPC\s/i.test(named.title)) {
+  
+  // ALWAYS search BestBuy natively by UPC code first. BestBuy's search API accurately indexes UPCs.
+  // If we find it, it's a guaranteed exact match (no similarName fuzziness needed).
+  let bb: BarcodeOffer[] = await fromBestBuy(code);
+  
+  // If UPC search fails, fallback to semantic title search if we have one
+  if (bb.length === 0 && named.title && !/^UPC\s/i.test(named.title)) {
     bb = await fromBestBuy(searchQueryFromTitle(named.title), named.title);
     if (bb.length === 0) bb = await fromBestBuy(named.title.slice(0, 80), named.title);
-  } else if (!named.asin) {
-    bb = await fromBestBuy(code);
   }
 
   const result = toLookup(code, [named, facts, micro], bb);

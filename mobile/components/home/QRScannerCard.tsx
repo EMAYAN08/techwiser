@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, Pressable, Platform, AppState } from "react-native";
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused } from "expo-router";
 import { Camera, Image as ImageIcon } from "lucide-react-native";
 import jsQR from "jsqr";
 import { useThemeColors, paletteTokens } from "../../constants/Colors";
@@ -75,7 +75,7 @@ function observationsFromJsQR(imageData: ImageData, dw: number, dh: number): QrO
 function ScanFrame({ kind, color }: { kind: ScanKind; color: string }) {
   const landscape = kind === "barcode";
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+    <View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}>
       <View
         style={[
           styles.frame,
@@ -257,7 +257,7 @@ function WebQrCamera({
     };
   }, [active, kind]);
 
-  return <View ref={hostRef} collapsable={false} style={StyleSheet.absoluteFillObject} />;
+  return <View ref={hostRef} collapsable={false} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />;
 }
 
 export function QRScannerCard({
@@ -495,7 +495,7 @@ export function QRScannerCard({
             <CameraView
               facing="back"
               autofocus="off"
-              style={StyleSheet.absoluteFillObject}
+              style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
               barcodeScannerSettings={{
                 barcodeTypes: kind === "barcode" ? [...NATIVE_BARCODE_TYPES] : ["qr"],
               }}
