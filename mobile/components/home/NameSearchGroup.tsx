@@ -160,21 +160,29 @@ export function NameSearchGroup({ onCompare, isLoading }: NameSearchGroupProps) 
     const validNames = names.map(n => n.trim()).filter(Boolean);
     if (validNames.length < 2) return;
     
+    console.log(`[NameSearchGroup] User triggered compare with names:`, validNames);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsResolving(true);
     try {
+      console.log(`[NameSearchGroup] Calling resolveProductNames API...`);
       const urls = await resolveProductNames(validNames);
+      console.log(`[NameSearchGroup] Received resolved URLs from API:`, urls);
+      
       if (!urls || urls.length === 0) {
+        console.warn(`[NameSearchGroup] Zero products resolved.`);
         Alert.alert("Error", "Could not find any products matching those names.");
         return;
       }
       if (urls.length < 2) {
+        console.warn(`[NameSearchGroup] Only 1 product resolved. Needed at least 2.`);
         Alert.alert("Warning", "Only found one product. Please check your spelling.");
         return;
       }
       
+      console.log(`[NameSearchGroup] Successfully resolved ${urls.length} products! Passing to onCompare pipeline.`);
       onCompare(urls);
     } catch (e) {
+      console.error(`[NameSearchGroup] Error resolving names:`, e);
       Alert.alert("Error", "Failed to search products.");
     } finally {
       setIsResolving(false);

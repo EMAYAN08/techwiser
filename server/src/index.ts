@@ -35,14 +35,19 @@ app.post('/api/barcode', async (req: Request, res: Response) => {
 app.post('/api/resolve-names', async (req: Request, res: Response) => {
   try {
     const { names } = req.body;
+    console.log(`[resolve-names] Received request to resolve ${names?.length || 0} names:`, names);
+    
     if (!names || !Array.isArray(names) || names.length === 0) {
+      console.warn(`[resolve-names] Invalid request payload:`, req.body);
       res.status(400).json({ error: 'An array of product names is required.' });
       return;
     }
+    
     const urls = await resolveProductNames(names);
+    console.log(`[resolve-names] Successfully resolved ${urls.length} URLs:`, urls);
     res.json({ urls });
   } catch (error: unknown) {
-    console.error('Unexpected error in /api/resolve-names:', error);
+    console.error(`[resolve-names] Unexpected error processing request for names:`, req.body?.names, error);
     res.status(500).json({ error: 'Failed to resolve product names.' });
   }
 });

@@ -444,13 +444,22 @@ async function lookupMicrolinkPages(code: string): Promise<any | null> {
 
 export async function resolveProductNames(names: string[]): Promise<string[]> {
   const resolvedUrls: string[] = [];
+  console.log(`[resolveProductNames] Starting resolution for names:`, names);
   for (const name of names) {
     if (!name.trim()) continue;
+    
+    console.log(`[resolveProductNames] Searching Best Buy natively for: "${name}"`);
     // We search best buy using the name. We don't provide expectedTitle so it just takes the top result.
     const offers = await searchBestBuy(name);
+    
     if (offers && offers.length > 0) {
+      console.log(`[resolveProductNames] Found match for "${name}" -> ${offers[0].url}`);
       resolvedUrls.push(offers[0].url);
+    } else {
+      console.warn(`[resolveProductNames] No match found for "${name}" on Best Buy.`);
     }
   }
+  
+  console.log(`[resolveProductNames] Finished resolution. Found ${resolvedUrls.length} valid URLs.`);
   return resolvedUrls;
 }
