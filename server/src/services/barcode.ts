@@ -456,10 +456,33 @@ export async function resolveProductNames(names: string[]): Promise<string[]> {
       console.log(`[resolveProductNames] Found match for "${name}" -> ${offers[0].url}`);
       resolvedUrls.push(offers[0].url);
     } else {
-      console.warn(`[resolveProductNames] No match found for "${name}" on Best Buy.`);
+      console.warn(`[resolveProductNames] No match found for "${name}" on Best Buy. Trying Amazon CA...`);
+      const asin = await searchAmazonCaForAsin(name);
+      if (asin) {
+        const amzUrl = `https://www.amazon.ca/dp/${asin}`;
+        console.log(`[resolveProductNames] Found match on Amazon CA -> ${amzUrl}`);
+        resolvedUrls.push(amzUrl);
+      } else {
+        console.warn(`[resolveProductNames] Exhausted all search options for "${name}".`);
+      }
     }
   }
   
   console.log(`[resolveProductNames] Finished resolution. Found ${resolvedUrls.length} valid URLs.`);
   return resolvedUrls;
 }
+
+
+async function searchAmazonCaForAsin(query: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://www.amazon.ca/s?k=${encodeURIComponent(query)}`, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36" }
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const match = html.match(/data-asin="([A-Z0-9]{10})"/);
+    if (match) return match[1];
+  } catch (e) {}
+  return null;
+}
+
