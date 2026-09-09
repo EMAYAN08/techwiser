@@ -441,3 +441,16 @@ async function lookupMicrolinkPages(code: string): Promise<any | null> {
   }
   return null;
 }
+
+export async function resolveProductNames(names: string[]): Promise<string[]> {
+  const resolvedUrls: string[] = [];
+  for (const name of names) {
+    if (!name.trim()) continue;
+    // We search best buy using the name. We don't provide expectedTitle so it just takes the top result.
+    const offers = await searchBestBuy(name);
+    if (offers && offers.length > 0) {
+      resolvedUrls.push(offers[0].url);
+    }
+  }
+  return resolvedUrls;
+}

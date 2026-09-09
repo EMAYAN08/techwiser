@@ -5,7 +5,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { scrapeUrl } from './services/scraper';
 import { generateComparison, explainSpec, findAlternatives } from './services/llm';
-import { lookupBarcode } from './services/barcode';
+import { lookupBarcode, resolveProductNames } from './services/barcode';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +29,21 @@ app.post('/api/barcode', async (req: Request, res: Response) => {
   } catch (error: unknown) {
     console.error('Unexpected error in /api/barcode:', error);
     res.status(500).json({ error: 'Failed to look up that barcode.' });
+  }
+});
+
+app.post('/api/resolve-names', async (req: Request, res: Response) => {
+  try {
+    const { names } = req.body;
+    if (!names || !Array.isArray(names) || names.length === 0) {
+      res.status(400).json({ error: 'An array of product names is required.' });
+      return;
+    }
+    const urls = await resolveProductNames(names);
+    res.json({ urls });
+  } catch (error: unknown) {
+    console.error('Unexpected error in /api/resolve-names:', error);
+    res.status(500).json({ error: 'Failed to resolve product names.' });
   }
 });
 

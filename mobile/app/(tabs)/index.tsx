@@ -197,7 +197,7 @@ export default function Home() {
               canCompare={canCompare}
             />
           )}
-          {inputMode === "name" && <NameSearchGroup />}
+          {inputMode === "name" && <NameSearchGroup onCompare={handleCompare} isLoading={isLoading} />}
           {inputMode === "upc" && <BarcodeInputGroup onCompare={handleCompare} isLoading={isLoading} />}
           {inputMode === "qr" && <QRInputGroup onCompare={handleCompare} isLoading={isLoading} />}
         </Animated.View>

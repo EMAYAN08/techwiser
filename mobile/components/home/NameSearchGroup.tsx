@@ -1,20 +1,23 @@
-import { type, fonts } from "../../constants/Typography";
+
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, TextInput, StyleSheet, Pressable, Animated } from "react-native";
+import { View, Text, StyleSheet, Pressable, Animated, TextInput, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "../../utils/haptics";
+import { useThemeColors } from "../../constants/Colors";
+import { type, fonts } from "../../constants/Typography";
+import { radii, size } from "../../constants/Layout";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
-import { useThemeColors } from "../../constants/Colors";
-import { radii, size } from "../../constants/Layout";
+import * as Haptics from "../../utils/haptics";
+import { resolveProductNames } from "../../services/api";
 
 const MOCK_SUGGESTIONS: Record<string, string[]> = {
-  mac: ['MacBook Pro 14" M3 Pro', 'MacBook Air 15" M3', 'MacBook Pro 16" M3 Max'],
-  dell: ["Dell XPS 15 9530", "Dell XPS 13 Plus", "Dell Inspiron 15"],
-  iphone: ["iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus"],
+  iphone: ["Apple iPhone 15 Pro", "Apple iPhone 14", "Apple iPhone 13 128GB"],
+  ipad: ["Apple iPad Pro 11-inch", "Apple iPad Air (5th gen)"],
+  macbook: ["Apple MacBook Air M3", "Apple MacBook Pro 14 M3 Pro"],
+  samsung: ["Samsung Galaxy S24 Ultra", "Samsung Galaxy S24+", "Samsung Galaxy A55"],
   galaxy: ["Samsung Galaxy S24 Ultra", "Samsung Galaxy S24+", "Samsung Galaxy A55"],
   sony: ["Sony WH-1000XM5", "Sony WF-1000XM5", "Sony Bravia XR A95L"],
-  lg: ['LG OLED C3 55"', 'LG OLED C3 65"', "LG UltraGear 27GN950"],
+  lg: ["LG OLED C3 55\"", "LG OLED C3 65\"", "LG UltraGear 27GN950"],
 };
 
 function getSuggestions(query: string): string[] {
@@ -120,10 +123,16 @@ function NameInput({ index, value, onChange, onRemove }: NameInputProps) {
   );
 }
 
-export function NameSearchGroup() {
+interface NameSearchGroupProps {
+  onCompare: (urls: string[]) => void;
+  isLoading: boolean;
+}
+
+export function NameSearchGroup({ onCompare, isLoading }: NameSearchGroupProps) {
   const { colors } = useThemeColors();
   const [names, setNames] = useState(["", ""]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [isResolving, setIsResolving] = useState(false);
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }).start();
@@ -147,12 +156,39 @@ export function NameSearchGroup() {
     setNames(names.filter((_, i) => i !== index));
   };
 
+  const handleCompare = async () => {
+    const validNames = names.map(n => n.trim()).filter(Boolean);
+    if (validNames.length < 2) return;
+    
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setIsResolving(true);
+    try {
+      const urls = await resolveProductNames(validNames);
+      if (!urls || urls.length === 0) {
+        Alert.alert("Error", "Could not find any products matching those names.");
+        return;
+      }
+      if (urls.length < 2) {
+        Alert.alert("Warning", "Only found one product. Please check your spelling.");
+        return;
+      }
+      
+      onCompare(urls);
+    } catch (e) {
+      Alert.alert("Error", "Failed to search products.");
+    } finally {
+      setIsResolving(false);
+    }
+  };
+
+  const disableCompare = names.filter((n) => n.trim()).length < 2 || isLoading || isResolving;
+
   return (
     <Animated.View style={{ opacity: fadeAnim }}>
       <View style={[styles.infoPill, { backgroundColor: colors.fog }]}>
         <Feather name="info" size={14} color={colors.stone} />
         <Text style={[styles.infoText, { color: colors.body }]}>
-          Type a product name — we search across all Canadian retailers
+          Type a product name - we search across Canadian retailers
         </Text>
       </View>
 
@@ -171,7 +207,8 @@ export function NameSearchGroup() {
           <View style={{ flex: 1 }}>
             <Pressable
               onPress={addName}
-              style={({ pressed }) => [styles.addBtn, { borderColor: colors.ink, opacity: pressed ? 0.72 : 1 }]}
+              disabled={isLoading || isResolving}
+              style={({ pressed }) => [styles.addBtn, { borderColor: colors.ink, opacity: pressed || isLoading || isResolving ? 0.4 : 1 }]}
             >
               <Feather name="plus" size={16} color={colors.ink} />
               <Text style={[styles.addBtnText, { color: colors.ink }]}>Add product</Text>
@@ -180,19 +217,13 @@ export function NameSearchGroup() {
         ) : null}
         <View style={{ flex: 1 }}>
           <Button
-            title="Compare"
+            title={isResolving ? "Searching..." : "Compare"}
             variant="primary"
-            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
-            disabled={names.filter((n) => n.trim()).length < 2}
+            onPress={handleCompare}
+            disabled={disableCompare}
             style={{ width: "100%" }}
           />
         </View>
-      </View>
-
-      <View style={styles.comingSoonRow}>
-        <View style={[styles.comingSoonLine, { backgroundColor: colors.line }]} />
-        <Text style={[styles.comingSoonNote, { color: colors.stone }]}>Product name search — Phase 2</Text>
-        <View style={[styles.comingSoonLine, { backgroundColor: colors.line }]} />
       </View>
     </Animated.View>
   );
@@ -272,18 +303,5 @@ const styles = StyleSheet.create({
     ...type.button,
     fontSize: 15,
   },
-  comingSoonRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 8,
-  },
-  comingSoonLine: {
-    flex: 1,
-    height: StyleSheet.hairlineWidth,
-  },
-  comingSoonNote: {
-    ...type.caption,
-    fontSize: 11,
-  },
 });
+

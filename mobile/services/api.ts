@@ -72,3 +72,23 @@ export async function fetchAlternatives(
 
   return response.json();
 }
+
+
+export async function resolveProductNames(names: string[]): Promise<string[]> {
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+  const response = await fetch(`${apiUrl}/api/resolve-names`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ names }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to resolve product names");
+  }
+
+  const json = await response.json();
+  return json.urls || [];
+}
+
