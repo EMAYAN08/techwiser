@@ -38,6 +38,7 @@ const TRACKING_PARAMS = [
   "mcid",
   "tag",
   "ascsubtag",
+  "selectedSellerId",
 ];
 
 const SKIP_SLUGS = new Set(["en-ca", "en", "fr", "fr-ca", "product", "dp", "gp", "p", "ip", "d"]);

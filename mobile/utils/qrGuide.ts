@@ -10,12 +10,13 @@ export type QrObservation = {
 export type ScanGuide = "seek" | "closer" | "farther" | "hold" | "lock";
 export type ScanKind = "qr" | "barcode";
 
-export const LOCK_HOLD_MS = 180;
-export const LOST_GRACE_MS = 260;
-export const GUIDE_STICK_MS = 90;
+/** Capture on the first successful decode — no size gate. */
+export const LOCK_HOLD_MS = 0;
+export const LOST_GRACE_MS = 180;
+export const GUIDE_STICK_MS = 40;
 
-const SWEET_FILL = 0.34;
-const SWEET_SPAN = 0.62;
+const SWEET_FILL = 0.22;
+const SWEET_SPAN = 0.45;
 
 function finitePts(
   points: Array<{ x: number; y: number } | null | undefined>
@@ -88,21 +89,12 @@ export function assessGuide(
   kind: ScanKind = "qr"
 ): Exclude<ScanGuide, "lock"> {
   if (!obs) return "seek";
-  const dx = Math.abs(obs.nx - 0.5);
-  const dy = Math.abs(obs.ny - 0.5);
-
+  // A successful decode is enough. Only nudge away if the code is clipped at the edge.
   if (kind === "barcode") {
-    if (obs.span < 0.38) return "closer";
-    if (obs.span > 0.94 || obs.pad < 0.02) return "farther";
-    if (dy > 0.34 || dx > 0.38) return obs.span < 0.32 ? "closer" : "seek";
+    if (obs.pad < 0.004 && obs.span > 0.96) return "farther";
     return "hold";
   }
-
-  if (obs.fill < 0.32) return "closer";
-  if (obs.fill > 0.56 || obs.pad < 0.045) return "farther";
-  if (dx > 0.3 || dy > 0.3) {
-    return obs.fill < 0.26 ? "closer" : "seek";
-  }
+  if (obs.pad < 0.004 && obs.fill > 0.9) return "farther";
   return "hold";
 }
 

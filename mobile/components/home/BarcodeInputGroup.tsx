@@ -457,12 +457,13 @@ export function BarcodeInputGroup({
 
         <QRScannerCard
           kind="barcode"
-          scanning={!paused && items.length < MAX_BARCODE_PRODUCTS}
+          scanning={!paused && items.length < MAX_BARCODE_PRODUCTS && !isLoading}
           atCapacity={items.length >= MAX_BARCODE_PRODUCTS}
           flashTick={flashTick}
           scannedCount={items.length}
           onScan={handleScan}
           onGallery={handleGallery}
+          allowed={!isLoading}
         />
 
         <View style={[styles.manual, { backgroundColor: colors.surface, borderColor: colors.line }]}>
