@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   brand: { ...type.eyebrow, marginBottom: 4, height: 16 },
-  titleStack: { minHeight: 22, marginBottom: 8, justifyContent: "center" },
+  titleStack: { minHeight: 40, marginBottom: 8, justifyContent: "center" },
   productTitle: {
     ...type.price,
     fontSize: 16,
