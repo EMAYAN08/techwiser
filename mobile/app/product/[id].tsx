@@ -18,10 +18,14 @@ export default function ProductDetailScreen() {
   const { colors, isDark } = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { recentComparisons, setUrls } = useComparisonStore();
+  const { recentComparisons, activeComparison, setUrls } = useComparisonStore();
   const insets = useSafeAreaInsets();
 
   const product = useMemo(() => {
+    if (activeComparison) {
+      const fromActive = activeComparison.products.find((p) => p.id === id);
+      if (fromActive) return fromActive;
+    }
     for (const comp of recentComparisons) {
       if (comp.result) {
         const found = comp.result.products.find((p) => p.id === id);
@@ -29,7 +33,7 @@ export default function ProductDetailScreen() {
       }
     }
     return null;
-  }, [id, recentComparisons]);
+  }, [id, recentComparisons, activeComparison]);
 
   if (!product) {
     return (
@@ -91,81 +95,85 @@ export default function ProductDetailScreen() {
           </View>
         ) : null}
 
-        {product.aiSummary ? (
-          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-            <View style={styles.aiHeader}>
-              <Feather name="zap" size={16} color={colors.spotify} />
-              <Text style={[styles.aiTitle, { color: colors.ink }]}>AI summary</Text>
-            </View>
-            <Text style={[styles.aiSummary, { color: colors.body }]}>{product.aiSummary}</Text>
-            {product.badges && product.badges.length > 0 ? (
-              <View style={styles.badgesRow}>
-                {product.badges.map((badge, i) => (
-                  <Chip key={i} label={badge} variant="tag" />
-                ))}
-              </View>
-            ) : null}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+          <View style={styles.aiHeader}>
+            <Feather name="zap" size={16} color={colors.spotify} />
+            <Text style={[styles.aiTitle, { color: colors.ink }]}>AI summary</Text>
           </View>
-        ) : null}
-
-        {product.description ? (
-          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-            <View style={styles.sectionHeader}>
-              <Feather name="align-left" size={18} color={colors.ink} />
-              <Text style={[styles.sectionTitle, { color: colors.ink, marginBottom: 0, marginLeft: 8 }]}>
-                Overview
-              </Text>
-            </View>
-            <Text style={[styles.bodyText, { color: colors.body }]}>{product.description}</Text>
-          </View>
-        ) : null}
-
-        {product.whatsInTheBox && product.whatsInTheBox.length > 0 ? (
-          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-            <View style={styles.sectionHeader}>
-              <Feather name="box" size={18} color={colors.ink} />
-              <Text style={[styles.sectionTitle, { color: colors.ink, marginBottom: 0, marginLeft: 8 }]}>
-                What's in the box
-              </Text>
-            </View>
-            <View style={styles.listContainer}>
-              {product.whatsInTheBox.map((item, i) => (
-                <View key={i} style={styles.listItem}>
-                  <View style={[styles.bullet, { backgroundColor: colors.stone }]} />
-                  <Text style={[styles.bodyText, { color: colors.body }]}>{item}</Text>
-                </View>
+          <Text style={[styles.aiSummary, { color: colors.body }]}>
+            {product.aiSummary?.trim() ||
+              `${product.name} is listed in this comparison. Use the spec sheet below to see what it is best suited for.`}
+          </Text>
+          {product.badges && product.badges.length > 0 ? (
+            <View style={styles.badgesRow}>
+              {product.badges.filter(Boolean).map((badge, i) => (
+                <Chip key={`${badge}-${i}`} label={badge} variant="tag" />
               ))}
             </View>
-          </View>
-        ) : null}
+          ) : null}
+        </View>
 
-        {product.userInsights ? (
-          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-            <View style={styles.sectionHeader}>
-              <Feather name="users" size={18} color={colors.ink} />
-              <Text style={[styles.sectionTitle, { color: colors.ink, marginBottom: 0, marginLeft: 8 }]}>
-                User Insights & Reviews
-              </Text>
-            </View>
-            <Text style={[styles.bodyText, { color: colors.body }]}>{product.userInsights}</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+          <View style={styles.sectionHeader}>
+            <Feather name="users" size={18} color={colors.ink} />
+            <Text style={[styles.sectionTitle, { color: colors.ink, marginBottom: 0, marginLeft: 8 }]}>
+              Real user reviews
+            </Text>
           </View>
-        ) : null}
+          {product.userInsights?.trim() ? (
+            <Text style={[styles.bodyText, { color: colors.body, marginBottom: 14 }]}>{product.userInsights}</Text>
+          ) : null}
+          {(product.userPros && product.userPros.length > 0) || (product.userCons && product.userCons.length > 0) ? (
+            <View style={styles.reviewCols}>
+              {product.userPros && product.userPros.length > 0 ? (
+                <View style={styles.reviewBlock}>
+                  <Text style={[styles.reviewHeading, { color: colors.spotify }]}>Pros</Text>
+                  {product.userPros.map((item, i) => (
+                    <View key={`pro-${i}`} style={styles.listItem}>
+                      <Feather name="check" size={14} color={colors.spotify} style={{ marginTop: 3 }} />
+                      <Text style={[styles.bodyText, { color: colors.body, flex: 1 }]}>{item}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+              {product.userCons && product.userCons.length > 0 ? (
+                <View style={styles.reviewBlock}>
+                  <Text style={[styles.reviewHeading, { color: colors.error }]}>Cons</Text>
+                  {product.userCons.map((item, i) => (
+                    <View key={`con-${i}`} style={styles.listItem}>
+                      <Feather name="minus" size={14} color={colors.error} style={{ marginTop: 3 }} />
+                      <Text style={[styles.bodyText, { color: colors.body, flex: 1 }]}>{item}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          ) : !product.userInsights?.trim() ? (
+            <Text style={[styles.bodyText, { color: colors.body }]}>
+              No reliable buyer consensus was available for this model yet. Check the retailer listing for the latest reviews.
+            </Text>
+          ) : null}
+        </View>
 
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
           <Text style={[styles.sectionTitle, { color: colors.ink }]}>Specifications</Text>
-          {(product.rawSpecs && product.rawSpecs.length > 0 ? product.rawSpecs : product.specs || []).map(
-            (spec: any, index: number, arr: any[]) => (
-              <View
-                key={index}
-                style={[
-                  styles.specRow,
-                  { borderBottomColor: colors.line },
-                  index === arr.length - 1 && styles.noBorder,
-                ]}
-              >
-                <Text style={[styles.specLabel, { color: colors.stone }]}>{spec.label}</Text>
-                <Text style={[styles.specValue, { color: colors.ink }]}>{spec.value}</Text>
-              </View>
+          {(product.rawSpecs && product.rawSpecs.length > 0 ? product.rawSpecs : product.specs || []).length === 0 ? (
+            <Text style={[styles.bodyText, { color: colors.body }]}>No specifications were extracted for this product.</Text>
+          ) : (
+            (product.rawSpecs && product.rawSpecs.length > 0 ? product.rawSpecs : product.specs || []).map(
+              (spec: any, index: number, arr: any[]) => (
+                <View
+                  key={`${spec.label}-${index}`}
+                  style={[
+                    styles.specRow,
+                    { borderBottomColor: colors.line },
+                    index === arr.length - 1 && styles.noBorder,
+                  ]}
+                >
+                  <Text style={[styles.specLabel, { color: colors.stone }]}>{spec.label}</Text>
+                  <Text style={[styles.specValue, { color: colors.ink }]}>{spec.value || "—"}</Text>
+                </View>
+              )
             )
           )}
         </View>
@@ -228,8 +236,11 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   bodyText: { ...type.body },
   listContainer: { marginTop: 4 },
-  listItem: { flexDirection: "row", alignItems: "flex-start", marginBottom: 6, paddingRight: 12 },
+  listItem: { flexDirection: "row", alignItems: "flex-start", marginBottom: 8, gap: 8, paddingRight: 8 },
   bullet: { width: 4, height: 4, borderRadius: 2, marginTop: 9, marginRight: 8 },
+  reviewCols: { gap: 16 },
+  reviewBlock: { gap: 6 },
+  reviewHeading: { ...type.eyebrow, marginBottom: 4 },
   footer: {
     position: "absolute",
     bottom: 0,

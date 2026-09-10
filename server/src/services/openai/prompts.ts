@@ -70,8 +70,16 @@ You are given a COMPLETE flat spec harvest for 2–3 products (already researche
 5. values[] must be aligned to product order (index 0 = first product). Use "—" only when that product truly has no value.
 6. winnerIndex: 0 or 1 (or 2) for the better spec, -1 for a draw or when better/worse does not apply.
 7. products[].rawSpecs MUST be the full harvested list for that product (label + value).
-8. Write a punchy 2–3 sentence aiSummary and 3–5 keyDifferences that actually differ.
+8. Write a punchy 2–3 sentence overall aiSummary and 3–5 keyDifferences that actually differ.
 9. Keep retailer names short (Best Buy, Amazon, Walmart, ...). Pass the original URL through. Keep the scraped/known price if present.
+10. For EACH product fill:
+    - aiSummary: 2–3 sentences on what this model is best suited for (use cases).
+    - badges: 3–6 short highlight tags such as "Fast", "Best battery", "Bright display".
+    - userInsights: 2–4 sentences of real-world buyer sentiment (not marketing copy).
+    - userPros: 3–5 short buyer-loved points.
+    - userCons: 2–4 short recurring complaints. If reviews are thin, still give honest trade-offs from known limitations.
+
+You MUST return a single JSON object.
 
 --- PREFERRED GROUPS BY DEVICE TYPE ---
 ${preferredGroupsJson()}

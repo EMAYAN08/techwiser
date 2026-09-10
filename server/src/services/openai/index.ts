@@ -6,7 +6,7 @@ import {
   normalizeComparisonResult,
 } from "./merge";
 import { buildAlternativesPrompt, buildExplainSpecPrompt, buildGroupPrompt, buildHarvestPrompt } from "./prompts";
-import { alternativesResponseSchema, explainSpecResponseSchema, harvestResponseSchema } from "./schemas";
+import { alternativesResponseSchema, explainSpecResponseSchema, groupResponseSchema, harvestResponseSchema } from "./schemas";
 
 export async function generateOpenAIComparison(
   productDataList: { url: string; retailerText: string; title: string }[]
@@ -28,11 +28,23 @@ export async function generateOpenAIComparison(
 
   let grouped: any;
   try {
-    grouped = await openaiJson({
-      operation: "groupSpecs",
-      input: buildGroupPrompt(harvest, productDataList),
-      timeoutMs: 45_000,
-    });
+    try {
+      grouped = await openaiJson({
+        operation: "groupSpecs",
+        input: buildGroupPrompt(harvest, productDataList),
+        schemaName: "comparison",
+        schema: groupResponseSchema,
+        timeoutMs: 60_000,
+      });
+    } catch (schemaErr: unknown) {
+      const message = schemaErr instanceof Error ? schemaErr.message : String(schemaErr);
+      console.warn(`[OpenAI] groupSpecs json_schema failed (${message}). Retrying json_object.`);
+      grouped = await openaiJson({
+        operation: "groupSpecs",
+        input: buildGroupPrompt(harvest, productDataList),
+        timeoutMs: 45_000,
+      });
+    }
     applyGroupedSpecsList(grouped);
     if (!grouped.groupedSpecs || Object.keys(grouped.groupedSpecs).length === 0) {
       throw new Error("Grouping returned no spec groups");

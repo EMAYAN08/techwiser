@@ -22,6 +22,8 @@ export interface Product {
   description?: string;
   whatsInTheBox?: string[];
   userInsights?: string;
+  userPros?: string[];
+  userCons?: string[];
   specs: Spec[];
   rawSpecs?: Array<{ label: string; value: string }>;
   aiSummary?: string;

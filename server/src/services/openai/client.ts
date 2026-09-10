@@ -37,7 +37,9 @@ export async function openaiJson(options: {
 }): Promise<any> {
   const model = options.model || openaiModel();
   const useSchema = !!(options.schema && options.schemaName);
-  console.log(`[OpenAI] Calling model: ${model} for operation: ${options.operation}${useSchema ? " (json_schema)" : " (json_object)"}`);
+  console.log(
+    `[OpenAI] Calling model: ${model} for operation: ${options.operation}${useSchema ? " (json_schema)" : " (json_object)"}`
+  );
 
   const responseFormat = useSchema
     ? {
@@ -58,7 +60,16 @@ export async function openaiJson(options: {
     },
     body: JSON.stringify({
       model,
-      messages: [{ role: "user", content: options.input }],
+      messages: [
+        {
+          role: "system",
+          content: "You are a JSON API. Reply with a single valid JSON object only. No markdown.",
+        },
+        {
+          role: "user",
+          content: `${options.input}\n\nReturn JSON only.`,
+        },
+      ],
       response_format: responseFormat,
     }),
     signal: AbortSignal.timeout(options.timeoutMs ?? 90_000),

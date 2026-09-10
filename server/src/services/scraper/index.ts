@@ -1,4 +1,5 @@
 import type { ScrapedProduct, ScrapeResult } from "../../types/scrape";
+import { scrapeBestBuyApi } from "./bestbuy";
 
 async function extractWithJina(url: string): Promise<Pick<ScrapeResult, "rawText" | "imageUrl" | "title">> {
   const jinaResponse = await fetch("https://r.jina.ai/" + url, {
@@ -132,6 +133,22 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
   let title = "";
 
   try {
+    try {
+      const bb = await scrapeBestBuyApi(url);
+      if (bb) {
+        rawText = bb.rawText;
+        title = bb.title;
+        imageUrl = bb.imageUrl;
+        priceText = bb.priceText;
+        if (priceText && !rawText.includes(priceText)) {
+          rawText = "META PRICE FOUND: " + priceText + "\n\n" + rawText;
+        }
+        return { rawText, imageUrl, title };
+      }
+    } catch (bbError: any) {
+      console.log(`Best Buy API warning for ${url}:`, bbError.message);
+    }
+
     try {
       const jina = await extractWithJina(url);
       rawText = jina.rawText;

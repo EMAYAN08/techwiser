@@ -97,12 +97,75 @@ def parse_html_content(html):
     
     return result
 
+def scrape_bestbuy_api(url: str):
+    if "bestbuy.ca" not in url.lower():
+        return None
+    sku_match = re.search(r"/(\d{5,})(?:\?|$)", url)
+    if not sku_match:
+        return None
+    sku = sku_match.group(1)
+    api_url = f"https://www.bestbuy.ca/api/v2/json/product/{sku}"
+    print(f"Best Buy API SKU {sku}: {api_url}")
+    try:
+        fetcher = Fetcher(auto_match=True)
+        response = fetcher.get(api_url, timeout=15)
+        data = json.loads(response.text)
+    except Exception as e:
+        print(f"Best Buy API failed: {e}")
+        return None
+    if not data or not data.get("name"):
+        return None
+
+    spec_lines = []
+    for spec in data.get("specs") or []:
+        if not isinstance(spec, dict):
+            continue
+        name = spec.get("name") or ""
+        value = spec.get("value") or ""
+        group = spec.get("group") or ""
+        if name and value:
+            spec_lines.append(f"[{group}] {name}: {value}" if group else f"{name}: {value}")
+
+    box = data.get("whatsInTheBox") or []
+    if isinstance(box, list):
+        box_text = ", ".join(str(x) for x in box if x)
+    else:
+        box_text = str(box)
+
+    def strip_html(value):
+        if not value:
+            return ""
+        return BeautifulSoup(str(value), "html.parser").get_text(separator=" ", strip=True)
+
+    payload = {
+        "name": data.get("name", ""),
+        "brand": data.get("brandName", ""),
+        "price": data.get("salePrice") or data.get("regularPrice"),
+        "overview": strip_html(data.get("shortDescription")),
+        "description": strip_html(data.get("longDescription")),
+        "whatsIncluded": box_text,
+        "rating": data.get("customerRating"),
+        "reviewCount": data.get("customerReviewCount"),
+        "specs": spec_lines,
+    }
+    image = data.get("highResImage") or data.get("thumbnailImage") or ""
+    return {
+        "status": "success",
+        "data": json.dumps(payload)[:30000],
+        "imageUrl": image,
+    }
+
+
 @app.post("/scrape")
 @app.post("/scrape/")
 async def scrape_endpoint(req: ScrapeRequest):
     try:
         print(f"Scraping URL (Scrapling): {req.url}")
-        
+
+        bb = scrape_bestbuy_api(req.url)
+        if bb:
+            return bb
+
         # Scrapling Fetcher configures curl_cffi optimally to bypass TLS fingerprinting
         fetcher = Fetcher(auto_match=True)
         response = fetcher.get(req.url, timeout=15)

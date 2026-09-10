@@ -146,6 +146,26 @@ function assignGroup(label: string): { group: string; icon: string } {
   return { group: "Other Features", icon: "other" };
 }
 
+function stringList(value: unknown, max = 8): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .slice(0, max);
+}
+
+function badgesFromSpecs(specs: { label: string; value: string }[]): string[] {
+  const blob = specs.map((s) => `${s.label} ${s.value}`).join(" ").toLowerCase();
+  const badges: string[] = [];
+  if (/oled|qled|mini.?led|120hz|144hz|4k|8k/.test(blob)) badges.push("Great display");
+  if (/battery|5000|mah|long.?life/.test(blob)) badges.push("Strong battery");
+  if (/\b(16|18|24|32)\s*gb\b|lpddr/.test(blob)) badges.push("Fast");
+  if (/oled|camera|megapixel|ois/.test(blob)) badges.push("Camera");
+  if (/wifi\s*6e|wifi\s*7|thunderbolt|hdmi 2\.1/.test(blob)) badges.push("Modern ports");
+  if (/atmos|dts|dolby/.test(blob)) badges.push("Immersive audio");
+  return badges.slice(0, 6);
+}
+
 export function fallbackGroupFromHarvest(
   harvest: { products?: HarvestProduct[] },
   productDataList: { url: string; title: string }[]
@@ -200,8 +220,10 @@ export function fallbackGroupFromHarvest(
         description: "",
         whatsInTheBox: [],
         userInsights: "",
-        badges: [],
-        aiSummary: "",
+        userPros: [],
+        userCons: [],
+        badges: badgesFromSpecs(harvested.specs || []),
+        aiSummary: `${harvested.name || productDataList[i]?.title || "This product"} is a ${inferDeviceType([productDataList[i]?.title || ""])} worth considering. See the spec sheet below for the full breakdown and who it fits.`,
         rawSpecs: (harvested.specs || []).map((s) => ({ label: s.label, value: s.value })),
       };
     }),
@@ -256,6 +278,35 @@ export function normalizeComparisonResult(result: any, productCount: number): an
         winnerIndex: typeof s.winnerIndex === "number" ? s.winnerIndex : -1,
       }));
   }
+
+  next.products = next.products.map((p: any, i: number) => {
+    const name = String(p?.name || `Product ${i + 1}`);
+    const rawSpecs = Array.isArray(p?.rawSpecs)
+      ? p.rawSpecs
+          .filter((s: any) => s && (s.label || s.name))
+          .map((s: any) => ({ label: String(s.label || s.name), value: s.value == null ? "—" : String(s.value) }))
+      : [];
+    const badges = stringList(p?.badges, 6);
+    return {
+      ...p,
+      name,
+      brand: String(p?.brand || ""),
+      retailer: String(p?.retailer || "other"),
+      url: String(p?.url || ""),
+      price: String(p?.price || "N/A"),
+      description: typeof p?.description === "string" ? p.description : "",
+      whatsInTheBox: stringList(p?.whatsInTheBox, 12),
+      userInsights: typeof p?.userInsights === "string" ? p.userInsights : "",
+      userPros: stringList(p?.userPros || p?.pros, 6),
+      userCons: stringList(p?.userCons || p?.cons, 6),
+      badges: badges.length ? badges : badgesFromSpecs(rawSpecs),
+      aiSummary:
+        typeof p?.aiSummary === "string" && p.aiSummary.trim()
+          ? p.aiSummary
+          : `${name} is a solid option in this matchup. Use the spec sheet below to see what it is best suited for.`,
+      rawSpecs,
+    };
+  });
 
   return next;
 }
