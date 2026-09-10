@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { RETAILER_COLORS } from "../config/constants";
-import { generateComparison } from "../services/llm";
+import { generateGrokComparison } from "../services/grok";
 import { partitionScrapeResults, scrapeUrlsSequentially } from "../services/scraper";
 
 const router = Router();
@@ -25,10 +25,10 @@ router.post("/compare", async (req: Request, res: Response) => {
       return;
     }
 
-    console.log(`Sending ${scrapedData.length} multi-source payloads to OpenRouter...`);
+    console.log(`Sending ${scrapedData.length} multi-source payloads to Grok...`);
     let comparisonResult: any;
     try {
-      comparisonResult = await generateComparison(
+      comparisonResult = await generateGrokComparison(
         scrapedData.map((d) => ({
           url: d.url,
           retailerText: d.retailerText,

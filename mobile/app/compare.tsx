@@ -352,11 +352,12 @@ interface CategoryPillProps {
   label: string;
   isSelected: boolean;
   onPress: () => void;
+  iconKey?: string;
 }
 
-function CategoryPill({ label, isSelected, onPress }: CategoryPillProps) {
+function CategoryPill({ label, isSelected, onPress, iconKey }: CategoryPillProps) {
   const { colors } = useThemeColors();
-  const Icon = getCategoryIcon(label);
+  const Icon = getCategoryIcon(label, iconKey);
   const scale = useRef(new Animated.Value(1)).current;
 
   const animateTo = (v: number) =>
@@ -804,6 +805,7 @@ export default function CompareScreen() {
               <CategoryPill
                 key={cat}
                 label={cat}
+                iconKey={activeComparison.groupIcons?.[cat]}
                 isSelected={selectedCategory === cat}
                 onPress={() => handleSelectCategory(cat)}
               />

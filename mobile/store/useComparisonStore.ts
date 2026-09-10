@@ -30,6 +30,8 @@ export interface Product {
 
 export interface ComparisonResult {
   groupedSpecs?: any;
+  groupIcons?: Record<string, string>;
+  deviceType?: string;
   id: string;
   products: Product[];
   keyDifferences: Array<{ label: string; values: string[] }>;

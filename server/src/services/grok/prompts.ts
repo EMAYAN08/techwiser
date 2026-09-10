@@ -1,0 +1,118 @@
+import { preferredGroupsJson } from "../../schemas/spec_groups";
+
+const MAX_RETAILER_CHARS = 40_000;
+
+export function clipRetailerText(text: string, max = MAX_RETAILER_CHARS): string {
+  if (!text || text.length <= max) return text || "";
+  const head = 8_000;
+  const tail = max - head - 80;
+  return `${text.slice(0, head)}\n\n[...truncated middle of page...]\n\n${text.slice(-tail)}`;
+}
+
+export function buildHarvestPrompt(
+  productDataList: { url: string; retailerText: string; title: string }[]
+): string {
+  const dataString = productDataList
+    .map(
+      (d, i) => `
+--- PRODUCT ${i + 1} ---
+URL: ${d.url}
+Title: ${d.title}
+RETAILER SOURCE TEXT:
+${clipRetailerText(d.retailerText)}
+------------------------
+`
+    )
+    .join("\n\n");
+
+  return `
+You are a meticulous consumer-electronics spec researcher.
+
+TASK: Build a COMPLETE flat specification list for each product. Grouping happens later. Do not omit specs.
+
+HOW TO GATHER SPECS
+1. Parse the retailer source text. Extract EVERY technical specification mentioned (hardware, software, dimensions, ports, sensors, codecs, charging, box contents, warranty, ratings).
+2. Use web search for official manufacturer spec sheets, GSMArena, RTINGS, Notebookcheck, or equivalent. Fill gaps the retailer page omitted.
+3. Use your own knowledge of the exact model only when scrape + web still miss a commonly published spec. Never invent a value — use "Unknown" if you cannot verify it.
+4. Align labels across products where they describe the same attribute (e.g. both "RAM", not "Memory" vs "RAM").
+5. Prefer specific values ("16 GB LPDDR5X") over marketing copy.
+
+ZERO DATA LOSS: If a spec appears in scrape or on the web, it MUST appear in specs[]. Aim for a thorough sheet (typically 20–60 rows for phones/laptops/TVs; fewer only for simple accessories).
+
+SOURCE TAGS
+- scraped: taken from the retailer text
+- web: taken from web search / official sheets
+- knowledge: filled from model knowledge when scrape and web did not have it
+
+Return one object in products[] per input product, in the same order.
+${dataString}
+`.trim();
+}
+
+export function buildGroupPrompt(
+  harvest: { products: { name: string; brand: string; specs: { label: string; value: string; source?: string }[] }[] },
+  productDataList: { url: string; retailerText: string; title: string }[]
+): string {
+  const harvestJson = JSON.stringify(harvest, null, 2);
+  const urlBlock = productDataList
+    .map((d, i) => `Product ${i + 1} URL: ${d.url}\nProduct ${i + 1} page title: ${d.title}`)
+    .join("\n");
+
+  return `
+You are an elite consumer electronics reviewer.
+
+You are given a COMPLETE flat spec harvest for 2–3 products (already researched). Your job is to STRUCTURE it for a comparison UI — not to drop specs.
+
+--- RULES ---
+1. EVERY harvested spec must appear in groupedSpecsList. Do not omit, merge-away, or "simplify" a spec out of existence.
+2. Preferred group names below are a GUIDELINE, not a whitelist. Use them when they fit. If a spec does not fit, CREATE a new group (e.g. "AI Features", "Cooling", "Camera") or put it in "Other Features". Never drop it.
+3. Pick deviceType from the keys in the guideline (smartphone, laptop, television, ...). Use "other" if unsure.
+4. iconKey must be one of: cpu, battery, display, camera, wifi, speaker, ports, design, software, health, storage, memory, graphics, keyboard, smart, audio, other.
+5. values[] must be aligned to product order (index 0 = first product). Use "—" only when that product truly has no value.
+6. winnerIndex: 0 or 1 (or 2) for the better spec, -1 for a draw or when better/worse does not apply.
+7. products[].rawSpecs MUST be the full harvested list for that product (label + value).
+8. Write a punchy 2–3 sentence aiSummary and 3–5 keyDifferences that actually differ.
+9. Keep retailer names short (Best Buy, Amazon, Walmart, ...). Pass the original URL through. Keep the scraped/known price if present.
+
+--- PREFERRED GROUPS BY DEVICE TYPE ---
+${preferredGroupsJson()}
+
+--- PRODUCT URLS ---
+${urlBlock}
+
+--- HARVESTED SPECS (source of truth — do not drop any row) ---
+${harvestJson}
+`.trim();
+}
+
+export function buildExplainSpecPrompt(productNames: string[], specLabel: string, specValues: string[]): string {
+  return `
+You are a technical analyst explaining specs to a shopper who is not an engineer.
+
+Specification: "${specLabel}"
+${productNames.map((name, i) => `- ${name}: ${specValues[i] || "N/A"}`).join("\n")}
+
+Return:
+- concept: 1–2 sentences on what this spec means in daily use
+- breakdowns: one object per product with productName, value, and a 1–2 sentence insight (who it is best for)
+`.trim();
+}
+
+export function buildAlternativesPrompt(products: any[]): string {
+  return `
+You are a highly knowledgeable tech advisor shopping for a Canadian buyer.
+
+The user is comparing:
+${JSON.stringify(products, null, 2)}
+
+Use web search to check current alternatives in a similar price range (Canada / North America).
+
+If the compared products are already the best in class for the money, return an empty alternatives array.
+Otherwise suggest up to 3 strictly better alternatives (value, performance, or recency).
+
+Each alternative MUST use a specific model name including generation/year (e.g. "Sony WH-1000XM5", "ASUS ROG Zephyrus G14 (2024)").
+estimatedPrice like "$999".
+reasonWhyBetter: 1–2 sentences.
+imageUrl: a real http(s) product image if you can find one, otherwise "".
+`.trim();
+}

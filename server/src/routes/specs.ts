@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { explainSpec, findAlternatives } from "../services/llm";
+import { explainSpecGrok, findAlternativesGrok } from "../services/grok";
 
 const router = Router();
 
@@ -12,7 +12,7 @@ router.post("/explain-spec", async (req: Request, res: Response) => {
       return;
     }
 
-    const explanation = await explainSpec(productNames, specLabel, specValues);
+    const explanation = await explainSpecGrok(productNames, specLabel, specValues);
     res.json(explanation);
   } catch (error: unknown) {
     console.error("Unexpected error in /api/explain-spec:", error);
@@ -29,7 +29,7 @@ router.post("/alternatives", async (req: Request, res: Response) => {
       return;
     }
 
-    const alternatives = await findAlternatives(products);
+    const alternatives = await findAlternativesGrok(products);
     res.json(alternatives);
   } catch (error: unknown) {
     console.error("Unexpected error in /api/alternatives:", error);
