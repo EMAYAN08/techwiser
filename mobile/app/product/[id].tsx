@@ -1,6 +1,14 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import { type } from "../../constants/Typography";
-import { View, Text, ScrollView, StyleSheet, Linking, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Linking,
+  Image,
+  Animated,
+  useWindowDimensions,
+} from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "../../utils/haptics";
@@ -9,10 +17,26 @@ import { useComparisonStore } from "../../store/useComparisonStore";
 import { Button } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
 import { NavCircle } from "../../components/ui/NavCircle";
-import { RetailerPill } from "../../components/ui/RetailerPill";
-import { useThemeColors } from "../../constants/Colors";
+import { useThemeColors, getRetailerColor } from "../../constants/Colors";
 import { radii, space } from "../../constants/Layout";
 import { exportProductToPDF } from "../../utils/exportPDF";
+
+function normalizeTitle(title: string): string {
+  const cleaned = title.replace(/5G|Unlocked|Smartphone|Dual SIM/gi, "").trim();
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  if (words.length > 3) return words.slice(0, 3).join(" ");
+  return cleaned;
+}
+
+function PriceChip({ price }: { price: string }) {
+  return (
+    <View style={styles.priceChip}>
+      <Text style={styles.priceChipText} numberOfLines={1}>
+        {price}
+      </Text>
+    </View>
+  );
+}
 
 export default function ProductDetailScreen() {
   const { colors, isDark } = useThemeColors();
@@ -20,6 +44,8 @@ export default function ProductDetailScreen() {
   const router = useRouter();
   const { recentComparisons, activeComparison, setUrls } = useComparisonStore();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const product = useMemo(() => {
     if (activeComparison) {
@@ -56,47 +82,174 @@ export default function ProductDetailScreen() {
     await exportProductToPDF(product, isDark);
   };
 
+  const gutter = space.gutter;
+  const topInset = Math.max(insets.top, 16);
+  const navH = 44;
+  const identityH = 78;
+  const stickyH = topInset + 10 + navH + identityH;
+  const hasImage = Boolean(product.imageUrl);
+  const heroSize = Math.max(160, screenWidth - gutter * 2);
+  const thumbSize = 68;
+  const titleMorph = 36;
+  const imageRange = hasImage ? heroSize : 56;
+  const shortName = normalizeTitle(product.name);
+  const showPrice = Boolean(product.price && product.price !== "N/A");
+  const retColor = getRetailerColor(product.retailer, isDark);
+
+  const fullTitleOpacity = scrollY.interpolate({
+    inputRange: [0, titleMorph],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+  const shortTitleOpacity = scrollY.interpolate({
+    inputRange: [0, titleMorph],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
+  const brandOpacity = scrollY.interpolate({
+    inputRange: [0, 24],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+  const brandHeight = scrollY.interpolate({
+    inputRange: [0, 24],
+    outputRange: [18, 0],
+    extrapolate: "clamp",
+  });
+
+  const scale = thumbSize / heroSize;
+  const x0 = gutter;
+  const y0 = stickyH;
+  const x1 = screenWidth - gutter - thumbSize;
+  const y1 = topInset + 10 + navH + Math.max(0, (identityH - thumbSize) / 2);
+  const c0x = x0 + heroSize / 2;
+  const c0y = y0 + heroSize / 2;
+  const c1x = x1 + thumbSize / 2;
+  const c1y = y1 + thumbSize / 2;
+
+  const imageTranslateX = scrollY.interpolate({
+    inputRange: [titleMorph, titleMorph + imageRange],
+    outputRange: [0, c1x - c0x],
+    extrapolate: "clamp",
+  });
+  const imageTranslateY = scrollY.interpolate({
+    inputRange: [titleMorph, titleMorph + imageRange],
+    outputRange: [0, c1y - c0y],
+    extrapolate: "clamp",
+  });
+  const imageScale = scrollY.interpolate({
+    inputRange: [titleMorph, titleMorph + imageRange],
+    outputRange: [1, scale],
+    extrapolate: "clamp",
+  });
+  const imageRadius = scrollY.interpolate({
+    inputRange: [titleMorph, titleMorph + imageRange],
+    outputRange: [radii.card, 14],
+    extrapolate: "clamp",
+  });
+  const identityPadRight = scrollY.interpolate({
+    inputRange: [titleMorph + imageRange * 0.45, titleMorph + imageRange],
+    outputRange: [0, thumbSize + 12],
+    extrapolate: "clamp",
+  });
+
+  const specs = product.rawSpecs && product.rawSpecs.length > 0 ? product.rawSpecs : product.specs || [];
+
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <Stack.Screen options={{ title: product.name, headerBackTitle: "Back" }} />
+
       <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: colors.bg,
-            borderBottomColor: colors.line,
-            paddingTop: Math.max(insets.top, 24),
-          },
-        ]}
+        pointerEvents="box-none"
+        style={[styles.sticky, { paddingTop: topInset, backgroundColor: colors.bg, zIndex: 20 }]}
       >
-        <View style={styles.headerTop}>
+        <View style={styles.navRow}>
           <NavCircle onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Go back">
             <Feather name="arrow-left" size={20} color={colors.ink} />
           </NavCircle>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <RetailerPill retailer={product.retailer} />
-            <NavCircle onPress={handleExport} accessibilityRole="button" accessibilityLabel="Export to PDF">
-              <Feather name="share" size={18} color={colors.ink} />
-            </NavCircle>
-          </View>
+          <NavCircle onPress={handleExport} accessibilityRole="button" accessibilityLabel="Export to PDF">
+            <Feather name="share" size={18} color={colors.ink} />
+          </NavCircle>
         </View>
-        <Text style={[styles.brand, { color: colors.stone }]}>{product.brand}</Text>
-        <Text style={[styles.productName, { color: colors.ink }]}>{product.name}</Text>
-        {product.price && product.price !== "N/A" ? (
-          <Text style={[styles.price, { color: colors.ink }]}>{product.price}</Text>
-        ) : null}
+
+        <Animated.View style={[styles.identity, { paddingRight: hasImage ? identityPadRight : 0 }]}>
+          {product.brand ? (
+            <Animated.Text style={[styles.brand, { color: colors.stone, opacity: brandOpacity, height: brandHeight }]} numberOfLines={1}>
+              {product.brand}
+            </Animated.Text>
+          ) : null}
+
+          <View style={styles.titleStack}>
+            <Animated.Text
+              style={[styles.productTitle, { color: colors.ink, opacity: fullTitleOpacity }]}
+              numberOfLines={2}
+            >
+              {product.name}
+            </Animated.Text>
+            <Animated.Text
+              style={[styles.productTitle, styles.titleOverlay, { color: colors.ink, opacity: shortTitleOpacity }]}
+              numberOfLines={1}
+            >
+              {shortName}
+            </Animated.Text>
+          </View>
+
+          <View style={styles.priceRow}>
+            {showPrice ? <PriceChip price={product.price!} /> : null}
+            <View
+              style={[
+                styles.retailerTag,
+                {
+                  backgroundColor: `${retColor}26`,
+                  borderColor: `${retColor}4D`,
+                },
+              ]}
+            >
+              <Text style={[styles.retailerTagText, { color: retColor }]} numberOfLines={1}>
+                {product.retailer}
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: 100 + insets.bottom }]}
-        showsVerticalScrollIndicator={false}
-      >
-        {product.imageUrl ? (
-          <View style={[styles.heroWell, { backgroundColor: colors.fog }]}>
-            <Image source={{ uri: product.imageUrl }} style={styles.heroImage} resizeMode="contain" />
-          </View>
-        ) : null}
+      {hasImage ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.heroFloat,
+            {
+              top: y0,
+              left: x0,
+              width: heroSize,
+              height: heroSize,
+              backgroundColor: colors.fog,
+              borderRadius: imageRadius,
+              transform: [
+                { translateX: imageTranslateX },
+                { translateY: imageTranslateY },
+                { scale: imageScale },
+              ],
+            },
+          ]}
+        >
+          <Image source={{ uri: product.imageUrl! }} style={styles.heroImage} resizeMode="contain" />
+        </Animated.View>
+      ) : null}
 
+      <Animated.ScrollView
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: false,
+        })}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingTop: stickyH + (hasImage ? heroSize + 16 : 12),
+          paddingHorizontal: gutter,
+          paddingBottom: 100 + insets.bottom,
+        }}
+        style={{ flex: 1, zIndex: 1 }}
+      >
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
           <View style={styles.aiHeader}>
             <Feather name="zap" size={16} color={colors.spotify} />
@@ -159,27 +312,25 @@ export default function ProductDetailScreen() {
 
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
           <Text style={[styles.sectionTitle, { color: colors.ink }]}>Specifications</Text>
-          {(product.rawSpecs && product.rawSpecs.length > 0 ? product.rawSpecs : product.specs || []).length === 0 ? (
+          {specs.length === 0 ? (
             <Text style={[styles.bodyText, { color: colors.body }]}>No specifications were extracted for this product.</Text>
           ) : (
-            (product.rawSpecs && product.rawSpecs.length > 0 ? product.rawSpecs : product.specs || []).map(
-              (spec: any, index: number, arr: any[]) => (
-                <View
-                  key={`${spec.label}-${index}`}
-                  style={[
-                    styles.specRow,
-                    { borderBottomColor: colors.line },
-                    index === arr.length - 1 && styles.noBorder,
-                  ]}
-                >
-                  <Text style={[styles.specLabel, { color: colors.stone }]}>{spec.label}</Text>
-                  <Text style={[styles.specValue, { color: colors.ink }]}>{spec.value || "—"}</Text>
-                </View>
-              )
-            )
+            specs.map((spec: any, index: number, arr: any[]) => (
+              <View
+                key={`${spec.label}-${index}`}
+                style={[
+                  styles.specRow,
+                  { borderBottomColor: colors.line },
+                  index === arr.length - 1 && styles.noBorder,
+                ]}
+              >
+                <Text style={[styles.specLabel, { color: colors.stone }]}>{spec.label}</Text>
+                <Text style={[styles.specValue, { color: colors.ink }]}>{spec.value || "—"}</Text>
+              </View>
+            ))
           )}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       <View
         style={[
@@ -204,20 +355,76 @@ export default function ProductDetailScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, zIndex: 50 },
-  content: { padding: space.gutter, paddingTop: 16 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: space.gutter },
   errorText: { ...type.body, marginTop: 16, marginBottom: 24 },
-  header: { paddingHorizontal: space.gutter, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, zIndex: 10 },
-  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 },
-  brand: { ...type.eyebrow, marginBottom: 6 },
-  productName: { ...type.productHero, marginBottom: 8 },
-  price: { ...type.priceHero },
-  heroWell: {
-    width: "100%",
-    aspectRatio: 1,
-    borderRadius: radii.card,
+  sticky: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: space.gutter,
+    paddingBottom: 8,
+  },
+  navRow: {
+    height: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  identity: {
+    minHeight: 78,
+    justifyContent: "center",
+  },
+  brand: { ...type.eyebrow, marginBottom: 4, height: 16 },
+  titleStack: { minHeight: 22, marginBottom: 8, justifyContent: "center" },
+  productTitle: {
+    ...type.price,
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  titleOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+  },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  priceChip: {
+    backgroundColor: "#FEF08A",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    transform: [{ rotate: "-1deg" }],
+  },
+  priceChipText: {
+    ...type.caption,
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#1C1C1C",
+  },
+  retailerTag: {
+    borderRadius: radii.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    maxWidth: 140,
+  },
+  retailerTagText: {
+    ...type.eyebrow,
+    fontSize: 10,
+    letterSpacing: 0.6,
+    textTransform: "capitalize",
+  },
+  heroFloat: {
+    position: "absolute",
+    zIndex: 15,
     overflow: "hidden",
-    marginBottom: 16,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -239,9 +446,7 @@ const styles = StyleSheet.create({
   specValue: { ...type.specValue, fontSize: 14, flex: 1, textAlign: "right" },
   sectionHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   bodyText: { ...type.body },
-  listContainer: { marginTop: 4 },
   listItem: { flexDirection: "row", alignItems: "flex-start", marginBottom: 8, gap: 8, paddingRight: 8 },
-  bullet: { width: 4, height: 4, borderRadius: 2, marginTop: 9, marginRight: 8 },
   reviewCols: { gap: 16 },
   reviewBlock: { gap: 6 },
   reviewHeading: { ...type.eyebrow, marginBottom: 4 },
@@ -255,5 +460,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.gutter,
     paddingTop: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
+    zIndex: 30,
   },
 });
