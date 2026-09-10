@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, Animated, StyleSheet, Easing } from "react-native";
+import { View, Text, Animated, StyleSheet, Easing, Modal } from "react-native";
 import { type } from "../../constants/Typography";
 import { useThemeColors } from "../../constants/Colors";
 import { Button } from "../ui/Button";
+import { setTabBarHidden } from "../../store/uiStore";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const MESSAGES = [
   "Fetching product pages...",
@@ -92,11 +94,21 @@ function ServerStack({ colors }: { colors: any }) {
 
 export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCancel?: () => void }) {
   const { colors, isDark } = useThemeColors();
+  const insets = useSafeAreaInsets();
   const [msgIndex, setMsgIndex] = useState(0);
   const msgOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    if (!visible) return;
+    setTabBarHidden(visible);
+    return () => setTabBarHidden(false);
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) {
+      setMsgIndex(0);
+      msgOpacity.setValue(1);
+      return;
+    }
     const interval = setInterval(() => {
       Animated.timing(msgOpacity, {
         toValue: 0,
@@ -114,39 +126,49 @@ export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCanc
     return () => clearInterval(interval);
   }, [visible, msgOpacity]);
 
-  if (!visible) return null;
-
   return (
-    <View
-      style={[
-        styles.overlay,
-        { backgroundColor: isDark ? "rgba(10,10,10,0.97)" : "rgba(246,246,244,0.97)" },
-      ]}
+    <Modal
+      visible={visible}
+      animationType="fade"
+      presentationStyle="fullScreen"
+      statusBarTranslucent
+      onRequestClose={onCancel}
+      hardwareAccelerated
     >
-      <View style={styles.content}>
-        <ServerStack colors={colors} />
-        <Animated.Text style={[styles.message, { opacity: msgOpacity, color: colors.ink }]}>
-          {MESSAGES[msgIndex]}
-        </Animated.Text>
-        <Text style={[styles.sub, { color: colors.stone, marginBottom: 32 }]}>Powered by Gemini AI</Text>
-        {onCancel ? (
-          <View style={styles.cancelContainer}>
-            <Button title="Cancel" variant="ghost" onPress={onCancel} />
-          </View>
-        ) : null}
+      <View
+        style={[
+          styles.screen,
+          {
+            backgroundColor: isDark ? "#2A2A2A" : "#D8D8D4",
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+          },
+        ]}
+      >
+        <View style={styles.content}>
+          <ServerStack colors={colors} />
+          <Animated.Text style={[styles.message, { opacity: msgOpacity, color: colors.ink }]}>
+            {MESSAGES[msgIndex]}
+          </Animated.Text>
+          <Text style={[styles.sub, { color: isDark ? "#A8A8A4" : "#6A6A66" }]}>Analyzing products</Text>
+          {onCancel ? (
+            <View style={styles.cancelContainer}>
+              <Button title="Cancel" variant="ghost" onPress={onCancel} />
+            </View>
+          ) : null}
+        </View>
       </View>
-    </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    ...{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 },
+  screen: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 100,
   },
-  content: { alignItems: "center", width: "100%", paddingHorizontal: 40, marginTop: 72 },
+  content: { alignItems: "center", width: "100%", paddingHorizontal: 40 },
   serverContainer: {
     height: 100,
     overflow: "hidden",
@@ -183,6 +205,7 @@ const styles = StyleSheet.create({
   sub: {
     ...type.caption,
     letterSpacing: 0.5,
+    marginBottom: 32,
   },
   cancelContainer: {
     width: 140,

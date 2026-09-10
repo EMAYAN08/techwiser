@@ -148,7 +148,43 @@ def scrape_bestbuy_api(url: str):
         "reviewCount": data.get("customerReviewCount"),
         "specs": spec_lines,
     }
-    image = data.get("highResImage") or data.get("thumbnailImage") or ""
+    def pick_image(data, sku):
+        def upgrade(url):
+            if not url or not isinstance(url, str):
+                return None
+            if "brand/" in url or url.lower().endswith(".gif"):
+                return None
+            return re.sub(r"/products/\d+x\d+/", "/products/1500x1500/", url)
+
+        candidates = []
+        for media in data.get("additionalMedia") or []:
+            if not isinstance(media, dict):
+                continue
+            mime = str(media.get("mimeType") or "")
+            if mime and mime != "Image" and not mime.lower().startswith("image/"):
+                continue
+            for key in ("url", "thumbnailUrl"):
+                upgraded = upgrade(media.get(key))
+                if upgraded:
+                    candidates.append(upgraded)
+        for key in ("highResImage", "thumbnailImage"):
+            upgraded = upgrade(data.get(key))
+            if upgraded:
+                candidates.append(upgraded)
+        if sku:
+            path = f"{sku[:3]}/{sku[:5]}/{sku}.jpg"
+            candidates.append(f"https://multimedia.bbycastatic.ca/multimedia/products/1500x1500/{path}")
+            candidates.append(f"https://multimedia.bbycastatic.ca/multimedia/products/500x500/{path}")
+        seen = []
+        for url in candidates:
+            if url and url not in seen:
+                seen.append(url)
+        for url in seen:
+            if "1500x1500" in url:
+                return url
+        return seen[0] if seen else ""
+
+    image = pick_image(data, sku)
     return {
         "status": "success",
         "data": json.dumps(payload)[:30000],

@@ -1,6 +1,8 @@
 const BB_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
+const BB_IMAGE_SIZES = ["1500x1500", "500x500", "250x250"] as const;
+
 export function extractBestBuySku(url: string): string | null {
   try {
     const parsed = new URL(url);
@@ -51,6 +53,86 @@ function formatSpecs(specs: unknown): string[] {
   return rows;
 }
 
+export function upgradeBestBuyImageUrl(url: string | null | undefined): string | null {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!trimmed.startsWith("http")) return null;
+  if (/brand\//i.test(trimmed) || /\.gif(\?|$)/i.test(trimmed)) return null;
+  return trimmed.replace(/\/products\/\d+x\d+\//i, "/products/1500x1500/");
+}
+
+function skuAssetPath(sku: string): string | null {
+  if (!/^\d{5,}$/.test(sku)) return null;
+  return `${sku.slice(0, 3)}/${sku.slice(0, 5)}/${sku}.jpg`;
+}
+
+function collectMediaUrls(data: any): string[] {
+  const urls: string[] = [];
+  const push = (value: unknown) => {
+    const text = asText(value);
+    if (text.startsWith("http")) urls.push(text);
+  };
+  for (const media of data?.additionalMedia || []) {
+    if (!media || typeof media !== "object") continue;
+    const mime = String(media.mimeType || "");
+    if (mime && mime !== "Image" && !/^image\//i.test(mime)) continue;
+    push(media.url);
+    push(media.thumbnailUrl);
+  }
+  push(data?.highResImage);
+  push(data?.thumbnailImage);
+  return urls;
+}
+
+async function imageExists(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, {
+      method: "HEAD",
+      headers: { "User-Agent": BB_UA, Accept: "image/*" },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (response.ok) return true;
+    if (response.status === 405 || response.status === 403) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+export async function resolveBestBuyImage(data: any, sku: string): Promise<string | null> {
+  const seen = new Set<string>();
+  const candidates: string[] = [];
+  const add = (url?: string | null) => {
+    const upgraded = upgradeBestBuyImageUrl(url);
+    for (const item of [upgraded, url]) {
+      if (!item || seen.has(item)) continue;
+      seen.add(item);
+      candidates.push(item);
+    }
+  };
+
+  for (const url of collectMediaUrls(data)) add(url);
+  const path = skuAssetPath(sku);
+  if (path) {
+    for (const size of BB_IMAGE_SIZES) {
+      add(`https://multimedia.bbycastatic.ca/multimedia/products/${size}/${path}`);
+    }
+  }
+
+  const ranked = [...candidates].sort((a, b) => {
+    const score = (u: string) => (u.includes("1500x1500") ? 3 : u.includes("500x500") ? 2 : 1);
+    return score(b) - score(a);
+  });
+
+  for (const url of ranked) {
+    if (url.includes("1500x1500") || url.includes("500x500")) {
+      if (await imageExists(url)) return url;
+    }
+  }
+
+  return ranked[0] || null;
+}
+
 export async function scrapeBestBuyApi(url: string): Promise<{
   rawText: string;
   title: string;
@@ -83,11 +165,7 @@ export async function scrapeBestBuyApi(url: string): Promise<{
 
   const priceNum = data.salePrice ?? data.regularPrice;
   const priceText = priceNum != null && priceNum !== "" ? `$${priceNum}` : null;
-  const imageUrl =
-    asText(data.highResImage) ||
-    asText(data.thumbnailImage) ||
-    asText(data.additionalMedia?.[0]?.url) ||
-    null;
+  const imageUrl = await resolveBestBuyImage(data, sku);
 
   const specLines = formatSpecs(data.specs);
   const boxItems = Array.isArray(data.whatsInTheBox)
@@ -111,6 +189,6 @@ export async function scrapeBestBuyApi(url: string): Promise<{
   const rawText = parts.join("\n");
   if (rawText.length < 80) return null;
 
-  console.log(`[BestBuy API] OK ${sku}: ${specLines.length} specs, image=${Boolean(imageUrl)}`);
+  console.log(`[BestBuy API] OK ${sku}: ${specLines.length} specs, image=${imageUrl || "none"}`);
   return { rawText, title: name, imageUrl, priceText };
 }

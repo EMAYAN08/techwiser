@@ -8,10 +8,10 @@ let lastScrollY = 0;
 export const handleScroll = (event: any) => {
   const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
   const currentScrollY = contentOffset.y;
-  
+
   // Ignore top rubber banding on iOS
   if (currentScrollY < 0) return;
-  
+
   // Ignore bottom rubber banding (prevents tab bar from popping up when bouncing at the bottom)
   const maxScroll = contentSize.height - layoutMeasurement.height;
   if (currentScrollY > maxScroll && maxScroll > 0) return;
@@ -28,7 +28,7 @@ export const handleScroll = (event: any) => {
       tension: 180,
       friction: 12,
     }).start();
-  } 
+  }
   // Scroll up (content moves down) -> show tab bar
   else if (delta < -12 && !isTabBarVisible) {
     isTabBarVisible = true;
@@ -40,3 +40,12 @@ export const handleScroll = (event: any) => {
     }).start();
   }
 };
+
+export function setTabBarHidden(hidden: boolean) {
+  isTabBarVisible = !hidden;
+  Animated.timing(tabBarAnim, {
+    toValue: hidden ? 0 : 1,
+    duration: 180,
+    useNativeDriver: true,
+  }).start();
+}
