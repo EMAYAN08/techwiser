@@ -54,7 +54,7 @@ function RetailerSticker({ retailer }: { retailer?: string }) {
   const fg = hexLuminance(fill) > 0.65 ? "#111111" : "#FFFFFF";
   return (
     <View style={styles.stickerWrap}>
-      <View style={[styles.stickerShadow, { backgroundColor: isDark ? "#050505" : "#111111" }]} />
+      {!isDark ? <View style={styles.stickerShadow} /> : null}
       <View style={[styles.stickerFace, { backgroundColor: fill }]}>
         <Text style={[styles.stickerText, { color: fg }]} numberOfLines={1}>
           {label}
@@ -109,15 +109,11 @@ export default function ProductDetailScreen() {
   };
 
   const gutter = space.gutter;
-  const topInset = Math.max(insets.top, 16);
-  const navH = 44;
-  const identityH = 78;
-  const stickyH = topInset + 10 + navH + identityH;
   const hasImage = Boolean(product.imageUrl);
-  const heroSize = Math.max(160, screenWidth - gutter * 2);
-  const thumbSize = 68;
-  const titleMorph = 36;
-  const imageRange = hasImage ? Math.max(heroSize * 0.85, 180) : 56;
+  const heroSize = Math.max(200, screenWidth - gutter * 2);
+  const thumbSize = 56;
+  const titleMorph = 28;
+  const imageRange = hasImage ? heroSize * 0.72 : 48;
   const shortName = normalizeTitle(product.name);
   const showPrice = Boolean(product.price && product.price !== "N/A");
 
@@ -132,59 +128,58 @@ export default function ProductDetailScreen() {
     extrapolate: "clamp",
   });
   const brandOpacity = scrollY.interpolate({
-    inputRange: [0, 24],
+    inputRange: [0, 18],
     outputRange: [1, 0],
     extrapolate: "clamp",
   });
   const brandHeight = scrollY.interpolate({
-    inputRange: [0, 24],
-    outputRange: [18, 0],
+    inputRange: [0, 18],
+    outputRange: [16, 0],
     extrapolate: "clamp",
   });
-
-  const scale = thumbSize / heroSize;
-  const x0 = gutter;
-  const y0 = stickyH;
-  const x1 = screenWidth - gutter - thumbSize;
-  const y1 = topInset + 10 + navH + Math.max(0, (identityH - thumbSize) / 2);
-  const c0x = x0 + heroSize / 2;
-  const c0y = y0 + heroSize / 2;
-  const c1x = x1 + thumbSize / 2;
-  const c1y = y1 + thumbSize / 2;
-
-  const imageTranslateX = scrollY.interpolate({
-    inputRange: [titleMorph, titleMorph + imageRange],
-    outputRange: [0, c1x - c0x],
+  const titleBlockHeight = scrollY.interpolate({
+    inputRange: [0, titleMorph],
+    outputRange: [40, 20],
     extrapolate: "clamp",
   });
-  const imageTranslateY = scrollY.interpolate({
-    inputRange: [titleMorph, titleMorph + imageRange],
-    outputRange: [0, c1y - c0y],
-    extrapolate: "clamp",
-  });
-  const imageScale = scrollY.interpolate({
-    inputRange: [titleMorph, titleMorph + imageRange],
-    outputRange: [1, scale],
-    extrapolate: "clamp",
-  });
-  const imageRadius = scrollY.interpolate({
-    inputRange: [titleMorph, titleMorph + imageRange],
-    outputRange: [radii.card, 12],
+  const titleGap = scrollY.interpolate({
+    inputRange: [0, titleMorph],
+    outputRange: [4, 2],
     extrapolate: "clamp",
   });
   const identityPadRight = scrollY.interpolate({
-    inputRange: [titleMorph + imageRange * 0.35, titleMorph + imageRange],
-    outputRange: [0, thumbSize + 12],
-    extrapolate: "clamp",
-  });
-  const heroOpacity = scrollY.interpolate({
-    inputRange: [titleMorph + imageRange * 0.86, titleMorph + imageRange],
-    outputRange: [1, 0],
+    inputRange: [titleMorph, titleMorph + imageRange * 0.55],
+    outputRange: [0, thumbSize + 10],
     extrapolate: "clamp",
   });
   const dockedOpacity = scrollY.interpolate({
-    inputRange: [titleMorph + imageRange * 0.78, titleMorph + imageRange],
+    inputRange: [titleMorph + imageRange * 0.35, titleMorph + imageRange * 0.75],
     outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
+  const dockedScale = scrollY.interpolate({
+    inputRange: [titleMorph + imageRange * 0.35, titleMorph + imageRange * 0.75],
+    outputRange: [0.86, 1],
+    extrapolate: "clamp",
+  });
+  const heroOpacity = scrollY.interpolate({
+    inputRange: [8, titleMorph + imageRange * 0.55],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+  const heroScale = scrollY.interpolate({
+    inputRange: [0, titleMorph + imageRange],
+    outputRange: [1, 0.72],
+    extrapolate: "clamp",
+  });
+  const heroTranslateX = scrollY.interpolate({
+    inputRange: [0, titleMorph + imageRange],
+    outputRange: [0, 18],
+    extrapolate: "clamp",
+  });
+  const heroTranslateY = scrollY.interpolate({
+    inputRange: [0, titleMorph + imageRange],
+    outputRange: [0, -24],
     extrapolate: "clamp",
   });
 
@@ -194,7 +189,7 @@ export default function ProductDetailScreen() {
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <Stack.Screen options={{ title: product.name, headerBackTitle: "Back" }} />
 
-      <View pointerEvents="box-none" style={[styles.sticky, { paddingTop: topInset, backgroundColor: colors.bg }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16), backgroundColor: colors.bg }]}>
         <View style={styles.navRow}>
           <NavCircle onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Go back">
             <Feather name="arrow-left" size={20} color={colors.ink} />
@@ -215,7 +210,7 @@ export default function ProductDetailScreen() {
               </Animated.Text>
             ) : null}
 
-            <View style={styles.titleStack}>
+            <Animated.View style={[styles.titleStack, { height: titleBlockHeight, marginBottom: titleGap }]}>
               <Animated.Text
                 style={[styles.productTitle, { color: colors.ink, opacity: fullTitleOpacity }]}
                 numberOfLines={2}
@@ -228,7 +223,7 @@ export default function ProductDetailScreen() {
               >
                 {shortName}
               </Animated.Text>
-            </View>
+            </Animated.View>
 
             <View style={styles.priceRow}>
               {showPrice ? <PriceChip price={product.price!} /> : null}
@@ -246,6 +241,7 @@ export default function ProductDetailScreen() {
                   height: thumbSize,
                   backgroundColor: colors.fog,
                   opacity: dockedOpacity,
+                  transform: [{ scale: dockedScale }],
                 },
               ]}
             >
@@ -255,27 +251,6 @@ export default function ProductDetailScreen() {
         </View>
       </View>
 
-      {hasImage ? (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.heroFloat,
-            {
-              top: y0,
-              left: x0,
-              width: heroSize,
-              height: heroSize,
-              backgroundColor: colors.fog,
-              borderRadius: imageRadius,
-              opacity: heroOpacity,
-              transform: [{ translateX: imageTranslateX }, { translateY: imageTranslateY }, { scale: imageScale }],
-            },
-          ]}
-        >
-          <Image source={{ uri: product.imageUrl! }} style={styles.heroImage} resizeMode="contain" />
-        </Animated.View>
-      ) : null}
-
       <Animated.ScrollView
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
           useNativeDriver: false,
@@ -283,12 +258,28 @@ export default function ProductDetailScreen() {
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingTop: stickyH + (hasImage ? heroSize + 16 : 12),
           paddingHorizontal: gutter,
-          paddingBottom: 100 + insets.bottom,
+          paddingTop: 12,
+          paddingBottom: 108 + insets.bottom,
         }}
         style={styles.scroll}
       >
+        {hasImage ? (
+          <Animated.View
+            style={[
+              styles.heroWell,
+              {
+                height: heroSize,
+                backgroundColor: colors.fog,
+                opacity: heroOpacity,
+                transform: [{ translateX: heroTranslateX }, { translateY: heroTranslateY }, { scale: heroScale }],
+              },
+            ]}
+          >
+            <Image source={{ uri: product.imageUrl! }} style={styles.heroImage} resizeMode="contain" />
+          </Animated.View>
+        ) : null}
+
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
           <View style={styles.aiHeader}>
             <Feather name="zap" size={16} color={colors.spotify} />
@@ -394,39 +385,31 @@ export default function ProductDetailScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  scroll: { flex: 1, zIndex: 1 },
+  scroll: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: space.gutter },
   errorText: { ...type.body, marginTop: 16, marginBottom: 24 },
-  sticky: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
+  header: {
     paddingHorizontal: space.gutter,
-    paddingBottom: 8,
-    zIndex: 20,
-    overflow: "visible",
+    paddingBottom: 10,
+    zIndex: 5,
   },
   navRow: {
     height: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 8,
-    zIndex: 22,
+    marginBottom: 6,
   },
   identityRow: {
-    minHeight: 78,
     position: "relative",
+    minHeight: 64,
     justifyContent: "center",
   },
   identity: {
-    minHeight: 78,
     justifyContent: "center",
-    zIndex: 21,
   },
-  brand: { ...type.eyebrow, marginBottom: 4, height: 16 },
-  titleStack: { minHeight: 40, marginBottom: 8, justifyContent: "center" },
+  brand: { ...type.eyebrow, marginBottom: 2, overflow: "hidden" },
+  titleStack: { justifyContent: "flex-end", overflow: "hidden" },
   productTitle: {
     ...type.price,
     fontSize: 16,
@@ -436,65 +419,63 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    top: 0,
+    bottom: 0,
   },
   priceRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    flexWrap: "wrap",
+    gap: 8,
+    minHeight: 26,
   },
   priceChip: {
     backgroundColor: "#FEF08A",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: 4,
     transform: [{ rotate: "-1deg" }],
   },
   priceChipText: {
     ...type.caption,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: "#1C1C1C",
   },
   stickerWrap: {
     position: "relative",
-    marginRight: 4,
-    marginBottom: 2,
   },
   stickerShadow: {
     position: "absolute",
-    top: 3,
-    left: 3,
-    right: -3,
-    bottom: -3,
-    borderRadius: 7,
+    top: 2,
+    left: 2,
+    right: -2,
+    bottom: -2,
+    borderRadius: 6,
+    backgroundColor: "#111111",
   },
   stickerFace: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 7,
-    transform: [{ rotate: "-2deg" }],
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   stickerText: {
     fontFamily: "Satoshi-Bold",
-    fontSize: 11,
-    lineHeight: 13,
-    letterSpacing: 0.7,
+    fontSize: 10,
+    lineHeight: 12,
+    letterSpacing: 0.6,
     fontWeight: "800",
   },
   dockedThumb: {
     position: "absolute",
     right: 0,
-    top: 5,
+    top: 4,
     borderRadius: 12,
     overflow: "hidden",
-    zIndex: 23,
   },
-  heroFloat: {
-    position: "absolute",
-    zIndex: 30,
+  heroWell: {
+    width: "100%",
+    borderRadius: radii.card,
     overflow: "hidden",
+    marginBottom: 16,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -530,6 +511,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.gutter,
     paddingTop: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
-    zIndex: 40,
+    zIndex: 10,
   },
 });
