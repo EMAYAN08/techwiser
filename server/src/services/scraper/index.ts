@@ -1,5 +1,6 @@
 import type { ScrapedProduct, ScrapeResult } from "../../types/scrape";
 import { scrapeBestBuyApi } from "./bestbuy";
+import { scrapeDirectHtml } from "./direct";
 
 async function extractWithJina(url: string): Promise<Pick<ScrapeResult, "rawText" | "imageUrl" | "title">> {
   const jinaResponse = await fetch("https://r.jina.ai/" + url, {
@@ -89,26 +90,41 @@ async function extractHtmlExtras(
 
 async function extractWithPythonScraper(url: string): Promise<{ rawText?: string; imageUrl?: string | null }> {
   const rawPyUrl = process.env.PYTHON_SCRAPER_URL || "http://127.0.0.1:8000";
-  const pyScraperUrl = rawPyUrl.replace(/\/+$/, ""); // strip trailing slash
+  const pyScraperUrl = rawPyUrl.replace(/\/+$/, "");
   const fetchUrl = `${pyScraperUrl}/scrape`;
-  console.log("Fetching Python Microservice at:", fetchUrl);
-  const pyRes = await fetch(fetchUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
-  });
-  if (pyRes.ok) {
-    const pyData = await pyRes.json();
-    console.log("Python Scraper responded with status:", pyData.status, "Data length:", pyData.data ? pyData.data.length : 0);
-    if (pyData.status === "success" && pyData.data && pyData.data.length > 100) {
-      return {
-        rawText: "RETAILER DATA (FROM SCRAPLING):\n" + pyData.data,
-        imageUrl: pyData.imageUrl || null,
-      };
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    console.log(`Fetching Python Microservice at: ${fetchUrl} (attempt ${attempt})`);
+    try {
+      const pyRes = await fetch(fetchUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (pyRes.status === 429 || pyRes.status === 503) {
+        console.log(`Python Scraper failed HTTP status: ${pyRes.status}`);
+        if (attempt < 3) await new Promise((r) => setTimeout(r, 1200 * attempt));
+        continue;
+      }
+      if (pyRes.ok) {
+        const pyData = await pyRes.json();
+        console.log("Python Scraper responded with status:", pyData.status, "Data length:", pyData.data ? pyData.data.length : 0);
+        if (pyData.status === "success" && pyData.data && pyData.data.length > 100) {
+          return {
+            rawText: "RETAILER DATA (FROM SCRAPLING):\n" + pyData.data,
+            imageUrl: pyData.imageUrl || null,
+          };
+        }
+        console.log("Python Scraper returned error or insufficient data. Status:", pyData.status, "Message:", pyData.message);
+        return {};
+      }
+      console.log("Python Scraper failed HTTP status:", pyRes.status);
+      return {};
+    } catch (err: any) {
+      console.log("Python Scraper request failed:", err.message);
+      if (attempt < 3) await new Promise((r) => setTimeout(r, 1200 * attempt));
     }
-    console.log("Python Scraper returned error or insufficient data. Status:", pyData.status, "Message:", pyData.message);
-  } else {
-    console.log("Python Scraper failed HTTP status:", pyRes.status);
   }
   return {};
 }
@@ -171,7 +187,7 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
 
     let finalTitle = title;
     const lowerTitle = finalTitle.toLowerCase();
-    if (
+    const scrapeIsThin =
       !finalTitle ||
       lowerTitle.includes("access denied") ||
       lowerTitle.includes("just a moment") ||
@@ -180,10 +196,26 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
       lowerTitle.includes("pardon our interruption") ||
       lowerTitle.includes("are you a human") ||
       lowerTitle.includes("security measure") ||
-      rawText.length < 500
-    ) {
-      // Trigger Python Scrapling Microservice Fallback
-      console.log("Jina got blocked. Triggering Python Scrapling Microservice...");
+      rawText.length < 500 ||
+      rawText.startsWith("Failed to extract");
+
+    if (scrapeIsThin) {
+      console.log(`Jina/HTML thin for ${url}. Trying direct HTML scrape...`);
+      try {
+        const direct = await scrapeDirectHtml(url);
+        if (direct?.rawText) {
+          rawText = direct.rawText;
+          if (direct.title) finalTitle = direct.title;
+          if (direct.imageUrl) imageUrl = direct.imageUrl;
+          if (direct.priceText) priceText = direct.priceText;
+        }
+      } catch (directError: any) {
+        console.log(`Direct HTML scrape failed for ${url}:`, directError.message);
+      }
+    }
+
+    if (rawText.length < 500 || rawText.startsWith("Failed to extract")) {
+      console.log("Direct HTML insufficient. Triggering Python Scrapling Microservice...");
       try {
         const pyData = await extractWithPythonScraper(url);
         if (pyData.rawText) {
@@ -195,13 +227,13 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
       } catch (err: any) {
         console.error("Python Scraper unavailable:", err.message);
       }
-      try {
-        const slugTitle = titleFromUrlSlug(url);
-        if (slugTitle) {
-          finalTitle = slugTitle;
+      if (!finalTitle) {
+        try {
+          const slugTitle = titleFromUrlSlug(url);
+          if (slugTitle) finalTitle = slugTitle;
+        } catch (e) {
+          console.log("Failed to parse URL for title fallback", e);
         }
-      } catch (e) {
-        console.log("Failed to parse URL for title fallback", e);
       }
     }
 
