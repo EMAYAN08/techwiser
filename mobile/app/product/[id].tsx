@@ -20,6 +20,7 @@ import { NavCircle } from "../../components/ui/NavCircle";
 import { useThemeColors, getRetailerColor, formatRetailerName } from "../../constants/Colors";
 import { radii, space } from "../../constants/Layout";
 import { exportProductToPDF } from "../../utils/exportPDF";
+import { GlassPanel } from "../../components/ui/GlassPanel";
 
 function normalizeTitle(title: string): string {
   const cleaned = title.replace(/5G|Unlocked|Smartphone|Dual SIM/gi, "").trim();
@@ -242,6 +243,7 @@ export default function ProductDetailScreen() {
                   backgroundColor: colors.fog,
                   opacity: dockedOpacity,
                   transform: [{ scale: dockedScale }],
+                  borderColor: isDark ? "rgba(255,255,255,0.28)" : "rgba(90,90,88,0.28)",
                 },
               ]}
             >
@@ -260,7 +262,7 @@ export default function ProductDetailScreen() {
         contentContainerStyle={{
           paddingHorizontal: gutter,
           paddingTop: 12,
-          paddingBottom: 108 + insets.bottom,
+          paddingBottom: 124 + insets.bottom,
         }}
         style={styles.scroll}
       >
@@ -362,22 +364,15 @@ export default function ProductDetailScreen() {
         </View>
       </Animated.ScrollView>
 
-      <View
-        style={[
-          styles.footer,
-          {
-            backgroundColor: colors.bg,
-            borderTopColor: colors.line,
-            paddingBottom: Math.max(insets.bottom, 16) + 8,
-          },
-        ]}
-      >
-        <View style={{ flex: 1 }}>
-          <Button title="View Product" variant="ghost" onPress={() => Linking.openURL(product.url)} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Button title="Compare" variant="primary" onPress={handleCompare} />
-        </View>
+      <View style={[styles.footerWrap, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+        <GlassPanel style={styles.footerGlass} contentStyle={styles.footerInner} radius={22}>
+          <View style={{ flex: 1 }}>
+            <Button title="View Product" variant="ghost" onPress={() => Linking.openURL(product.url)} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button title="Compare" variant="primary" onPress={handleCompare} />
+          </View>
+        </GlassPanel>
       </View>
     </View>
   );
@@ -470,6 +465,7 @@ const styles = StyleSheet.create({
     top: 4,
     borderRadius: 12,
     overflow: "hidden",
+    borderWidth: 1,
   },
   heroWell: {
     width: "100%",
@@ -501,16 +497,22 @@ const styles = StyleSheet.create({
   reviewCols: { gap: 16 },
   reviewBlock: { gap: 6 },
   reviewHeading: { ...type.eyebrow, marginBottom: 4 },
-  footer: {
+  footerWrap: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: "row",
-    gap: 12,
     paddingHorizontal: space.gutter,
-    paddingTop: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
     zIndex: 10,
+  },
+  footerGlass: {
+    minHeight: 72,
+  },
+  footerInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
 });

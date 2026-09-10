@@ -10,12 +10,11 @@ import {
   Animated,
   AccessibilityInfo,
   ActivityIndicator,
-  Linking,
-} from "react-native";
+} from "react-native"; from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "../utils/haptics";
-import { ArrowLeft, Crown, Sparkles, PackageOpen, Trophy, Info, Share, X, AlertTriangle } from "lucide-react-native";
+import { ArrowLeft, Crown, Sparkles, Trophy, Info, Share, X, AlertTriangle } from "lucide-react-native";
 import { BlurView } from "expo-blur";
 
 import { useComparisonStore } from "../store/useComparisonStore";
@@ -27,6 +26,7 @@ import { Card } from "../components/ui/Card";
 import { NavCircle } from "../components/ui/NavCircle";
 import { RetailerPill } from "../components/ui/RetailerPill";
 import { getCategoryIcon } from "../components/comparison/CategoryIcon";
+import { AlternativesDeck } from "../components/comparison/AlternativesDeck";
 import { type DetailedSpecRow, type DetailedSpecValue } from "../components/comparison/SpecBarRow";
 import { exportComparisonToPDF } from "../utils/exportPDF";
 import { explainSpec, fetchAlternatives, type SpecExplanationResponse } from "../services/api";
@@ -659,115 +659,17 @@ export default function CompareScreen() {
     );
   };
 
-  const AltImage = ({ uri, colors }: { uri?: string; colors: any }) => {
-    const [error, setError] = useState(false);
-    const isValid = uri && uri.trim().startsWith("http");
-    if (!isValid || error) {
-      return (
-        <View style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: colors.fog, alignItems: "center", justifyContent: "center" }}>
-          <PackageOpen size={32} color={colors.stone} />
-        </View>
+  const retryAlternatives = () => {
+    if (!activeComparison) return;
+    setAlternativesData({ loading: true });
+    fetchAlternatives(activeComparison.products)
+      .then((data) => setAlternativesData({ loading: false, data }))
+      .catch((error: unknown) =>
+        setAlternativesData({
+          loading: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        })
       );
-    }
-    return (
-      <Image
-        source={{ uri }}
-        style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: colors.fog }}
-        resizeMode="contain"
-        onError={() => setError(true)}
-      />
-    );
-  };
-
-  const renderAlternatives = () => {
-    if (!alternativesData) return null;
-
-    if (alternativesData.loading) {
-      return (
-        <View style={{ alignItems: "center", marginTop: 40, gap: 12 }}>
-          <ActivityIndicator size="large" color={colors.spotify} />
-          <Text style={{ ...type.body, color: colors.body }}>Techvisor is searching for better alternatives...</Text>
-        </View>
-      );
-    }
-
-    if (alternativesData.error) {
-      return (
-        <View style={{ alignItems: "center", marginTop: 40 }}>
-          <AnimatedErrorIcon color={colors.error} />
-          <Text style={{ ...type.body, color: colors.error, marginBottom: 16, textAlign: "center" }}>
-            {alternativesData.error}
-          </Text>
-          <Button
-            title="Retry"
-            variant="ghost"
-            onPress={() => {
-              if (activeComparison) {
-                setAlternativesData({ loading: true });
-                fetchAlternatives(activeComparison.products)
-                  .then((data) => setAlternativesData({ loading: false, data }))
-                  .catch((error: unknown) =>
-                    setAlternativesData({
-                      loading: false,
-                      error: error instanceof Error ? error.message : "Unknown error",
-                    })
-                  );
-              }
-            }}
-          />
-        </View>
-      );
-    }
-
-    const { alternatives } = alternativesData.data || { alternatives: [] };
-
-    if (alternatives.length === 0) {
-      return (
-        <View style={{ alignItems: "center", marginTop: 40, padding: 20 }}>
-          <Trophy size={48} color={colors.spotify} strokeWidth={1.5} style={{ marginBottom: 16 }} />
-          <Text style={{ ...type.productName, fontSize: 18, color: colors.ink, textAlign: "center", marginBottom: 8 }}>
-            You picked well!
-          </Text>
-          <Text style={{ ...type.body, color: colors.body, textAlign: "center" }}>
-            Techvisor couldn't find any strictly better alternatives in this price range.
-          </Text>
-        </View>
-      );
-    }
-
-    return (
-      <View style={{ gap: 16 }}>
-        {alternatives.map(
-          (
-            alt: { name: string; estimatedPrice: string; reasonWhyBetter: string; url?: string; imageUrl?: string },
-            index: number
-          ) => (
-            <Pressable
-              key={index}
-              onPress={() => {
-                const searchQuery = encodeURIComponent(alt.name + " canada");
-                const safeUrl = `https://www.google.ca/search?tbm=shop&q=${searchQuery}`;
-                Linking.openURL(safeUrl);
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }}
-            >
-              <Card borderRadius={radii.card} style={{ padding: 16, flexDirection: "row", gap: 16 }}>
-                <AltImage uri={alt.imageUrl} colors={colors} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ ...type.productName, fontSize: 17, color: colors.ink, marginBottom: 4 }}>
-                    {alt.name}
-                  </Text>
-                  <Text style={{ ...type.price, color: colors.ink, marginBottom: 8 }}>{alt.estimatedPrice}</Text>
-                  <Text style={{ ...type.body, color: colors.body, fontSize: 14, lineHeight: 20 }}>
-                    {alt.reasonWhyBetter}
-                  </Text>
-                </View>
-              </Card>
-            </Pressable>
-          )
-        )}
-      </View>
-    );
   };
 
   return (
@@ -835,23 +737,37 @@ export default function CompareScreen() {
       </View>
 
       <View style={{ flex: 1 }}>
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            {
+        {selectedCategory === "Alternatives" ? (
+          <View
+            style={{
+              flex: 1,
               paddingHorizontal: screenPadding,
-              paddingTop: 24,
-              paddingBottom: insets.bottom + 32,
-            },
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
-          {selectedCategory === OVERVIEW_KEY
-            ? renderOverview()
-            : selectedCategory === "Alternatives"
-              ? renderAlternatives()
-              : renderCategory(selectedCategory)}
-        </ScrollView>
+              paddingTop: 12,
+              paddingBottom: insets.bottom + 12,
+            }}
+          >
+            <AlternativesDeck
+              loading={!alternativesData || alternativesData.loading}
+              error={alternativesData?.error}
+              alternatives={alternativesData?.data?.alternatives || []}
+              onRetry={retryAlternatives}
+            />
+          </View>
+        ) : (
+          <ScrollView
+            contentContainerStyle={[
+              styles.scrollContent,
+              {
+                paddingHorizontal: screenPadding,
+                paddingTop: 24,
+                paddingBottom: insets.bottom + 32,
+              },
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            {selectedCategory === OVERVIEW_KEY ? renderOverview() : renderCategory(selectedCategory)}
+          </ScrollView>
+        )}
 
         {selectedSpecDetail && (
           <BlurView
