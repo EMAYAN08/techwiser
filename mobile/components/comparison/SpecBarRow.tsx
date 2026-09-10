@@ -47,7 +47,7 @@ interface TwoColCardProps {
 }
 
 function TwoColCard({ value, colors }: TwoColCardProps) {
-  const isWinner = value.isWinner || value.isDraw;
+  const isWinner = value.isWinner && !value.isDraw;
   return (
     <View
       style={[
@@ -118,7 +118,7 @@ function StackedRow({ value, pct, fillColor, colors }: StackedRowProps) {
     outputRange: ["0%", `${pct * 100}%`],
   });
 
-  const isWinner = value.isWinner || value.isDraw;
+  const isWinner = value.isWinner && !value.isDraw;
   const valueColor = isWinner ? colors.ink : colors.body;
   const nameColor = isWinner ? colors.ink : colors.stone;
 
@@ -176,7 +176,7 @@ export function SpecBarRow({ row, colors }: SpecBarRowProps) {
   };
 
   const fillColorFor = (v: DetailedSpecValue): string => {
-    return v.isWinner || v.isDraw ? colors.spotify : colors.stone;
+    return v.isWinner && !v.isDraw ? colors.spotify : colors.stone;
   };
 
   return (
@@ -196,7 +196,7 @@ export function SpecBarRow({ row, colors }: SpecBarRowProps) {
       ) : !hasNumeric ? (
         <View style={styles.stackedList}>
           {values.map((v) => {
-            const win = v.isWinner || v.isDraw;
+            const win = v.isWinner && !v.isDraw;
             return (
               <View key={v.productId} style={styles.textOnlyRow}>
                 <Text

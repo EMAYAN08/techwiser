@@ -2,6 +2,7 @@ export type ScrapeResult = {
   rawText: string;
   imageUrl: string | null;
   title: string;
+  priceText?: string | null;
 };
 
 export type ScrapedProduct = {
@@ -9,4 +10,5 @@ export type ScrapedProduct = {
   retailerText: string;
   imageUrl: string | null;
   title: string;
+  priceText?: string | null;
 };

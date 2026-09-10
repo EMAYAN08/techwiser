@@ -33,6 +33,17 @@ import { explainSpec, fetchAlternatives, type SpecExplanationResponse } from "..
 
 const OVERVIEW_KEY = "Overview";
 
+function specValuesAreEqual(values: string[]): boolean {
+  if (!Array.isArray(values) || values.length < 2) return false;
+  const canon = values.map((v) =>
+    String(v || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9.%+-]+/g, "")
+  );
+  const present = canon.filter((v) => v && v !== "n/a" && v !== "unknown" && v !== "na");
+  return present.length === values.length && present.length >= 2 && present.every((v) => v === present[0]);
+}
+
 function AnimatedErrorIcon({ color }: { color: string }) {
   const pulse = useRef(new Animated.Value(0.4)).current;
   useEffect(() => {
@@ -226,7 +237,7 @@ function KeyDifferencesCard({
             onPress={() => onSpecPress(diff.label, Array.isArray(diff.values) ? diff.values : [])}
           >
             {(Array.isArray(diff.values) ? diff.values : []).map((val, idx) => {
-              const win = diff.isDraw || diff.winnerIndex === idx;
+              const win = !diff.isDraw && diff.winnerIndex === idx;
               return (
                 <View
                   key={idx}
@@ -264,7 +275,7 @@ interface ValueCardProps {
 }
 
 function ValueCard({ value, colors, width }: ValueCardProps) {
-  const isWinner = value.isWinner || value.isDraw;
+  const isWinner = value.isWinner && !value.isDraw;
   return (
     <View
       style={[
@@ -496,15 +507,16 @@ export default function CompareScreen() {
       const gs = (activeComparison as any).groupedSpecs;
       return Object.entries(gs).map(([key, specsArray]: [string, any]) => {
         const rows = (Array.isArray(specsArray) ? specsArray : []).map((spec: any) => {
-          const specValues = Array.isArray(spec?.values) ? spec.values : [];
+          const specValues = Array.isArray(spec?.values) ? spec.values.map((v: unknown) => (v == null ? "—" : String(v))) : [];
+          const tied = specValuesAreEqual(specValues);
           const values = products.map((p, pIndex) => ({
             productId: p.id,
             productName: p.name,
             productColor: getRetailerColor(p.retailer),
             displayValue: specValues[pIndex] ? specValues[pIndex] : "—",
             numericValue: null,
-            isWinner: spec?.winnerIndex === pIndex,
-            isDraw: spec?.winnerIndex === -1,
+            isWinner: !tied && spec?.winnerIndex === pIndex,
+            isDraw: tied || spec?.winnerIndex === -1,
           }));
           return { label: spec?.label || "Spec", values, unit: spec?.unit || "" };
         });
@@ -548,7 +560,7 @@ export default function CompareScreen() {
       .map((diff) => {
         const values = Array.isArray(diff.values) ? diff.values.map((v) => (v == null ? "—" : String(v))) : [];
         let winnerIndex = null;
-        let isDraw = false;
+        let isDraw = specValuesAreEqual(values);
 
         if ((activeComparison as any).groupedSpecs) {
           for (const specs of Object.values((activeComparison as any).groupedSpecs)) {

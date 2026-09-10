@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { RETAILER_COLORS } from "../config/constants";
+import { extractPriceFromText, formatDisplayPrice, isMissingPrice } from "../lib/price";
 import { generateAiComparison } from "../services/ai";
 import { partitionScrapeResults, scrapeUrlsSequentially } from "../services/scraper";
 
@@ -48,8 +49,15 @@ router.post("/compare", async (req: Request, res: Response) => {
       p.id = `product-${i}`;
       p.retailerColor = RETAILER_COLORS[p.retailer?.toLowerCase().replace(/[^a-z]/g, "")] || "#333333";
       const matchedData = scrapedData[i];
-      p.imageUrl = matchedData?.imageUrl || null;
+      p.imageUrl = matchedData?.imageUrl || p.imageUrl || null;
       p.url = matchedData?.url || p.url;
+      const scrapedPrice =
+        formatDisplayPrice(matchedData?.priceText) || extractPriceFromText(matchedData?.retailerText || "");
+      if (isMissingPrice(p.price) && scrapedPrice) {
+        p.price = scrapedPrice;
+      } else {
+        p.price = formatDisplayPrice(p.price) || scrapedPrice || p.price || "N/A";
+      }
       return p;
     });
 

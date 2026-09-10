@@ -82,7 +82,9 @@ export default function ProductDetailScreen() {
         </View>
         <Text style={[styles.brand, { color: colors.stone }]}>{product.brand}</Text>
         <Text style={[styles.productName, { color: colors.ink }]}>{product.name}</Text>
-        {product.price ? <Text style={[styles.price, { color: colors.ink }]}>{product.price}</Text> : null}
+        {product.price && product.price !== "N/A" ? (
+          <Text style={[styles.price, { color: colors.ink }]}>{product.price}</Text>
+        ) : null}
       </View>
 
       <ScrollView
@@ -91,7 +93,7 @@ export default function ProductDetailScreen() {
       >
         {product.imageUrl ? (
           <View style={[styles.heroWell, { backgroundColor: colors.fog }]}>
-            <Image source={{ uri: product.imageUrl }} style={styles.heroImage} resizeMode="cover" />
+            <Image source={{ uri: product.imageUrl }} style={styles.heroImage} resizeMode="contain" />
           </View>
         ) : null}
 
@@ -212,10 +214,12 @@ const styles = StyleSheet.create({
   price: { ...type.priceHero },
   heroWell: {
     width: "100%",
-    aspectRatio: 4 / 5,
+    aspectRatio: 1,
     borderRadius: radii.card,
     overflow: "hidden",
     marginBottom: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   heroImage: { width: "100%", height: "100%" },
   card: {

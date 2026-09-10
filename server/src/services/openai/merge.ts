@@ -230,6 +230,31 @@ export function fallbackGroupFromHarvest(
   };
 }
 
+export function canonicalizeSpecValue(value: string): string {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/[^a-z0-9.%+-]+/g, "");
+}
+
+export function specValuesAreTied(values: string[]): boolean {
+  if (!Array.isArray(values) || values.length < 2) return false;
+  const canon = values.map((v) => canonicalizeSpecValue(v));
+  const present = canon.filter((v) => v && v !== "n/a" && v !== "unknown" && v !== "na");
+  if (present.length < 2) return false;
+  return present.every((v) => v === present[0]) && present.length === values.length;
+}
+
+function applyTieWinners(groupedSpecs: Record<string, { label: string; values: string[]; winnerIndex: number }[]>): void {
+  for (const specs of Object.values(groupedSpecs)) {
+    for (const spec of specs) {
+      if (specValuesAreTied(spec.values)) {
+        spec.winnerIndex = -1;
+      }
+    }
+  }
+}
+
 export function padValues(values: unknown, productCount: number): string[] {
   const raw = Array.isArray(values) ? values : [];
   const out = raw.map((v) => (v == null || String(v).trim() === "" ? "—" : String(v)));
@@ -275,9 +300,16 @@ export function normalizeComparisonResult(result: any, productCount: number): an
       .map((s: any) => ({
         label: String(s.label || s.name || "Spec"),
         values: padValues(s.values, productCount),
-        winnerIndex: typeof s.winnerIndex === "number" ? s.winnerIndex : -1,
+        winnerIndex: specValuesAreTied(padValues(s.values, productCount))
+          ? -1
+          : typeof s.winnerIndex === "number"
+            ? s.winnerIndex
+            : -1,
       }));
   }
+
+  applyTieWinners(next.groupedSpecs);
+  next.keyDifferences = next.keyDifferences.filter((d: { values: string[] }) => !specValuesAreTied(d.values));
 
   next.products = next.products.map((p: any, i: number) => {
     const name = String(p?.name || `Product ${i + 1}`);

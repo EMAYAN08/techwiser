@@ -143,7 +143,7 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
         if (priceText && !rawText.includes(priceText)) {
           rawText = "META PRICE FOUND: " + priceText + "\n\n" + rawText;
         }
-        return { rawText, imageUrl, title };
+        return { rawText, imageUrl, title, priceText };
       }
     } catch (bbError: any) {
       console.log(`Best Buy API warning for ${url}:`, bbError.message);
@@ -208,7 +208,7 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
     if (priceText && !rawText.includes(priceText)) {
       rawText = "META PRICE FOUND: " + priceText + "\n\n" + rawText;
     }
-    return { rawText, imageUrl, title: finalTitle };
+    return { rawText, imageUrl, title: finalTitle, priceText };
   } catch (error: any) {
     console.error(`Scrape failed for ${url}:`, error.message);
     return { rawText: "Failed to scrape.", imageUrl: null, title: "" };
@@ -241,6 +241,7 @@ export function partitionScrapeResults(
         retailerText: result.value.rawText,
         imageUrl: result.value.imageUrl,
         title: result.value.title,
+        priceText: result.value.priceText || null,
       });
     } else {
       console.error(`Failed to scrape ${urls[index]}:`, result.reason);
