@@ -1,3 +1,5 @@
+import { getApiBase } from "../utils/apiBase";
+
 export interface SpecExplanationResponse {
   concept: string;
   breakdowns: {
@@ -12,7 +14,7 @@ export async function explainSpec(
   specLabel: string,
   specValues: string[]
 ): Promise<SpecExplanationResponse> {
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+  const apiUrl = getApiBase();
   const response = await fetch(`${apiUrl}/api/explain-spec`, {
     method: "POST",
     headers: {
@@ -52,7 +54,7 @@ export interface AlternativesResponse {
 export async function fetchAlternatives(
   products: { name: string; price?: string; retailer?: string }[]
 ): Promise<AlternativesResponse> {
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+  const apiUrl = getApiBase();
   const response = await fetch(`${apiUrl}/api/alternatives`, {
     method: "POST",
     headers: {
@@ -75,7 +77,7 @@ export async function fetchAlternatives(
 
 
 export async function resolveProductNames(names: string[]): Promise<string[]> {
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+  const apiUrl = getApiBase();
   const response = await fetch(`${apiUrl}/api/resolve-names`, {
     method: "POST",
     headers: {

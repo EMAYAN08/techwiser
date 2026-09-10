@@ -15,6 +15,7 @@ import { useComparisonStore } from "../../store/useComparisonStore";
 import { useThemeColors } from "../../constants/Colors";
 import { space } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { getApiBase } from "../../utils/apiBase";
 
 export default function Home() {
   const router = useRouter();
@@ -73,7 +74,7 @@ export default function Home() {
     abortControllerRef.current = new AbortController();
 
     try {
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || "https://techwiser.onrender.com";
+      const apiUrl = getApiBase();
       const response = await fetch(`${apiUrl}/api/compare`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

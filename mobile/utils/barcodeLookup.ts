@@ -9,6 +9,7 @@ import {
   type UrlPreview,
 } from "./qr";
 import { compactGtin, formatGtin, normalizeGtin } from "./barcode";
+import { getApiBase } from "./apiBase";
 
 export type BarcodeOffer = {
   url: string;
@@ -43,10 +44,6 @@ const NESTED_PARAMS = [
   "newurl",
 ];
 
-function apiBase() {
-  return (process.env.EXPO_PUBLIC_API_URL || "https://techwiser.onrender.com").replace(/\/$/, "");
-}
-
 function gtinVariants(code: string): string[] {
   const d = (code || "").replace(/\D/g, "");
   const out = new Set<string>();
@@ -68,7 +65,7 @@ function serverEndpoints(): string[] {
       urls.push(`${window.location.origin.replace(/\/$/, "")}/api/barcode`);
     }
   }
-  urls.push(`${apiBase()}/api/barcode`);
+  urls.push(`${getApiBase()}/api/barcode`);
   return [...new Set(urls)];
 }
 
