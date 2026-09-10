@@ -17,7 +17,7 @@ import { useComparisonStore } from "../../store/useComparisonStore";
 import { Button } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
 import { NavCircle } from "../../components/ui/NavCircle";
-import { useThemeColors, getRetailerColor } from "../../constants/Colors";
+import { useThemeColors, getRetailerColor, formatRetailerName } from "../../constants/Colors";
 import { radii, space } from "../../constants/Layout";
 import { exportProductToPDF } from "../../utils/exportPDF";
 
@@ -34,6 +34,32 @@ function PriceChip({ price }: { price: string }) {
       <Text style={styles.priceChipText} numberOfLines={1}>
         {price}
       </Text>
+    </View>
+  );
+}
+
+function hexLuminance(hex: string): number {
+  const raw = hex.replace("#", "");
+  if (raw.length < 6) return 0;
+  const r = parseInt(raw.slice(0, 2), 16) / 255;
+  const g = parseInt(raw.slice(2, 4), 16) / 255;
+  const b = parseInt(raw.slice(4, 6), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function RetailerSticker({ retailer }: { retailer?: string }) {
+  const { isDark } = useThemeColors();
+  const fill = getRetailerColor(retailer, false);
+  const label = formatRetailerName(retailer).toUpperCase();
+  const fg = hexLuminance(fill) > 0.65 ? "#111111" : "#FFFFFF";
+  return (
+    <View style={styles.stickerWrap}>
+      <View style={[styles.stickerShadow, { backgroundColor: isDark ? "#050505" : "#111111" }]} />
+      <View style={[styles.stickerFace, { backgroundColor: fill }]}>
+        <Text style={[styles.stickerText, { color: fg }]} numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -91,10 +117,9 @@ export default function ProductDetailScreen() {
   const heroSize = Math.max(160, screenWidth - gutter * 2);
   const thumbSize = 68;
   const titleMorph = 36;
-  const imageRange = hasImage ? heroSize : 56;
+  const imageRange = hasImage ? Math.max(heroSize * 0.85, 180) : 56;
   const shortName = normalizeTitle(product.name);
   const showPrice = Boolean(product.price && product.price !== "N/A");
-  const retColor = getRetailerColor(product.retailer, isDark);
 
   const fullTitleOpacity = scrollY.interpolate({
     inputRange: [0, titleMorph],
@@ -144,12 +169,22 @@ export default function ProductDetailScreen() {
   });
   const imageRadius = scrollY.interpolate({
     inputRange: [titleMorph, titleMorph + imageRange],
-    outputRange: [radii.card, 14],
+    outputRange: [radii.card, 12],
     extrapolate: "clamp",
   });
   const identityPadRight = scrollY.interpolate({
-    inputRange: [titleMorph + imageRange * 0.45, titleMorph + imageRange],
+    inputRange: [titleMorph + imageRange * 0.35, titleMorph + imageRange],
     outputRange: [0, thumbSize + 12],
+    extrapolate: "clamp",
+  });
+  const heroOpacity = scrollY.interpolate({
+    inputRange: [titleMorph + imageRange * 0.86, titleMorph + imageRange],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+  const dockedOpacity = scrollY.interpolate({
+    inputRange: [titleMorph + imageRange * 0.78, titleMorph + imageRange],
+    outputRange: [0, 1],
     extrapolate: "clamp",
   });
 
@@ -159,10 +194,7 @@ export default function ProductDetailScreen() {
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <Stack.Screen options={{ title: product.name, headerBackTitle: "Back" }} />
 
-      <View
-        pointerEvents="box-none"
-        style={[styles.sticky, { paddingTop: topInset, backgroundColor: colors.bg, zIndex: 20 }]}
-      >
+      <View pointerEvents="box-none" style={[styles.sticky, { paddingTop: topInset, backgroundColor: colors.bg }]}>
         <View style={styles.navRow}>
           <NavCircle onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Go back">
             <Feather name="arrow-left" size={20} color={colors.ink} />
@@ -172,45 +204,55 @@ export default function ProductDetailScreen() {
           </NavCircle>
         </View>
 
-        <Animated.View style={[styles.identity, { paddingRight: hasImage ? identityPadRight : 0 }]}>
-          {product.brand ? (
-            <Animated.Text style={[styles.brand, { color: colors.stone, opacity: brandOpacity, height: brandHeight }]} numberOfLines={1}>
-              {product.brand}
-            </Animated.Text>
-          ) : null}
+        <View style={styles.identityRow}>
+          <Animated.View style={[styles.identity, { paddingRight: hasImage ? identityPadRight : 0 }]}>
+            {product.brand ? (
+              <Animated.Text
+                style={[styles.brand, { color: colors.stone, opacity: brandOpacity, height: brandHeight }]}
+                numberOfLines={1}
+              >
+                {product.brand}
+              </Animated.Text>
+            ) : null}
 
-          <View style={styles.titleStack}>
-            <Animated.Text
-              style={[styles.productTitle, { color: colors.ink, opacity: fullTitleOpacity }]}
-              numberOfLines={2}
-            >
-              {product.name}
-            </Animated.Text>
-            <Animated.Text
-              style={[styles.productTitle, styles.titleOverlay, { color: colors.ink, opacity: shortTitleOpacity }]}
-              numberOfLines={1}
-            >
-              {shortName}
-            </Animated.Text>
-          </View>
+            <View style={styles.titleStack}>
+              <Animated.Text
+                style={[styles.productTitle, { color: colors.ink, opacity: fullTitleOpacity }]}
+                numberOfLines={2}
+              >
+                {product.name}
+              </Animated.Text>
+              <Animated.Text
+                style={[styles.productTitle, styles.titleOverlay, { color: colors.ink, opacity: shortTitleOpacity }]}
+                numberOfLines={1}
+              >
+                {shortName}
+              </Animated.Text>
+            </View>
 
-          <View style={styles.priceRow}>
-            {showPrice ? <PriceChip price={product.price!} /> : null}
-            <View
+            <View style={styles.priceRow}>
+              {showPrice ? <PriceChip price={product.price!} /> : null}
+              <RetailerSticker retailer={product.retailer} />
+            </View>
+          </Animated.View>
+
+          {hasImage ? (
+            <Animated.View
+              pointerEvents="none"
               style={[
-                styles.retailerTag,
+                styles.dockedThumb,
                 {
-                  backgroundColor: `${retColor}26`,
-                  borderColor: `${retColor}4D`,
+                  width: thumbSize,
+                  height: thumbSize,
+                  backgroundColor: colors.fog,
+                  opacity: dockedOpacity,
                 },
               ]}
             >
-              <Text style={[styles.retailerTagText, { color: retColor }]} numberOfLines={1}>
-                {product.retailer}
-              </Text>
-            </View>
-          </View>
-        </Animated.View>
+              <Image source={{ uri: product.imageUrl! }} style={styles.heroImage} resizeMode="contain" />
+            </Animated.View>
+          ) : null}
+        </View>
       </View>
 
       {hasImage ? (
@@ -225,11 +267,8 @@ export default function ProductDetailScreen() {
               height: heroSize,
               backgroundColor: colors.fog,
               borderRadius: imageRadius,
-              transform: [
-                { translateX: imageTranslateX },
-                { translateY: imageTranslateY },
-                { scale: imageScale },
-              ],
+              opacity: heroOpacity,
+              transform: [{ translateX: imageTranslateX }, { translateY: imageTranslateY }, { scale: imageScale }],
             },
           ]}
         >
@@ -248,7 +287,7 @@ export default function ProductDetailScreen() {
           paddingHorizontal: gutter,
           paddingBottom: 100 + insets.bottom,
         }}
-        style={{ flex: 1, zIndex: 1 }}
+        style={styles.scroll}
       >
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
           <View style={styles.aiHeader}>
@@ -354,7 +393,8 @@ export default function ProductDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, zIndex: 50 },
+  root: { flex: 1 },
+  scroll: { flex: 1, zIndex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: space.gutter },
   errorText: { ...type.body, marginTop: 16, marginBottom: 24 },
   sticky: {
@@ -364,6 +404,8 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: space.gutter,
     paddingBottom: 8,
+    zIndex: 20,
+    overflow: "visible",
   },
   navRow: {
     height: 44,
@@ -371,10 +413,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 8,
+    zIndex: 22,
+  },
+  identityRow: {
+    minHeight: 78,
+    position: "relative",
+    justifyContent: "center",
   },
   identity: {
     minHeight: 78,
     justifyContent: "center",
+    zIndex: 21,
   },
   brand: { ...type.eyebrow, marginBottom: 4, height: 16 },
   titleStack: { minHeight: 40, marginBottom: 8, justifyContent: "center" },
@@ -392,7 +441,7 @@ const styles = StyleSheet.create({
   priceRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
     flexWrap: "wrap",
   },
   priceChip: {
@@ -408,22 +457,43 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#1C1C1C",
   },
-  retailerTag: {
-    borderRadius: radii.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    maxWidth: 140,
+  stickerWrap: {
+    position: "relative",
+    marginRight: 4,
+    marginBottom: 2,
   },
-  retailerTagText: {
-    ...type.eyebrow,
-    fontSize: 10,
-    letterSpacing: 0.6,
-    textTransform: "capitalize",
+  stickerShadow: {
+    position: "absolute",
+    top: 3,
+    left: 3,
+    right: -3,
+    bottom: -3,
+    borderRadius: 7,
+  },
+  stickerFace: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 7,
+    transform: [{ rotate: "-2deg" }],
+  },
+  stickerText: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: 11,
+    lineHeight: 13,
+    letterSpacing: 0.7,
+    fontWeight: "800",
+  },
+  dockedThumb: {
+    position: "absolute",
+    right: 0,
+    top: 5,
+    borderRadius: 12,
+    overflow: "hidden",
+    zIndex: 23,
   },
   heroFloat: {
     position: "absolute",
-    zIndex: 15,
+    zIndex: 30,
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
@@ -460,6 +530,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.gutter,
     paddingTop: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
-    zIndex: 30,
+    zIndex: 40,
   },
 });
