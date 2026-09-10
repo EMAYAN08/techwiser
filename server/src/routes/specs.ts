@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { explainSpecOpenAI, findAlternativesOpenAI } from "../services/openai";
+import { explainSpecAi, findAlternativesAi } from "../services/ai";
 
 const router = Router();
 
@@ -12,7 +12,7 @@ router.post("/explain-spec", async (req: Request, res: Response) => {
       return;
     }
 
-    const explanation = await explainSpecOpenAI(productNames, specLabel, specValues);
+    const explanation = await explainSpecAi(productNames, specLabel, specValues);
     res.json(explanation);
   } catch (error: unknown) {
     console.error("Unexpected error in /api/explain-spec:", error);
@@ -29,7 +29,7 @@ router.post("/alternatives", async (req: Request, res: Response) => {
       return;
     }
 
-    const alternatives = await findAlternativesOpenAI(products);
+    const alternatives = await findAlternativesAi(products);
     res.json(alternatives);
   } catch (error: unknown) {
     console.error("Unexpected error in /api/alternatives:", error);

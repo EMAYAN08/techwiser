@@ -67,7 +67,7 @@ export async function openaiJson(options: {
   const rawText = await response.text();
   if (!response.ok) {
     console.error(`[OpenAI] ${options.operation} HTTP ${response.status}:`, rawText.slice(0, 800));
-    throw new Error(`OpenAI API error ${response.status}`);
+    throw new Error(`OpenAI API error ${response.status}: ${rawText.slice(0, 200)}`);
   }
 
   const data = JSON.parse(rawText);
