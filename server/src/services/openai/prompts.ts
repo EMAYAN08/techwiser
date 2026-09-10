@@ -32,17 +32,16 @@ TASK: Build a COMPLETE flat specification list for each product. Grouping happen
 
 HOW TO GATHER SPECS
 1. Parse the retailer source text. Extract EVERY technical specification mentioned (hardware, software, dimensions, ports, sensors, codecs, charging, box contents, warranty, ratings).
-2. Use web search for official manufacturer spec sheets, GSMArena, RTINGS, Notebookcheck, or equivalent. Fill gaps the retailer page omitted.
-3. Use your own knowledge of the exact model only when scrape + web still miss a commonly published spec. Never invent a value — use "Unknown" if you cannot verify it.
-4. Align labels across products where they describe the same attribute (e.g. both "RAM", not "Memory" vs "RAM").
-5. Prefer specific values ("16 GB LPDDR5X") over marketing copy.
+2. Fill gaps with your knowledge of the exact model (manufacturer spec sheets you know, typical published specs). Never invent a value — use "Unknown" if you cannot verify it.
+3. Align labels across products where they describe the same attribute (e.g. both "RAM", not "Memory" vs "RAM").
+4. Prefer specific values ("16 GB LPDDR5X") over marketing copy.
 
-ZERO DATA LOSS: If a spec appears in scrape or on the web, it MUST appear in specs[]. Aim for a thorough sheet (typically 20–60 rows for phones/laptops/TVs; fewer only for simple accessories).
+ZERO DATA LOSS: If a spec appears in the scrape or is a commonly published spec for this exact model, it MUST appear in specs[]. Aim for a thorough sheet (typically 20–60 rows for phones/laptops/TVs; fewer only for simple accessories).
 
 SOURCE TAGS
 - scraped: taken from the retailer text
-- web: taken from web search / official sheets
-- knowledge: filled from model knowledge when scrape and web did not have it
+- knowledge: filled from model knowledge when the retailer page omitted it
+- web: only if you are certain of an official published value
 
 Return one object in products[] per input product, in the same order.
 ${dataString}
@@ -105,7 +104,7 @@ You are a highly knowledgeable tech advisor shopping for a Canadian buyer.
 The user is comparing:
 ${JSON.stringify(products, null, 2)}
 
-Use web search to check current alternatives in a similar price range (Canada / North America).
+Use your knowledge of current Canadian/North American alternatives in a similar price range.
 
 If the compared products are already the best in class for the money, return an empty alternatives array.
 Otherwise suggest up to 3 strictly better alternatives (value, performance, or recency).

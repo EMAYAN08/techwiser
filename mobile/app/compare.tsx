@@ -221,8 +221,11 @@ function KeyDifferencesCard({
           ]}
         >
           <Text style={[styles.diffLabel, { color: colors.ink, opacity: 0.9 }]}>{diff.label}</Text>
-          <Pressable style={styles.diffValuesRow} onPress={() => onSpecPress(diff.label, diff.values)}>
-            {diff.values.map((val, idx) => {
+          <Pressable
+            style={styles.diffValuesRow}
+            onPress={() => onSpecPress(diff.label, Array.isArray(diff.values) ? diff.values : [])}
+          >
+            {(Array.isArray(diff.values) ? diff.values : []).map((val, idx) => {
               const win = diff.isDraw || diff.winnerIndex === idx;
               return (
                 <View
@@ -492,17 +495,18 @@ export default function CompareScreen() {
     if ((activeComparison as any).groupedSpecs) {
       const gs = (activeComparison as any).groupedSpecs;
       return Object.entries(gs).map(([key, specsArray]: [string, any]) => {
-        const rows = specsArray.map((spec: any) => {
+        const rows = (Array.isArray(specsArray) ? specsArray : []).map((spec: any) => {
+          const specValues = Array.isArray(spec?.values) ? spec.values : [];
           const values = products.map((p, pIndex) => ({
             productId: p.id,
             productName: p.name,
             productColor: getRetailerColor(p.retailer),
-            displayValue: spec.values && spec.values[pIndex] ? spec.values[pIndex] : "—",
+            displayValue: specValues[pIndex] ? specValues[pIndex] : "—",
             numericValue: null,
-            isWinner: spec.winnerIndex === pIndex,
-            isDraw: spec.winnerIndex === -1,
+            isWinner: spec?.winnerIndex === pIndex,
+            isDraw: spec?.winnerIndex === -1,
           }));
-          return { label: spec.label, values, unit: spec.unit || "" };
+          return { label: spec?.label || "Spec", values, unit: spec?.unit || "" };
         });
         return { key, rows };
       });
@@ -538,31 +542,35 @@ export default function CompareScreen() {
   }, [productA, products, activeComparison]);
 
   const decoratedDifferences = useMemo<KeyDifference[]>(() => {
-    if (!productA) return [];
-    return keyDifferences.map((diff) => {
-      let winnerIndex = null;
-      let isDraw = false;
+    if (!productA || !Array.isArray(keyDifferences)) return [];
+    return keyDifferences
+      .filter((diff) => diff && typeof diff === "object")
+      .map((diff) => {
+        const values = Array.isArray(diff.values) ? diff.values.map((v) => (v == null ? "—" : String(v))) : [];
+        let winnerIndex = null;
+        let isDraw = false;
 
-      if ((activeComparison as any).groupedSpecs) {
-        for (const specs of Object.values((activeComparison as any).groupedSpecs)) {
-          const match = (specs as any[]).find((s) => s.label === diff.label);
-          if (match) {
-            if (match.winnerIndex === -1) isDraw = true;
-            else winnerIndex = match.winnerIndex;
-            break;
+        if ((activeComparison as any).groupedSpecs) {
+          for (const specs of Object.values((activeComparison as any).groupedSpecs)) {
+            if (!Array.isArray(specs)) continue;
+            const match = (specs as any[]).find((s) => s && s.label === diff.label);
+            if (match) {
+              if (match.winnerIndex === -1) isDraw = true;
+              else winnerIndex = match.winnerIndex;
+              break;
+            }
+          }
+        } else if (productA.specs) {
+          const idx = productA.specs.findIndex((s) => s.label === diff.label && s.category !== OVERVIEW_KEY);
+          if (idx >= 0) {
+            isDraw = !!productA.specs[idx]?.isDraw;
+            const winnerIdx = products.findIndex((p) => p.specs[idx]?.isWinner);
+            winnerIndex = winnerIdx >= 0 ? winnerIdx : null;
           }
         }
-      } else if (productA.specs) {
-        const idx = productA.specs.findIndex((s) => s.label === diff.label && s.category !== OVERVIEW_KEY);
-        if (idx >= 0) {
-          isDraw = !!productA.specs[idx]?.isDraw;
-          const winnerIdx = products.findIndex((p) => p.specs[idx]?.isWinner);
-          winnerIndex = winnerIdx >= 0 ? winnerIdx : null;
-        }
-      }
 
-      return { ...diff, winnerIndex, isDraw };
-    });
+        return { ...diff, label: diff.label || "Difference", values, winnerIndex, isDraw };
+      });
   }, [keyDifferences, productA, products, activeComparison]);
 
   const categoryList = useMemo(
