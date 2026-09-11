@@ -285,23 +285,30 @@ function CustomTabBar({ state, navigation }: any) {
 }
 
 export default function TabLayout() {
+  const { colors } = useThemeColors();
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-      }}
-      screenListeners={{
-        tabPress: () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        },
-      }}
-      tabBar={(props) => <CustomTabBar {...props as any} />}
-    >
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="library" options={{ title: "Library" }} />
-      <Tabs.Screen name="price" options={{ title: "Price" }} />
-      <Tabs.Screen name="settings" options={{ title: "Settings" }} />
-    </Tabs>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          animation: "fade",
+          freezeOnBlur: true,
+          sceneStyle: { backgroundColor: colors.bg },
+          lazy: false,
+        }}
+        screenListeners={{
+          tabPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          },
+        }}
+        tabBar={(props) => <CustomTabBar {...props as any} />}
+      >
+        <Tabs.Screen name="index" options={{ title: "Home" }} />
+        <Tabs.Screen name="library" options={{ title: "Library" }} />
+        <Tabs.Screen name="price" options={{ title: "Price" }} />
+        <Tabs.Screen name="settings" options={{ title: "Settings" }} />
+      </Tabs>
+    </View>
   );
 }
 
