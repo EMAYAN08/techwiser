@@ -13,22 +13,23 @@ import {
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from "react-native";
-import { Trophy, Sparkles, ExternalLink } from "lucide-react-native";
+import { Trophy, ExternalLink } from "lucide-react-native";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { type } from "../../constants/Typography";
 import { radii } from "../../constants/Layout";
 import { Button } from "../ui/Button";
 import { Chip } from "../ui/Chip";
+import { AltProductMark } from "./AltProductMark";
 import type { AlternativeProduct } from "../../services/api";
 
-function AltImage({ uri, colors }: { uri?: string; colors: { fog: string; stone: string; spotify: string } }) {
+function AltImage({ uri, colors }: { uri?: string; colors: { fog: string; stone: string; spotify: string; ink: string } }) {
   const valid = Boolean(uri && uri.trim().startsWith("http"));
   const [error, setError] = useState(false);
   if (!valid || error) {
     return (
       <View style={styles.imageFallback}>
-        <Sparkles size={36} color={colors.spotify} strokeWidth={1.75} />
+        <AltProductMark accent={colors.spotify} ink={colors.ink} />
       </View>
     );
   }
@@ -152,7 +153,7 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
                   },
                 ]}
               >
-                <ScrollView
+                <View
                   style={[
                     styles.card,
                     {
@@ -160,43 +161,51 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
                       borderColor: isDark ? "rgba(255,255,255,0.16)" : colors.line,
                     },
                   ]}
-                  contentContainerStyle={styles.cardContent}
-                  showsVerticalScrollIndicator
-                  bounces
-                  nestedScrollEnabled
-                  directionalLockEnabled
                 >
-                  <View style={styles.topRow}>
-                    <AltImage uri={item.imageUrl} colors={colors} />
-                    <View style={styles.topCopy}>
-                      <Text style={[styles.name, { color: colors.ink }]}>{item.name}</Text>
-                      <View style={styles.priceRow}>
-                        {item.estimatedPrice ? (
-                          <View style={styles.priceChip}>
-                            <Text style={styles.priceChipText}>{item.estimatedPrice}</Text>
-                          </View>
-                        ) : null}
-                        <Pressable
-                          onPress={() => openAlt(item)}
-                          hitSlop={10}
-                          accessibilityRole="link"
-                          accessibilityLabel={`Open listings for ${item.name}`}
-                          style={styles.linkBtn}
-                        >
-                          <ExternalLink size={18} color={colors.ink} strokeWidth={2.25} />
-                        </Pressable>
+                  <View style={[styles.header, { borderBottomColor: isDark ? "rgba(255,255,255,0.10)" : colors.line }]}>
+                    <View style={styles.topRow}>
+                      <AltImage uri={item.imageUrl} colors={colors} />
+                      <View style={styles.topCopy}>
+                        <Text style={[styles.name, { color: colors.ink }]} numberOfLines={3}>
+                          {item.name}
+                        </Text>
+                        <View style={styles.priceRow}>
+                          {item.estimatedPrice ? (
+                            <View style={styles.priceChip}>
+                              <Text style={styles.priceChipText}>{item.estimatedPrice}</Text>
+                            </View>
+                          ) : null}
+                          <Pressable
+                            onPress={() => openAlt(item)}
+                            hitSlop={10}
+                            accessibilityRole="link"
+                            accessibilityLabel={`Open listings for ${item.name}`}
+                            style={styles.linkBtn}
+                          >
+                            <ExternalLink size={18} color={colors.ink} strokeWidth={2.25} />
+                          </Pressable>
+                        </View>
                       </View>
                     </View>
+                    {tags.length > 0 ? (
+                      <View style={styles.tagsRow}>
+                        {tags.map((tag) => (
+                          <Chip key={tag} label={tag} variant="tag" />
+                        ))}
+                      </View>
+                    ) : null}
                   </View>
-                  {tags.length > 0 ? (
-                    <View style={styles.tagsRow}>
-                      {tags.map((tag) => (
-                        <Chip key={tag} label={tag} variant="tag" />
-                      ))}
-                    </View>
-                  ) : null}
-                  <Text style={[styles.reason, { color: colors.body }]}>{item.reasonWhyBetter}</Text>
-                </ScrollView>
+                  <ScrollView
+                    style={styles.reasonScroll}
+                    contentContainerStyle={styles.reasonContent}
+                    showsVerticalScrollIndicator
+                    bounces
+                    nestedScrollEnabled
+                    directionalLockEnabled
+                  >
+                    <Text style={[styles.reason, { color: colors.body }]}>{item.reasonWhyBetter}</Text>
+                  </ScrollView>
+                </View>
               </Animated.View>
             </View>
           );
@@ -240,17 +249,19 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderRadius: radii.card,
+    overflow: "hidden",
   },
-  cardContent: {
-    padding: 18,
-    paddingBottom: 24,
-    flexGrow: 1,
+  header: {
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  topRow: { flexDirection: "row", gap: 14, marginBottom: 14, alignItems: "center" },
-  image: { width: 88, height: 88 },
+  topRow: { flexDirection: "row", gap: 14, alignItems: "center" },
+  image: { width: 72, height: 72 },
   imageFallback: {
-    width: 88,
-    height: 88,
+    width: 72,
+    height: 72,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -271,7 +282,9 @@ const styles = StyleSheet.create({
     color: "#1C1C1C",
   },
   linkBtn: { padding: 4 },
-  tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
+  tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
+  reasonScroll: { flex: 1 },
+  reasonContent: { paddingHorizontal: 18, paddingTop: 14, paddingBottom: 24 },
   reason: { ...type.body, fontSize: 15, lineHeight: 23 },
   dots: {
     flexDirection: "row",
