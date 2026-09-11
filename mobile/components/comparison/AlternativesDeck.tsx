@@ -13,7 +13,7 @@ import {
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from "react-native";
-import { Trophy, Sparkles } from "lucide-react-native";
+import { Trophy, Sparkles, ExternalLink } from "lucide-react-native";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { type } from "../../constants/Typography";
@@ -77,17 +77,12 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
       alternatives.map((_, i) => ({
         scale: scrollX.interpolate({
           inputRange: [(i - 1) * page.width, i * page.width, (i + 1) * page.width],
-          outputRange: [0.9, 1, 0.9],
+          outputRange: [0.94, 1, 0.94],
           extrapolate: "clamp",
         }),
         opacity: scrollX.interpolate({
           inputRange: [(i - 1) * page.width, i * page.width, (i + 1) * page.width],
-          outputRange: [0.52, 1, 0.52],
-          extrapolate: "clamp",
-        }),
-        lift: scrollX.interpolate({
-          inputRange: [(i - 1) * page.width, i * page.width, (i + 1) * page.width],
-          outputRange: [10, 0, 10],
+          outputRange: [0.62, 1, 0.62],
           extrapolate: "clamp",
         }),
       })),
@@ -153,51 +148,55 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
                   styles.cardMotion,
                   {
                     opacity: interpolations[i]?.opacity,
-                    transform: [{ translateY: interpolations[i]?.lift || 0 }, { scale: interpolations[i]?.scale || 1 }],
+                    transform: [{ scale: interpolations[i]?.scale || 1 }],
                   },
                 ]}
               >
-                <Pressable style={styles.cardPress} onPress={() => openAlt(item)}>
-                  <View
-                    style={[
-                      styles.card,
-                      {
-                        backgroundColor: colors.surface,
-                        borderColor: isDark ? "rgba(255,255,255,0.16)" : colors.line,
-                      },
-                    ]}
-                  >
-                    <View style={styles.topRow}>
-                      <AltImage uri={item.imageUrl} colors={colors} />
-                      <View style={styles.topCopy}>
-                        <Text style={[styles.name, { color: colors.ink }]} numberOfLines={3}>
-                          {item.name}
-                        </Text>
+                <ScrollView
+                  style={[
+                    styles.card,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: isDark ? "rgba(255,255,255,0.16)" : colors.line,
+                    },
+                  ]}
+                  contentContainerStyle={styles.cardContent}
+                  showsVerticalScrollIndicator
+                  bounces
+                  nestedScrollEnabled
+                  directionalLockEnabled
+                >
+                  <View style={styles.topRow}>
+                    <AltImage uri={item.imageUrl} colors={colors} />
+                    <View style={styles.topCopy}>
+                      <Text style={[styles.name, { color: colors.ink }]}>{item.name}</Text>
+                      <View style={styles.priceRow}>
                         {item.estimatedPrice ? (
                           <View style={styles.priceChip}>
                             <Text style={styles.priceChipText}>{item.estimatedPrice}</Text>
                           </View>
                         ) : null}
+                        <Pressable
+                          onPress={() => openAlt(item)}
+                          hitSlop={10}
+                          accessibilityRole="link"
+                          accessibilityLabel={`Open listings for ${item.name}`}
+                          style={styles.linkBtn}
+                        >
+                          <ExternalLink size={18} color={colors.ink} strokeWidth={2.25} />
+                        </Pressable>
                       </View>
                     </View>
-                    {tags.length > 0 ? (
-                      <View style={styles.tagsRow}>
-                        {tags.map((tag) => (
-                          <Chip key={tag} label={tag} variant="tag" />
-                        ))}
-                      </View>
-                    ) : null}
-                    <ScrollView
-                      style={styles.reasonScroll}
-                      contentContainerStyle={styles.reasonContent}
-                      showsVerticalScrollIndicator={false}
-                      nestedScrollEnabled
-                    >
-                      <Text style={[styles.reason, { color: colors.body }]}>{item.reasonWhyBetter}</Text>
-                    </ScrollView>
-                    <Text style={[styles.cta, { color: colors.stone }]}>Tap to view listings</Text>
                   </View>
-                </Pressable>
+                  {tags.length > 0 ? (
+                    <View style={styles.tagsRow}>
+                      {tags.map((tag) => (
+                        <Chip key={tag} label={tag} variant="tag" />
+                      ))}
+                    </View>
+                  ) : null}
+                  <Text style={[styles.reason, { color: colors.body }]}>{item.reasonWhyBetter}</Text>
+                </ScrollView>
               </Animated.View>
             </View>
           );
@@ -237,12 +236,15 @@ const styles = StyleSheet.create({
   statusText: { ...type.body, textAlign: "center" },
   emptyTitle: { ...type.productName, fontSize: 18, textAlign: "center" },
   cardMotion: { flex: 1, marginHorizontal: 2, marginVertical: 4 },
-  cardPress: { flex: 1 },
   card: {
     flex: 1,
     borderWidth: 1,
     borderRadius: radii.card,
+  },
+  cardContent: {
     padding: 18,
+    paddingBottom: 24,
+    flexGrow: 1,
   },
   topRow: { flexDirection: "row", gap: 14, marginBottom: 14, alignItems: "center" },
   image: { width: 88, height: 88 },
@@ -254,8 +256,8 @@ const styles = StyleSheet.create({
   },
   topCopy: { flex: 1, minWidth: 0, justifyContent: "center" },
   name: { ...type.productName, fontSize: 18, lineHeight: 22, marginBottom: 8 },
+  priceRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   priceChip: {
-    alignSelf: "flex-start",
     backgroundColor: "#FEF08A",
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -268,11 +270,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#1C1C1C",
   },
+  linkBtn: { padding: 4 },
   tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
-  reasonScroll: { flex: 1 },
-  reasonContent: { paddingBottom: 8 },
   reason: { ...type.body, fontSize: 15, lineHeight: 23 },
-  cta: { ...type.caption, marginTop: 10, letterSpacing: 0.3 },
   dots: {
     flexDirection: "row",
     alignItems: "center",
