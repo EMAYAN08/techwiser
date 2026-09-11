@@ -20,86 +20,67 @@ const THUMBS_LIGHT = require("../../assets/mascot/owl-thumbs-light.gif");
 const THUMBS_DARK = require("../../assets/mascot/owl-thumbs-dark.gif");
 const WALK_STILL = require("../../assets/mascot/owl-walk-still.png");
 const THUMBS_STILL = require("../../assets/mascot/owl-thumbs-still.png");
+const SHADOW_LIGHT = require("../../assets/mascot/owl-shadow-light.png");
+const SHADOW_DARK = require("../../assets/mascot/owl-shadow-dark.png");
 
 const THUMBS_MS = 2000;
 const THUMBS_CAP_MS = 2600;
 
-function ServerStack({ colors }: { colors: any }) {
-  const progress = useRef(new Animated.Value(0)).current;
-  const pulse = useRef(new Animated.Value(0)).current;
+function GroundShadow({
+  isDark,
+  phase,
+  reduceMotion,
+}: {
+  isDark: boolean;
+  phase: "loading" | "success";
+  reduceMotion: boolean;
+}) {
+  const pulse = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
-    Animated.loop(
-      Animated.timing(progress, {
-        toValue: 1,
-        duration: 900,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-
-    Animated.loop(
+    if (reduceMotion) {
+      pulse.setValue(0.5);
+      return;
+    }
+    pulse.setValue(0);
+    const dur = phase === "success" ? 900 : 520;
+    const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 500, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0, duration: 500, useNativeDriver: true }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: dur,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0,
+          duration: dur,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
       ])
-    ).start();
-  }, [progress, pulse]);
+    );
+    loop.start();
+    return () => {
+      loop.stop();
+      pulse.stopAnimation();
+    };
+  }, [phase, reduceMotion, pulse]);
 
-  const translateY = progress.interpolate({
+  const scaleX = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.84, 1.06] });
+  const scaleY = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.1] });
+  const opacity = pulse.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -36],
+    outputRange: isDark ? [0.42, 0.78] : [0.38, 0.72],
   });
-
-  const topOpacity = progress.interpolate({
-    inputRange: [0, 0.8, 1],
-    outputRange: [1, 0, 0],
-  });
-  const topScale = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 0.85],
-  });
-
-  const bottomOpacity = progress.interpolate({
-    inputRange: [0, 0.2, 1],
-    outputRange: [0, 1, 1],
-  });
-  const bottomScale = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.85, 1],
-  });
-
-  const led = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] });
-
-  const renderBlock = (opacity: any, scale: any) => (
-    <Animated.View
-      style={[
-        styles.serverBlock,
-        {
-          borderColor: colors.spotify,
-          backgroundColor: colors.spotifyWash,
-          opacity,
-          transform: [{ scale }],
-        },
-      ]}
-    >
-      <View style={{ flexDirection: "row", gap: 6 }}>
-        <View style={[styles.serverLine, { width: 24, backgroundColor: colors.spotify }]} />
-        <View style={[styles.serverLine, { width: 12, backgroundColor: colors.spotify }]} />
-      </View>
-      <Animated.View style={[styles.serverLed, { backgroundColor: colors.spotify, opacity: led }]} />
-    </Animated.View>
-  );
 
   return (
-    <View style={styles.serverContainer}>
-      <Animated.View style={{ transform: [{ translateY }] }}>
-        {renderBlock(topOpacity, topScale)}
-        {renderBlock(1, 1)}
-        {renderBlock(1, 1)}
-        {renderBlock(bottomOpacity, bottomScale)}
-      </Animated.View>
-    </View>
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.shadow, { opacity, transform: [{ scaleX }, { scaleY }] }]}
+    >
+      <Image source={isDark ? SHADOW_DARK : SHADOW_LIGHT} style={styles.shadowImg} resizeMode="contain" />
+    </Animated.View>
   );
 }
 
@@ -120,32 +101,36 @@ function OwlMascot({
       scale.setValue(1);
       return;
     }
-    scale.setValue(0.92);
+    scale.setValue(0.94);
     Animated.spring(scale, { toValue: 1, friction: 6, tension: 120, useNativeDriver: true }).start();
   }, [phase, reduceMotion, scale]);
 
-  const source = reduceMotion || gifFailed
-    ? phase === "success"
-      ? THUMBS_STILL
-      : WALK_STILL
-    : phase === "success"
-      ? isDark
-        ? THUMBS_DARK
-        : THUMBS_LIGHT
-      : isDark
-        ? WALK_DARK
-        : WALK_LIGHT;
+  const source =
+    reduceMotion || gifFailed
+      ? phase === "success"
+        ? THUMBS_STILL
+        : WALK_STILL
+      : phase === "success"
+        ? isDark
+          ? THUMBS_DARK
+          : THUMBS_LIGHT
+        : isDark
+          ? WALK_DARK
+          : WALK_LIGHT;
 
   return (
-    <Animated.View style={[styles.mascotWrap, { transform: [{ scale }] }]}>
-      <Image
-        source={source}
-        style={styles.mascot}
-        resizeMode="contain"
-        accessibilityLabel={phase === "success" ? "Comparison ready" : "Owl checking products"}
-        onError={() => setGifFailed(true)}
-      />
-    </Animated.View>
+    <View style={styles.stage}>
+      <GroundShadow isDark={isDark} phase={phase} reduceMotion={reduceMotion} />
+      <Animated.View style={[styles.mascotLift, { transform: [{ scale }] }]}>
+        <Image
+          source={source}
+          style={styles.mascot}
+          resizeMode="contain"
+          accessibilityLabel={phase === "success" ? "Comparison ready" : "Owl checking products"}
+          onError={() => setGifFailed(true)}
+        />
+      </Animated.View>
+    </View>
   );
 }
 
@@ -246,7 +231,7 @@ export function LoadingOverlay({
         style={[
           styles.screen,
           {
-            backgroundColor: isDark ? "#2A2A2A" : "#D8D8D4",
+            backgroundColor: isDark ? "#000000" : "#FFFFFF",
             paddingTop: insets.top,
             paddingBottom: insets.bottom,
           },
@@ -254,7 +239,6 @@ export function LoadingOverlay({
       >
         <View style={styles.content}>
           <OwlMascot phase={phase} isDark={isDark} reduceMotion={reduceMotion} />
-          <ServerStack colors={colors} />
           <Animated.Text style={[styles.message, { opacity: phase === "success" ? 1 : msgOpacity, color: colors.ink }]}>
             {message}
           </Animated.Text>
@@ -279,43 +263,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   content: { alignItems: "center", width: "100%", paddingHorizontal: 40 },
-  mascotWrap: {
-    width: 132,
-    height: 132,
-    marginBottom: 8,
+  stage: {
+    width: 220,
+    height: 210,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    marginBottom: 28,
+  },
+  shadow: {
+    position: "absolute",
+    bottom: 10,
+    width: 168,
+    height: 56,
     alignItems: "center",
     justifyContent: "center",
   },
-  mascot: {
-    width: 132,
-    height: 132,
+  shadowImg: {
+    width: 168,
+    height: 56,
   },
-  serverContainer: {
-    height: 100,
-    overflow: "hidden",
-    marginBottom: 32,
-    justifyContent: "flex-start",
-  },
-  serverBlock: {
-    width: 80,
-    height: 28,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    flexDirection: "row",
+  mascotLift: {
+    width: 188,
+    height: 188,
     alignItems: "center",
-    paddingHorizontal: 10,
-    justifyContent: "space-between",
-    marginBottom: 8,
+    justifyContent: "center",
+    zIndex: 1,
   },
-  serverLine: {
-    height: 4,
-    borderRadius: 2,
-    opacity: 0.6,
-  },
-  serverLed: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  mascot: {
+    width: 188,
+    height: 188,
   },
   message: {
     ...type.body,
