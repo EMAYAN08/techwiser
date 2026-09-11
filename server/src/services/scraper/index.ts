@@ -159,7 +159,13 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
         if (priceText && !rawText.includes(priceText)) {
           rawText = "META PRICE FOUND: " + priceText + "\n\n" + rawText;
         }
-        return { rawText, imageUrl, title, priceText };
+        return {
+          rawText,
+          imageUrl,
+          title,
+          priceText,
+          priceSource: priceText ? "bestbuy-api" : undefined,
+        };
       }
     } catch (bbError: any) {
       console.log(`Best Buy API warning for ${url}:`, bbError.message);
@@ -274,6 +280,7 @@ export function partitionScrapeResults(
         imageUrl: result.value.imageUrl,
         title: result.value.title,
         priceText: result.value.priceText || null,
+        priceSource: result.value.priceSource,
       });
     } else {
       console.error(`Failed to scrape ${urls[index]}:`, result.reason);

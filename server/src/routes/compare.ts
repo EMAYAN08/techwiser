@@ -6,6 +6,15 @@ import { partitionScrapeResults, scrapeUrlsSequentially } from "../services/scra
 
 const router = Router();
 
+function isBestBuyCanada(url?: string): boolean {
+  if (!url) return false;
+  try {
+    return new URL(url).hostname.toLowerCase().includes("bestbuy.ca");
+  } catch {
+    return /bestbuy\.ca/i.test(url);
+  }
+}
+
 router.post("/compare", async (req: Request, res: Response) => {
   try {
     const { urls } = req.body;
@@ -53,10 +62,19 @@ router.post("/compare", async (req: Request, res: Response) => {
       p.url = matchedData?.url || p.url;
       const scrapedPrice =
         formatDisplayPrice(matchedData?.priceText) || extractPriceFromText(matchedData?.retailerText || "");
-      if (isMissingPrice(p.price) && scrapedPrice) {
+      const llmPrice = formatDisplayPrice(p.price);
+      const preferBestBuyApi =
+        isBestBuyCanada(matchedData?.url || p.url) &&
+        matchedData?.priceSource === "bestbuy-api" &&
+        Boolean(scrapedPrice);
+
+      if (preferBestBuyApi) {
+        console.log(`[Price] Best Buy API ${scrapedPrice} overrides LLM ${p.price || "n/a"} for ${matchedData?.url}`);
+        p.price = scrapedPrice;
+      } else if (isMissingPrice(p.price) && scrapedPrice) {
         p.price = scrapedPrice;
       } else {
-        p.price = formatDisplayPrice(p.price) || scrapedPrice || p.price || "N/A";
+        p.price = llmPrice || scrapedPrice || p.price || "N/A";
       }
       return p;
     });
