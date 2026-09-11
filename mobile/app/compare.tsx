@@ -14,7 +14,7 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "../utils/haptics";
-import { ArrowLeft, Crown, Sparkles, Trophy, Share, X, AlertTriangle } from "lucide-react-native";
+import { ArrowLeft, Crown, Sparkles, Trophy, Share, X, AlertTriangle, PackageOpen } from "lucide-react-native";
 import { BlurView } from "expo-blur";
 
 import { useComparisonStore } from "../store/useComparisonStore";
