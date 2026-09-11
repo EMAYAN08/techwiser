@@ -23,6 +23,32 @@ const THUMBS_STILL = require("../../assets/mascot/owl-thumbs-still.png");
 const SHADOW_LIGHT = require("../../assets/mascot/owl-shadow-light.png");
 const SHADOW_DARK = require("../../assets/mascot/owl-shadow-dark.png");
 
+export const MASCOT_ASSETS = [
+  WALK_LIGHT,
+  WALK_DARK,
+  THUMBS_LIGHT,
+  THUMBS_DARK,
+  WALK_STILL,
+  THUMBS_STILL,
+  SHADOW_LIGHT,
+  SHADOW_DARK,
+];
+
+export function MascotPreloader() {
+  return (
+    <View
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={styles.preloader}
+    >
+      {MASCOT_ASSETS.map((source, i) => (
+        <Image key={i} source={source} style={styles.preloaderImg} />
+      ))}
+    </View>
+  );
+}
+
 const THUMBS_MS = 2000;
 const THUMBS_CAP_MS = 2600;
 
@@ -97,6 +123,10 @@ function OwlMascot({
   const [gifFailed, setGifFailed] = useState(false);
 
   useEffect(() => {
+    setGifFailed(false);
+  }, [phase, isDark]);
+
+  useEffect(() => {
     if (phase !== "success" || reduceMotion) {
       scale.setValue(1);
       return;
@@ -105,11 +135,10 @@ function OwlMascot({
     Animated.spring(scale, { toValue: 1, friction: 6, tension: 120, useNativeDriver: true }).start();
   }, [phase, reduceMotion, scale]);
 
-  const source =
+  const still = phase === "success" ? THUMBS_STILL : WALK_STILL;
+  const gif =
     reduceMotion || gifFailed
-      ? phase === "success"
-        ? THUMBS_STILL
-        : WALK_STILL
+      ? null
       : phase === "success"
         ? isDark
           ? THUMBS_DARK
@@ -123,12 +152,19 @@ function OwlMascot({
       <GroundShadow isDark={isDark} phase={phase} reduceMotion={reduceMotion} />
       <Animated.View style={[styles.mascotLift, { transform: [{ scale }] }]}>
         <Image
-          source={source}
+          source={still}
           style={styles.mascot}
           resizeMode="contain"
           accessibilityLabel={phase === "success" ? "Comparison ready" : "Owl checking products"}
-          onError={() => setGifFailed(true)}
         />
+        {gif ? (
+          <Image
+            source={gif}
+            style={styles.mascotGif}
+            resizeMode="contain"
+            onError={() => setGifFailed(true)}
+          />
+        ) : null}
       </Animated.View>
     </View>
   );
@@ -293,6 +329,25 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   mascot: {
+    width: 188,
+    height: 188,
+  },
+  mascotGif: {
+    position: "absolute",
+    width: 188,
+    height: 188,
+  },
+  preloader: {
+    position: "absolute",
+    width: 188,
+    height: 188,
+    left: -400,
+    top: -400,
+    opacity: 0,
+    overflow: "hidden",
+  },
+  preloaderImg: {
+    position: "absolute",
     width: 188,
     height: 188,
   },
