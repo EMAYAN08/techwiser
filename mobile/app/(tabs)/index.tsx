@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ScrollView, StyleSheet, View, Text, Animated } from "react-native";
+import { StyleSheet, View, Text, Animated } from "react-native";
 import { Typography } from "../../constants/Typography";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import * as Haptics from "../../utils/haptics";
-import { handleScroll } from "../../store/uiStore";
+import { handleScroll, resetScrollTracking } from "../../store/uiStore";
 import { URLInputGroup, URLInputHeader } from "../../components/home/URLInputGroup";
 import { RecentComparisons, RecentHeader } from "../../components/home/RecentComparisons";
 import { InputModeTabs, InputMode } from "../../components/home/InputModeTabs";
@@ -20,14 +20,13 @@ import { getApiBase } from "../../utils/apiBase";
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const {
-    urls,
-    isLoading,
-    setLoading,
-    setLoadPhase,
-    setActiveComparison,
-    addRecentComparison,
-  } = useComparisonStore();
+  const urls = useComparisonStore((s) => s.urls);
+  const isLoading = useComparisonStore((s) => s.isLoading);
+  const setLoading = useComparisonStore((s) => s.setLoading);
+  const setLoadPhase = useComparisonStore((s) => s.setLoadPhase);
+  const setActiveComparison = useComparisonStore((s) => s.setActiveComparison);
+  const addRecentComparison = useComparisonStore((s) => s.addRecentComparison);
+  const loadPhase = useComparisonStore((s) => s.loadPhase);
   const [inputMode, setInputMode] = useState<InputMode>("url");
   const { colors } = useThemeColors();
   const [scrollEnabled, setScrollEnabled] = useState(true);
@@ -37,7 +36,6 @@ export default function Home() {
   const cancelledRef = useRef(false);
   const navigatedRef = useRef(false);
   const loadPhaseRef = useRef<"loading" | "success">("loading");
-  const loadPhase = useComparisonStore((s) => s.loadPhase);
   loadPhaseRef.current = loadPhase;
 
   useEffect(() => {
@@ -165,9 +163,21 @@ export default function Home() {
   };
 
   const scrollY = useRef(new Animated.Value(0)).current;
+  const onScroll = useRef(
+    Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+      listener: handleScroll,
+    })
+  ).current;
   const TITLE_HEIGHT = 104;
   const TABS_HEIGHT = 104;
-  const HEADER_HEIGHT = TITLE_HEIGHT + TABS_HEIGHT;
+
+  useFocusEffect(
+    useCallback(() => {
+      resetScrollTracking();
+      return undefined;
+    }, [])
+  );
 
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, TITLE_HEIGHT],
@@ -202,10 +212,7 @@ export default function Home() {
       </Animated.View>
 
       <Animated.ScrollView
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }], 
-          { useNativeDriver: true, listener: handleScroll }
-        )}
+        onScroll={onScroll}
         scrollEventThrottle={16}
         style={[styles.container, { marginTop: TITLE_HEIGHT }]}
         stickyHeaderIndices={[1, 3]}

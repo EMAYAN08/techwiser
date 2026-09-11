@@ -3,7 +3,7 @@ import { Animated } from "react-native";
 export const tabBarAnim = new Animated.Value(1); // 1 = visible, 0 = hidden
 
 let isTabBarVisible = true;
-let lastScrollY = 0;
+let lastScrollY: number | null = 0;
 
 export const handleScroll = (event: any) => {
   const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
@@ -15,6 +15,11 @@ export const handleScroll = (event: any) => {
   // Ignore bottom rubber banding (prevents tab bar from popping up when bouncing at the bottom)
   const maxScroll = contentSize.height - layoutMeasurement.height;
   if (currentScrollY > maxScroll && maxScroll > 0) return;
+
+  if (lastScrollY === null) {
+    lastScrollY = currentScrollY;
+    return;
+  }
 
   const delta = currentScrollY - lastScrollY;
   lastScrollY = currentScrollY;
@@ -40,6 +45,10 @@ export const handleScroll = (event: any) => {
     }).start();
   }
 };
+
+export function resetScrollTracking() {
+  lastScrollY = null;
+}
 
 export function setTabBarHidden(hidden: boolean) {
   isTabBarVisible = !hidden;

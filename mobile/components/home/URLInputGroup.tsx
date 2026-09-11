@@ -179,7 +179,11 @@ export function URLInputGroup({
   canCompare = false,
 }: URLInputGroupProps) {
   const { colors } = useThemeColors();
-  const { urls, updateUrl, addUrl, removeUrl, setUrls } = useComparisonStore();
+  const urls = useComparisonStore((s) => s.urls);
+  const updateUrl = useComparisonStore((s) => s.updateUrl);
+  const addUrl = useComparisonStore((s) => s.addUrl);
+  const removeUrl = useComparisonStore((s) => s.removeUrl);
+  const setUrls = useComparisonStore((s) => s.setUrls);
   const animValues = useRef(urls.map(() => new Animated.Value(0))).current;
   const clearScale = useRef(new Animated.Value(1)).current;
 
@@ -341,7 +345,8 @@ const styles = StyleSheet.create({
 
 export function URLInputHeader() {
   const { colors } = useThemeColors();
-  const { urls, setUrls } = useComparisonStore();
+  const urls = useComparisonStore((s) => s.urls);
+  const setUrls = useComparisonStore((s) => s.setUrls);
   const clearScale = useRef(new Animated.Value(1)).current;
 
   const handleClearAll = () => {

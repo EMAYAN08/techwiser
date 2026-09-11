@@ -24,7 +24,11 @@ export default function Layout() {
   });
 
   useEffect(() => {
-    Asset.loadAsync([...(ALL_IMAGE_ASSETS as number[]), ...MASCOT_ASSETS]).catch(() => {});
+    Asset.loadAsync([
+      ...(ALL_IMAGE_ASSETS as number[]),
+      ...MASCOT_ASSETS,
+      require("../assets/icons/open-box.png"),
+    ]).catch(() => {});
   }, []);
 
   if (!loaded) {

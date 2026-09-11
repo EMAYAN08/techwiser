@@ -30,7 +30,8 @@ function uniqueProducts(products: Product[]): Product[] {
 }
 
 export default function LibraryScreen() {
-  const { recentComparisons, removeProductFromHistory } = useComparisonStore();
+  const recentComparisons = useComparisonStore((s) => s.recentComparisons);
+  const removeProductFromHistory = useComparisonStore((s) => s.removeProductFromHistory);
   const { colors, isDark } = useThemeColors();
   const insets = useSafeAreaInsets();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -133,6 +134,12 @@ export default function LibraryScreen() {
 
   const isWellsSticky = wellsOpen && allProducts.length > 0;
   const scrollY = useRef(new Animated.Value(0)).current;
+  const onScroll = useRef(
+    Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+      listener: handleScroll,
+    })
+  ).current;
 
   // Measure constants for smooth translation
   const TITLE_HEIGHT = 90; 
@@ -250,10 +257,7 @@ export default function LibraryScreen() {
       </Animated.View>
 
       <Animated.ScrollView
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }], 
-          { useNativeDriver: true, listener: handleScroll }
-        )}
+        onScroll={onScroll}
         onScrollBeginDrag={() => { if (menuOpen) setMenuOpen(false); }}
         scrollEventThrottle={16}
         contentContainerStyle={[styles.scroll, { paddingTop: HEADER_HEIGHT, paddingBottom: 120 }]}

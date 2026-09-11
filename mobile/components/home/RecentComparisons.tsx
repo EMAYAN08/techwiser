@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, memo } from "react";
 import { View, Text, StyleSheet, Pressable, Animated, Image } from "react-native";
 import { type } from "../../constants/Typography";
 import { useComparisonStore, Comparison } from "../../store/useComparisonStore";
@@ -25,7 +25,9 @@ function ComparisonCard({ comparison, index }: { comparison: Comparison; index: 
       delay: index * 50 + 200,
       useNativeDriver: true,
     }).start();
-  }, [fadeAnim, index]);
+    // Only fade in on first mount — not when a new comparison prepends and shifts index.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fadeAnim]);
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -94,9 +96,11 @@ function ComparisonCard({ comparison, index }: { comparison: Comparison; index: 
   );
 }
 
+const MemoComparisonCard = memo(ComparisonCard);
+
 export function RecentComparisons() {
   const { colors } = useThemeColors();
-  const { recentComparisons } = useComparisonStore();
+  const recentComparisons = useComparisonStore((s) => s.recentComparisons);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -115,7 +119,7 @@ export function RecentComparisons() {
         <Text style={[styles.empty, { color: colors.stone }]}>No comparisons yet</Text>
       ) : (
         recentComparisons.map((comp, index) => (
-          <ComparisonCard key={comp.id} comparison={comp} index={index} />
+          <MemoComparisonCard key={comp.id} comparison={comp} index={index} />
         ))
       )}
     </View>

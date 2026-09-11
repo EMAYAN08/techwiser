@@ -24,18 +24,28 @@ import type { AlternativeProduct } from "../../services/api";
 
 const OPEN_BOX = require("../../assets/icons/open-box.png");
 
-function AltImage({ uri }: { uri?: string }) {
-  const valid = Boolean(uri && uri.trim().startsWith("http"));
-  const [showRemote, setShowRemote] = useState(valid);
+function isUsableImageUrl(uri?: string) {
+  if (!uri) return false;
+  const u = uri.trim();
+  if (!/^https?:\/\//i.test(u)) return false;
+  if (/placeholder|no[-_]?image|1x1\.(gif|png|jpg)|blank\.|spacer|default[-_]?product/i.test(u)) return false;
+  return true;
+}
+
+function AltImage({ uri, loadRemote }: { uri?: string; loadRemote: boolean }) {
+  const valid = isUsableImageUrl(uri);
+  const [failed, setFailed] = useState(false);
+  const showRemote = valid && loadRemote && !failed;
   return (
     <View style={styles.imageFallback}>
-      <Image source={OPEN_BOX} style={styles.image} resizeMode="contain" />
-      {valid && showRemote ? (
+      <Image source={OPEN_BOX} style={styles.image} resizeMode="contain" fadeDuration={0} />
+      {showRemote ? (
         <Image
           source={{ uri }}
           style={[styles.image, StyleSheet.absoluteFillObject]}
           resizeMode="contain"
-          onError={() => setShowRemote(false)}
+          fadeDuration={0}
+          onError={() => setFailed(true)}
         />
       ) : null}
     </View>
@@ -169,7 +179,7 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
                 >
                   <View style={[styles.header, { borderBottomColor: isDark ? "rgba(255,255,255,0.10)" : colors.line }]}>
                     <View style={styles.topRow}>
-                      <AltImage uri={item.imageUrl} />
+                      <AltImage uri={item.imageUrl} loadRemote={Math.abs(i - index) <= 1} />
                       <View style={styles.topCopy}>
                         <Text style={[styles.name, { color: colors.ink }]} numberOfLines={3}>
                           {item.name}
