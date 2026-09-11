@@ -52,9 +52,29 @@ export interface AlternativesResponse {
   alternatives: AlternativeProduct[];
 }
 
+function alternativesCacheKey(products: { id?: string; url?: string; name?: string }[]) {
+  return products.map((p) => String(p.id || p.url || p.name || "")).join("||");
+}
+
+const alternativesCache = new Map<string, AlternativesResponse>();
+
+export function peekAlternativesCache(
+  products: { id?: string; url?: string; name?: string }[]
+): AlternativesResponse | null {
+  if (!products?.length) return null;
+  return alternativesCache.get(alternativesCacheKey(products)) ?? null;
+}
+
 export async function fetchAlternatives(
-  products: { name: string; price?: string; retailer?: string }[]
+  products: { id?: string; name: string; price?: string; retailer?: string; url?: string }[],
+  options?: { force?: boolean }
 ): Promise<AlternativesResponse> {
+  const key = alternativesCacheKey(products);
+  if (!options?.force) {
+    const hit = alternativesCache.get(key);
+    if (hit) return hit;
+  }
+
   const apiUrl = getApiBase();
   const response = await fetch(`${apiUrl}/api/alternatives`, {
     method: "POST",
@@ -70,10 +90,15 @@ export async function fetchAlternatives(
       const errJson = await response.json();
       if (errJson.error) errMsg = errJson.error;
     } catch (e) {}
-    throw new Error(errMsg || 'Unknown error occurred');
+    throw new Error(errMsg || "Unknown error occurred");
   }
 
-  return response.json();
+  const json = (await response.json()) as AlternativesResponse;
+  const normalized: AlternativesResponse = {
+    alternatives: Array.isArray(json?.alternatives) ? json.alternatives : [],
+  };
+  alternativesCache.set(key, normalized);
+  return normalized;
 }
 
 

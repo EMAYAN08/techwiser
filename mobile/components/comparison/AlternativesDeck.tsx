@@ -26,14 +26,19 @@ const OPEN_BOX = require("../../assets/icons/open-box.png");
 
 function AltImage({ uri }: { uri?: string }) {
   const valid = Boolean(uri && uri.trim().startsWith("http"));
-  const [error, setError] = useState(false);
+  const [showRemote, setShowRemote] = useState(valid);
   return (
-    <Image
-      source={!valid || error ? OPEN_BOX : { uri }}
-      style={styles.image}
-      resizeMode="contain"
-      onError={() => setError(true)}
-    />
+    <View style={styles.imageFallback}>
+      <Image source={OPEN_BOX} style={styles.image} resizeMode="contain" />
+      {valid && showRemote ? (
+        <Image
+          source={{ uri }}
+          style={[styles.image, StyleSheet.absoluteFillObject]}
+          resizeMode="contain"
+          onError={() => setShowRemote(false)}
+        />
+      ) : null}
+    </View>
   );
 }
 
@@ -265,6 +270,7 @@ const styles = StyleSheet.create({
     height: 72,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
   topCopy: { flex: 1, minWidth: 0, justifyContent: "center" },
   name: { ...type.productName, fontSize: 18, lineHeight: 22, marginBottom: 8 },

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { AlternativesResponse } from "../services/api";
 
 export interface Spec {
   label: string;
@@ -39,6 +40,7 @@ export interface ComparisonResult {
   keyDifferences: Array<{ label: string; values: string[] }>;
   aiSummary: string;
   createdAt: string;
+  alternatives?: AlternativesResponse;
 }
 
 export interface Comparison {
@@ -61,6 +63,7 @@ interface ComparisonStore {
   setUrls: (urls: string[]) => void;
   setLoading: (isLoading: boolean, message?: string) => void;
   setActiveComparison: (result: ComparisonResult | null) => void;
+  setComparisonAlternatives: (data: AlternativesResponse) => void;
   addRecentComparison: (comparison: Comparison) => void;
   clearRecentComparisons: () => void;
   removeProductFromHistory: (productId: string) => void;
@@ -402,6 +405,17 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
   setLoading: (isLoading, message) =>
     set({ isLoading, loadingMessage: message ?? "Analyzing products..." }),
   setActiveComparison: (result) => set({ activeComparison: result }),
+  setComparisonAlternatives: (data) =>
+    set((state) => {
+      if (!state.activeComparison) return {};
+      const next = { ...state.activeComparison, alternatives: data };
+      return {
+        activeComparison: next,
+        recentComparisons: state.recentComparisons.map((comp) =>
+          comp.result?.id === next.id ? { ...comp, result: { ...comp.result, alternatives: data } } : comp
+        ),
+      };
+    }),
   addRecentComparison: (comparison) =>
     set((state) => ({
       recentComparisons: [comparison, ...state.recentComparisons].slice(0, 10),

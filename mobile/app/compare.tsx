@@ -29,7 +29,7 @@ import { getCategoryIcon } from "../components/comparison/CategoryIcon";
 import { AlternativesDeck } from "../components/comparison/AlternativesDeck";
 import { type DetailedSpecRow, type DetailedSpecValue } from "../components/comparison/SpecBarRow";
 import { exportComparisonToPDF } from "../utils/exportPDF";
-import { explainSpec, fetchAlternatives, type SpecExplanationResponse } from "../services/api";
+import { explainSpec, fetchAlternatives, peekAlternativesCache, type SpecExplanationResponse } from "../services/api";
 
 const OVERVIEW_KEY = "Overview";
 
@@ -414,7 +414,7 @@ export default function CompareScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { colors, isDark } = useThemeColors();
-  const { activeComparison } = useComparisonStore();
+  const { activeComparison, setComparisonAlternatives } = useComparisonStore();
   const [selectedCategory, setSelectedCategory] = useState<string>(OVERVIEW_KEY);
 
   const [selectedSpecDetail, setSelectedSpecDetail] = useState<{
@@ -586,22 +586,45 @@ export default function CompareScreen() {
   };
 
   const [alternativesData, setAlternativesData] = useState<{ loading: boolean; data?: any; error?: string } | null>(
-    null
+    () => {
+      const hit = activeComparison?.alternatives || peekAlternativesCache(activeComparison?.products || []);
+      return hit ? { loading: false, data: hit } : null;
+    }
   );
+
+  const loadAlternatives = (force = false) => {
+    if (!activeComparison) return;
+    if (!force) {
+      const hit = alternativesData?.data || activeComparison.alternatives || peekAlternativesCache(activeComparison.products);
+      if (hit) {
+        setAlternativesData({ loading: false, data: hit });
+        return;
+      }
+    }
+    setAlternativesData({ loading: true });
+    fetchAlternatives(activeComparison.products, { force })
+      .then((data) => {
+        setComparisonAlternatives(data);
+        setAlternativesData({ loading: false, data });
+      })
+      .catch((error: unknown) =>
+        setAlternativesData({
+          loading: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        })
+      );
+  };
 
   const handleSelectCategory = (cat: string) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedCategory(cat);
 
-    if (cat === "Alternatives" && !alternativesData && activeComparison) {
-      setAlternativesData({ loading: true });
-      fetchAlternatives(activeComparison.products)
-        .then((data) => setAlternativesData({ loading: false, data }))
-        .catch((error: unknown) =>
-          setAlternativesData({ loading: false, error: error instanceof Error ? error.message : "Unknown error" })
-        );
+    if (cat === "Alternatives") {
+      loadAlternatives(false);
     }
   };
+
+  const retryAlternatives = () => loadAlternatives(true);
 
   const renderOverview = () => (
     <View>
@@ -638,19 +661,6 @@ export default function CompareScreen() {
         onSpecPress={handleSpecPress}
       />
     );
-  };
-
-  const retryAlternatives = () => {
-    if (!activeComparison) return;
-    setAlternativesData({ loading: true });
-    fetchAlternatives(activeComparison.products)
-      .then((data) => setAlternativesData({ loading: false, data }))
-      .catch((error: unknown) =>
-        setAlternativesData({
-          loading: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        })
-      );
   };
 
   return (
