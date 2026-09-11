@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, Animated, StyleSheet, Easing, Modal, Image, AccessibilityInfo } from "react-native";
-import { type } from "../../constants/Typography";
-import { useThemeColors } from "../../constants/Colors";
-import { Button } from "../ui/Button";
+import { View, Text, Animated, StyleSheet, Easing, Modal, Image, AccessibilityInfo, Pressable } from "react-native";
+import { type, Typography } from "../../constants/Typography";
 import { setTabBarHidden } from "../../store/uiStore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "../../utils/haptics";
@@ -14,33 +12,14 @@ const MESSAGES = [
   "Calculating the winner...",
 ];
 
-const WALK_LIGHT = require("../../assets/mascot/owl-walk-light.gif");
-const WALK_DARK = require("../../assets/mascot/owl-walk-dark.gif");
-const THINK_LIGHT = require("../../assets/mascot/owl-think-light.gif");
-const THINK_DARK = require("../../assets/mascot/owl-think-dark.gif");
-const THUMBS_LIGHT = require("../../assets/mascot/owl-thumbs-light.gif");
-const THUMBS_DARK = require("../../assets/mascot/owl-thumbs-dark.gif");
-const WALK_STILL_LIGHT = require("../../assets/mascot/owl-walk-still-light.png");
-const WALK_STILL_DARK = require("../../assets/mascot/owl-walk-still-dark.png");
-const THINK_STILL_LIGHT = require("../../assets/mascot/owl-think-still-light.png");
-const THINK_STILL_DARK = require("../../assets/mascot/owl-think-still-dark.png");
-const THUMBS_STILL_LIGHT = require("../../assets/mascot/owl-thumbs-still-light.png");
-const THUMBS_STILL_DARK = require("../../assets/mascot/owl-thumbs-still-dark.png");
+const WALK = require("../../assets/mascot/owl-walk-light.gif");
+const THINK = require("../../assets/mascot/owl-think-light.gif");
+const THUMBS = require("../../assets/mascot/owl-thumbs-light.gif");
+const WALK_STILL = require("../../assets/mascot/owl-walk-still-light.png");
+const THINK_STILL = require("../../assets/mascot/owl-think-still-light.png");
+const THUMBS_STILL = require("../../assets/mascot/owl-thumbs-still-light.png");
 
-export const MASCOT_ASSETS = [
-  WALK_LIGHT,
-  WALK_DARK,
-  THINK_LIGHT,
-  THINK_DARK,
-  THUMBS_LIGHT,
-  THUMBS_DARK,
-  WALK_STILL_LIGHT,
-  WALK_STILL_DARK,
-  THINK_STILL_LIGHT,
-  THINK_STILL_DARK,
-  THUMBS_STILL_LIGHT,
-  THUMBS_STILL_DARK,
-];
+export const MASCOT_ASSETS = [WALK, THINK, THUMBS, WALK_STILL, THINK_STILL, THUMBS_STILL];
 
 export function MascotPreloader() {
   return (
@@ -64,33 +43,18 @@ const THINK_MS = 5000;
 
 type LoadClip = "walk" | "think";
 
-function pickAssets(clip: "walk" | "think" | "thumbs", isDark: boolean) {
-  if (clip === "thumbs") {
-    return {
-      gif: isDark ? THUMBS_DARK : THUMBS_LIGHT,
-      still: isDark ? THUMBS_STILL_DARK : THUMBS_STILL_LIGHT,
-    };
-  }
-  if (clip === "think") {
-    return {
-      gif: isDark ? THINK_DARK : THINK_LIGHT,
-      still: isDark ? THINK_STILL_DARK : THINK_STILL_LIGHT,
-    };
-  }
-  return {
-    gif: isDark ? WALK_DARK : WALK_LIGHT,
-    still: isDark ? WALK_STILL_DARK : WALK_STILL_LIGHT,
-  };
+function pickAssets(clip: "walk" | "think" | "thumbs") {
+  if (clip === "thumbs") return { gif: THUMBS, still: THUMBS_STILL };
+  if (clip === "think") return { gif: THINK, still: THINK_STILL };
+  return { gif: WALK, still: WALK_STILL };
 }
 
 function OwlMascot({
   phase,
-  isDark,
   reduceMotion,
   active,
 }: {
   phase: "loading" | "success";
-  isDark: boolean;
   reduceMotion: boolean;
   active: boolean;
 }) {
@@ -102,7 +66,7 @@ function OwlMascot({
 
   useEffect(() => {
     setGifFailed(false);
-  }, [phase, isDark, clip]);
+  }, [phase, clip]);
 
   useEffect(() => {
     if (!active || phase === "success" || reduceMotion) {
@@ -153,7 +117,7 @@ function OwlMascot({
   }, [phase, reduceMotion, scale]);
 
   const pose: "walk" | "think" | "thumbs" = phase === "success" ? "thumbs" : clip;
-  const { gif, still } = pickAssets(pose, isDark);
+  const { gif, still } = pickAssets(pose);
   const showGif = !reduceMotion && !gifFailed;
   const label =
     pose === "thumbs" ? "Comparison ready" : pose === "think" ? "Owl thinking" : "Owl checking products";
@@ -186,7 +150,6 @@ export function LoadingOverlay({
   onCancel?: () => void;
   onCelebrateEnd?: () => void;
 }) {
-  const { colors, isDark } = useThemeColors();
   const insets = useSafeAreaInsets();
   const [msgIndex, setMsgIndex] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -273,24 +236,30 @@ export function LoadingOverlay({
         style={[
           styles.screen,
           {
-            backgroundColor: isDark ? "#000000" : "#FFFFFF",
+            backgroundColor: "#FFFFFF",
             paddingTop: insets.top,
             paddingBottom: insets.bottom,
           },
         ]}
       >
         <View style={styles.content}>
-          <OwlMascot phase={phase} isDark={isDark} reduceMotion={reduceMotion} active={visible} />
-          <Animated.Text style={[styles.message, { opacity: phase === "success" ? 1 : msgOpacity, color: colors.ink }]}>
+          <OwlMascot phase={phase} reduceMotion={reduceMotion} active={visible} />
+          <Animated.Text style={[styles.message, { opacity: phase === "success" ? 1 : msgOpacity, color: "#1A1A1A" }]}>
             {message}
           </Animated.Text>
-          <Text style={[styles.sub, { color: isDark ? "#A8A8A4" : "#6A6A66" }]}>
+          <Text style={[styles.sub, { color: "#6A6A66" }]}>
             {phase === "success" ? "Opening comparison" : "Analyzing products"}
           </Text>
           {onCancel ? (
-            <View style={styles.cancelContainer}>
-              <Button title="Cancel" variant="ghost" onPress={onCancel} />
-            </View>
+            <Pressable
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onCancel();
+              }}
+              style={styles.cancelBtn}
+            >
+              <Text style={styles.cancelText}>Cancel</Text>
+            </Pressable>
           ) : null}
         </View>
       </View>
@@ -354,7 +323,18 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 32,
   },
-  cancelContainer: {
-    width: 140,
+  cancelBtn: {
+    height: 48,
+    minWidth: 140,
+    paddingHorizontal: 24,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: "#0A0A0A",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelText: {
+    ...Typography.button,
+    color: "#0A0A0A",
   },
 });
