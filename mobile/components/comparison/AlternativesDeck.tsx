@@ -7,7 +7,6 @@ import {
   Pressable,
   ScrollView,
   Linking,
-  ActivityIndicator,
   useWindowDimensions,
   Animated,
   type NativeSyntheticEvent,
@@ -20,6 +19,7 @@ import { type } from "../../constants/Typography";
 import { radii } from "../../constants/Layout";
 import { Button } from "../ui/Button";
 import { Chip } from "../ui/Chip";
+import { AlternativesSkeleton } from "../ui/Skeleton";
 import type { AlternativeProduct } from "../../services/api";
 
 const OPEN_BOX = require("../../assets/icons/open-box.png");
@@ -98,12 +98,10 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
 
   if (loading) {
     return (
-      <View style={styles.centerFill}>
-        <ActivityIndicator size="large" color={colors.spotify} />
-        <Text style={[styles.statusText, { color: colors.body }]}>
-          Techvisor is searching for better alternatives...
-        </Text>
-      </View>
+      <AlternativesSkeleton
+        surface={colors.surface}
+        borderColor={isDark ? "rgba(255,255,255,0.16)" : colors.line}
+      />
     );
   }
 
