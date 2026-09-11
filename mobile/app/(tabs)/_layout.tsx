@@ -292,9 +292,8 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: false,
           animation: "fade",
-          freezeOnBlur: true,
+          freezeOnBlur: false,
           sceneStyle: { backgroundColor: colors.bg },
-          lazy: false,
         }}
         screenListeners={{
           tabPress: () => {

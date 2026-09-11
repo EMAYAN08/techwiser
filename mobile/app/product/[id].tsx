@@ -8,7 +8,6 @@ import {
   Image,
   Animated,
   useWindowDimensions,
-  Pressable,
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -42,9 +41,11 @@ function PriceChip({ price }: { price: string }) {
 
 export default function ProductDetailScreen() {
   const { colors, isDark } = useThemeColors();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const id = useLocalSearchParams<{ id: string }>().id;
   const router = useRouter();
-  const { recentComparisons, activeComparison, setUrls } = useComparisonStore();
+  const recentComparisons = useComparisonStore((s) => s.recentComparisons);
+  const activeComparison = useComparisonStore((s) => s.activeComparison);
+  const setUrls = useComparisonStore((s) => s.setUrls);
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -354,28 +355,13 @@ export default function ProductDetailScreen() {
           },
         ]}
       >
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Pressable
-            onPress={() => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              Linking.openURL(product.url);
-            }}
-            accessibilityRole="link"
-            accessibilityLabel="Open product in a new tab"
-            hitSlop={8}
-            style={[
-              styles.openTabBtn,
-              {
-                borderColor: colors.ink,
-                backgroundColor: colors.bg,
-              },
-            ]}
-          >
-            <Feather name="external-link" size={18} color={colors.ink} />
-          </Pressable>
-          <View style={{ flex: 1 }}>
-            <Button title="View Product" variant="ghost" onPress={() => Linking.openURL(product.url)} />
-          </View>
+        <View style={{ flex: 1 }}>
+          <Button
+            title="View Product"
+            variant="ghost"
+            icon={<Feather name="external-link" size={16} color={colors.ink} />}
+            onPress={() => Linking.openURL(product.url)}
+          />
         </View>
         <View style={{ flex: 1 }}>
           <Button title="Compare" variant="primary" onPress={handleCompare} />
@@ -491,13 +477,5 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
     zIndex: 10,
-  },
-  openTabBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    alignItems: "center",
-    justifyContent: "center",
   },
 });

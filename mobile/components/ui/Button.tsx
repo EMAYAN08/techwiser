@@ -7,6 +7,7 @@ import {
   Animated,
   StyleProp,
   ViewStyle,
+  View,
 } from "react-native";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
@@ -19,13 +20,15 @@ interface ButtonProps extends Omit<PressableProps, "style"> {
   title: string;
   variant?: "primary" | "ghost";
   style?: StyleProp<ViewStyle>;
+  icon?: React.ReactNode;
 }
 
 export const Button = React.forwardRef<any, ButtonProps>(
-  ({ title, variant = "primary", style, onPress, disabled, ...props }, ref) => {
+  ({ title, variant = "primary", style, onPress, disabled, icon, ...props }, ref) => {
     const scale = useRef(new Animated.Value(1)).current;
     const { colors } = useThemeColors();
     const isPrimary = variant === "primary";
+    const labelColor = isPrimary ? colors.primaryBtnFg : colors.ink;
 
     const handlePressIn = (e: any) => {
       if (!disabled) {
@@ -71,14 +74,10 @@ export const Button = React.forwardRef<any, ButtonProps>(
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         {...props}
       >
-        <Text
-          style={[
-            styles.text,
-            { color: isPrimary ? colors.primaryBtnFg : colors.ink },
-          ]}
-        >
-          {title}
-        </Text>
+        <View style={styles.labelRow}>
+          <Text style={[styles.text, { color: labelColor }]}>{title}</Text>
+          {icon ? <View style={styles.icon}>{icon}</View> : null}
+        </View>
       </AnimatedPressable>
     );
   }
@@ -91,6 +90,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: radii.pill,
     paddingHorizontal: 24,
+  },
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  icon: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   text: {
     ...Typography.button,

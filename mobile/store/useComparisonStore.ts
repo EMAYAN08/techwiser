@@ -418,38 +418,40 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
   setComparisonAlternatives: (comparisonId, data) =>
     set((state) => {
       if (!state.activeComparison || state.activeComparison.id !== comparisonId) return {};
-      const next = { ...state.activeComparison, alternatives: data };
       return {
-        activeComparison: next,
-        recentComparisons: state.recentComparisons.map((comp) =>
-          comp.result?.id === comparisonId ? { ...comp, result: { ...comp.result, alternatives: data } } : comp
-        ),
+        activeComparison: { ...state.activeComparison, alternatives: data },
       };
     }),
   setComparisonSpecExplanation: (comparisonId, specKey, data) =>
     set((state) => {
       if (!state.activeComparison || state.activeComparison.id !== comparisonId) return {};
       if (!specKey) return {};
-      const next = {
-        ...state.activeComparison,
-        specExplanations: {
-          ...(state.activeComparison.specExplanations || {}),
-          [specKey]: data,
-        },
-      };
       return {
-        activeComparison: next,
-        recentComparisons: state.recentComparisons.map((comp) =>
-          comp.result?.id === comparisonId
-            ? { ...comp, result: { ...comp.result, specExplanations: next.specExplanations } }
-            : comp
-        ),
+        activeComparison: {
+          ...state.activeComparison,
+          specExplanations: {
+            ...(state.activeComparison.specExplanations || {}),
+            [specKey]: data,
+          },
+        },
       };
     }),
   addRecentComparison: (comparison) =>
-    set((state) => ({
-      recentComparisons: [comparison, ...state.recentComparisons].slice(0, 10),
-    })),
+    set((state) => {
+      const slim = comparison.result
+        ? {
+            ...comparison,
+            result: {
+              ...comparison.result,
+              alternatives: undefined,
+              specExplanations: undefined,
+            },
+          }
+        : comparison;
+      return {
+        recentComparisons: [slim, ...state.recentComparisons.filter((c) => c.id !== slim.id)].slice(0, 10),
+      };
+    }),
   clearRecentComparisons: () => set({ recentComparisons: [] }),
   removeProductFromHistory: (productId) =>
     set((state) => {

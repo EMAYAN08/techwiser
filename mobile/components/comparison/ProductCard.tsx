@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, memo } from "react";
 import { type } from "../../constants/Typography";
 import { View, Text, Animated, StyleSheet, Pressable, Image } from "react-native";
 import { useRouter } from "expo-router";
@@ -9,7 +9,7 @@ import { Trash2 } from "lucide-react-native";
 import { useThemeColors } from "../../constants/Colors";
 import { radii } from "../../constants/Layout";
 
-export function ProductCard({ product, index, onDelete }: { product: any; index: number; onDelete?: () => void }) {
+export const ProductCard = memo(function ProductCard({ product, index, onDelete }: { product: any; index: number; onDelete?: () => void }) {
   const { colors } = useThemeColors();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -20,17 +20,19 @@ export function ProductCard({ product, index, onDelete }: { product: any; index:
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 400,
-        delay: index * 100,
+        delay: Math.min(index, 6) * 60,
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 400,
-        delay: index * 100,
+        delay: Math.min(index, 6) * 60,
         useNativeDriver: true,
       }),
     ]).start();
-  }, [index, fadeAnim, slideAnim]);
+    // Fade in once on mount so later store updates don't replay the intro.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const badges: string[] = product.badges || [];
 
@@ -86,7 +88,7 @@ export function ProductCard({ product, index, onDelete }: { product: any; index:
       </Pressable>
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   productCard: { padding: 12, minHeight: 260, gap: 8 },

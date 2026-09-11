@@ -21,21 +21,6 @@ const THUMBS_STILL = require("../../assets/mascot/owl-thumbs-still-light.png");
 
 export const MASCOT_ASSETS = [WALK, THINK, THUMBS, WALK_STILL, THINK_STILL, THUMBS_STILL];
 
-export function MascotPreloader() {
-  return (
-    <View
-      pointerEvents="none"
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      style={styles.preloader}
-    >
-      {MASCOT_ASSETS.map((source, i) => (
-        <Image key={i} source={source} style={styles.preloaderImg} />
-      ))}
-    </View>
-  );
-}
-
 const THUMBS_MS = 2000;
 const THUMBS_CAP_MS = 2600;
 const WALK_MS = 5000;
@@ -294,20 +279,6 @@ const styles = StyleSheet.create({
     height: 200,
   },
   mascotGif: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-  },
-  preloader: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    left: -420,
-    top: -420,
-    opacity: 0,
-    overflow: "hidden",
-  },
-  preloaderImg: {
     position: "absolute",
     width: 200,
     height: 200,

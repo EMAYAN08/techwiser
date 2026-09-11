@@ -432,7 +432,9 @@ function CompareScreenBody() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { colors, isDark } = useThemeColors();
-  const { activeComparison, setComparisonAlternatives, setComparisonSpecExplanation } = useComparisonStore();
+  const activeComparison = useComparisonStore((s) => s.activeComparison);
+  const setComparisonAlternatives = useComparisonStore((s) => s.setComparisonAlternatives);
+  const setComparisonSpecExplanation = useComparisonStore((s) => s.setComparisonSpecExplanation);
   const [selectedCategory, setSelectedCategory] = useState<string>(OVERVIEW_KEY);
 
   const [selectedSpecDetail, setSelectedSpecDetail] = useState<{

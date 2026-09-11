@@ -6,7 +6,7 @@ import { useFonts } from "expo-font";
 import { Asset } from "expo-asset";
 import { useThemeColors } from "../constants/Colors";
 import { ALL_IMAGE_ASSETS } from "../constants/wellCatalog";
-import { LoadingOverlay, MASCOT_ASSETS, MascotPreloader } from "../components/home/LoadingOverlay";
+import { LoadingOverlay, MASCOT_ASSETS } from "../components/home/LoadingOverlay";
 import { useComparisonStore } from "../store/useComparisonStore";
 import { runLoadingOverlayCancel, runLoadingOverlayCelebrateEnd } from "../store/loadingOverlayBridge";
 
@@ -43,10 +43,9 @@ export default function Layout() {
           headerShown: false,
           contentStyle: { backgroundColor: colors.bg },
           animation: "fade",
-          freezeOnBlur: true,
+          freezeOnBlur: false,
         }}
       />
-      <MascotPreloader />
       <LoadingOverlay
         visible={isLoading}
         phase={loadPhase}
