@@ -9,6 +9,7 @@ import { type } from "../constants/Typography";
 import { space } from "../constants/Layout";
 import { Button } from "../components/ui/Button";
 import { NavCircle } from "../components/ui/NavCircle";
+import { useComparisonStore } from "../store/useComparisonStore";
 
 function BrokenServerSVG({ colors }: { colors: any }) {
   const floatAnim = useRef(new Animated.Value(0)).current;
@@ -100,6 +101,12 @@ export default function ErrorScreen() {
   useEffect(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+    const t = setTimeout(() => {
+      if (useComparisonStore.getState().isLoading) {
+        useComparisonStore.getState().setLoading(false);
+      }
+    }, 360);
+    return () => clearTimeout(t);
   }, [fadeAnim]);
 
   return (

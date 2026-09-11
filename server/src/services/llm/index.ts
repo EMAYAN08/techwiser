@@ -1,83 +1,85 @@
-import { TechCategories } from "../../schemas/tech_categories";
+import {
+  applyGroupedSpecsList,
+  fallbackGroupFromHarvest,
+  mergeOrphanSpecs,
+  normalizeAlternativesResult,
+  normalizeComparisonResult,
+} from "../openai/merge";
 import { generateGeminiJson } from "./client";
-import { buildAlternativesPrompt, buildComparisonPrompt, buildExplainSpecPrompt } from "./prompts";
-import { alternativesResponseSchema, comparisonResponseSchema, explainSpecResponseSchema } from "./schemas";
+import { buildAlternativesPrompt, buildExplainSpecPrompt, buildGroupPrompt, buildHarvestPrompt } from "./prompts";
+import { alternativesResponseSchema, explainSpecResponseSchema, groupResponseSchema, harvestResponseSchema } from "./schemas";
 
 const MODEL_NAME = "gemini-3.1-flash-lite";
 
 export async function generateComparison(
   productDataList: { url: string; retailerText: string; title: string }[]
 ): Promise<any> {
-  const schemaJson = JSON.stringify(TechCategories, null, 2);
-  const fullPrompt = buildComparisonPrompt(schemaJson, productDataList);
+  console.log(`[Gemini] Harvesting specs for ${productDataList.length} products...`);
+  const harvest = await generateGeminiJson({
+    operation: "harvestSpecs",
+    modelName: MODEL_NAME,
+    contents: buildHarvestPrompt(productDataList),
+    responseSchema: harvestResponseSchema,
+  });
 
+  const harvestedCount = (harvest.products || []).reduce(
+    (n: number, p: { specs?: unknown[] }) => n + (p.specs?.length || 0),
+    0
+  );
+  console.log(`[Gemini] Harvest complete: ${harvestedCount} spec row(s). Grouping...`);
+
+  let grouped: any;
   try {
-    const parsed = await generateGeminiJson({
-      operation: "generateComparison",
-      modelName: MODEL_NAME,
-      contents: fullPrompt,
-      responseSchema: comparisonResponseSchema,
-    });
-
-    if (parsed.groupedSpecsList) {
-      parsed.groupedSpecs = {};
-      for (const group of parsed.groupedSpecsList) {
-        parsed.groupedSpecs[group.groupName] = group.specs;
-      }
-      delete parsed.groupedSpecsList;
+    try {
+      grouped = await generateGeminiJson({
+        operation: "groupSpecs",
+        modelName: MODEL_NAME,
+        contents: buildGroupPrompt(harvest, productDataList),
+        responseSchema: groupResponseSchema,
+      });
+    } catch (schemaErr: unknown) {
+      const message = schemaErr instanceof Error ? schemaErr.message : String(schemaErr);
+      console.warn(`[Gemini] groupSpecs schema failed (${message}). Retrying without schema.`);
+      grouped = await generateGeminiJson({
+        operation: "groupSpecs",
+        modelName: MODEL_NAME,
+        contents: buildGroupPrompt(harvest, productDataList),
+      });
     }
-
-    return parsed;
-  } catch (err: any) {
-    console.error("Gemini LLM Error:", err.message || err);
-    throw err;
+    applyGroupedSpecsList(grouped);
+    if (!grouped.groupedSpecs || Object.keys(grouped.groupedSpecs).length === 0) {
+      throw new Error("Grouping returned no spec groups");
+    }
+    console.log(`[Gemini] Grouping complete: ${Object.keys(grouped.groupedSpecs).length} groups`);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[Gemini] groupSpecs failed (${message}). Using local grouping fallback.`);
+    grouped = fallbackGroupFromHarvest(harvest, productDataList);
   }
+
+  mergeOrphanSpecs(grouped, harvest, productDataList.length);
+  return normalizeComparisonResult(grouped, productDataList.length);
 }
 
 export async function explainSpec(productNames: string[], specLabel: string, specValues: string[]): Promise<any> {
-  console.log(`[LLM Service] explainSpec invoked for: "${specLabel}"`);
-  console.log(`[LLM Service] Products: ${productNames.join(", ")}`);
-
-  const prompt = buildExplainSpecPrompt(productNames, specLabel, specValues);
-
-  try {
-    const parsed = await generateGeminiJson({
-      operation: "explainSpec",
-      modelName: MODEL_NAME,
-      contents: prompt,
-      responseSchema: explainSpecResponseSchema,
-    });
-    console.log(`[LLM Service] explainSpec completed successfully for: "${specLabel}"`);
-    return parsed;
-  } catch (err: any) {
-    console.error(`[LLM Service] explainSpec Error for "${specLabel}":`, err.message || err);
-    throw err;
-  }
+  console.log(`[Gemini] explainSpec invoked for: "${specLabel}"`);
+  const parsed = await generateGeminiJson({
+    operation: "explainSpec",
+    modelName: MODEL_NAME,
+    contents: buildExplainSpecPrompt(productNames, specLabel, specValues),
+    responseSchema: explainSpecResponseSchema,
+  });
+  console.log(`[Gemini] explainSpec completed for: "${specLabel}"`);
+  return parsed;
 }
 
 export async function findAlternatives(products: any[]): Promise<any> {
-  console.log(`[LLM Service] findAlternatives invoked for ${products.length} products`);
-
-  const prompt = buildAlternativesPrompt(products);
-
-  try {
-    const parsed = await generateGeminiJson({
-      operation: "findAlternatives",
-      modelName: MODEL_NAME,
-      contents: prompt,
-      responseSchema: alternativesResponseSchema,
-    });
-    const list = Array.isArray(parsed?.alternatives) ? parsed.alternatives : [];
-    return {
-      alternatives: list.map((item: any) => ({
-        ...item,
-        highlights: Array.isArray(item?.highlights)
-          ? item.highlights.map((h: unknown) => String(h || "").trim()).filter(Boolean).slice(0, 5)
-          : [],
-      })),
-    };
-  } catch (err: any) {
-    console.error(`[LLM Service] findAlternatives Error:`, err.message || err);
-    throw err;
-  }
+  console.log(`[Gemini] findAlternatives invoked for ${products.length} products`);
+  const parsed = await generateGeminiJson({
+    operation: "findAlternatives",
+    modelName: MODEL_NAME,
+    contents: buildAlternativesPrompt(products),
+    responseSchema: alternativesResponseSchema,
+  });
+  return normalizeAlternativesResult(parsed);
 }

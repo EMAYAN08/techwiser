@@ -56,6 +56,7 @@ interface ComparisonStore {
   urls: string[];
   isLoading: boolean;
   loadingMessage: string;
+  loadPhase: "loading" | "success";
   activeComparison: ComparisonResult | null;
   recentComparisons: Comparison[];
   updateUrl: (index: number, url: string) => void;
@@ -63,6 +64,7 @@ interface ComparisonStore {
   removeUrl: (index: number) => void;
   setUrls: (urls: string[]) => void;
   setLoading: (isLoading: boolean, message?: string) => void;
+  setLoadPhase: (phase: "loading" | "success") => void;
   setActiveComparison: (result: ComparisonResult | null) => void;
   setComparisonAlternatives: (comparisonId: string, data: AlternativesResponse) => void;
   setComparisonSpecExplanation: (
@@ -323,6 +325,7 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
   urls: ["", ""],
   isLoading: false,
   loadingMessage: "Analyzing products...",
+  loadPhase: "loading",
   activeComparison: null,
   recentComparisons: [
     {
@@ -410,6 +413,7 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
   setUrls: (urls) => set({ urls }),
   setLoading: (isLoading, message) =>
     set({ isLoading, loadingMessage: message ?? "Analyzing products..." }),
+  setLoadPhase: (loadPhase) => set({ loadPhase }),
   setActiveComparison: (result) => set({ activeComparison: result }),
   setComparisonAlternatives: (comparisonId, data) =>
     set((state) => {

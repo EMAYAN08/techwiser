@@ -4,16 +4,16 @@ export async function generateGeminiJson(options: {
   operation: string;
   modelName: string;
   contents: string;
-  responseSchema: Schema;
+  responseSchema?: Schema;
 }): Promise<any> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  console.log(`[LLM Service] Calling model: ${options.modelName} for operation: ${options.operation}`);
+  console.log(`[Gemini] Calling model: ${options.modelName} for operation: ${options.operation}`);
   const response = await ai.models.generateContent({
     model: options.modelName,
     contents: options.contents,
     config: {
       responseMimeType: "application/json",
-      responseSchema: options.responseSchema,
+      ...(options.responseSchema ? { responseSchema: options.responseSchema } : {}),
     },
   });
 

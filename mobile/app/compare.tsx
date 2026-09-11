@@ -412,6 +412,15 @@ function EmptyState({ onBack }: { onBack: () => void }) {
 export default function CompareScreen() {
   const router = useRouter();
   const activeComparison = useComparisonStore((s) => s.activeComparison);
+
+  useEffect(() => {
+    if (!useComparisonStore.getState().isLoading) return;
+    const t = setTimeout(() => {
+      useComparisonStore.getState().setLoading(false);
+    }, 360);
+    return () => clearTimeout(t);
+  }, []);
+
   if (!activeComparison) {
     return <EmptyState onBack={() => router.back()} />;
   }

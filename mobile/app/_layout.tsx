@@ -6,9 +6,14 @@ import { useFonts } from "expo-font";
 import { Asset } from "expo-asset";
 import { useThemeColors } from "../constants/Colors";
 import { ALL_IMAGE_ASSETS } from "../constants/wellCatalog";
+import { LoadingOverlay } from "../components/home/LoadingOverlay";
+import { useComparisonStore } from "../store/useComparisonStore";
+import { runLoadingOverlayCancel, runLoadingOverlayCelebrateEnd } from "../store/loadingOverlayBridge";
 
 export default function Layout() {
   const { colors, isDark } = useThemeColors();
+  const isLoading = useComparisonStore((s) => s.isLoading);
+  const loadPhase = useComparisonStore((s) => s.loadPhase);
   const [loaded] = useFonts({
     "ClashDisplay-Medium": require("../assets/fonts/ClashDisplay-Medium.ttf"),
     "ClashDisplay-Semibold": require("../assets/fonts/ClashDisplay-Semibold.ttf"),
@@ -36,6 +41,12 @@ export default function Layout() {
           animation: "fade",
           freezeOnBlur: true,
         }}
+      />
+      <LoadingOverlay
+        visible={isLoading}
+        phase={loadPhase}
+        onCancel={runLoadingOverlayCancel}
+        onCelebrateEnd={runLoadingOverlayCelebrateEnd}
       />
     </View>
   );

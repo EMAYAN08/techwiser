@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, Animated, StyleSheet, Easing, Modal, Image, AccessibilityInfo } from "react-native";
+import { View, Text, Animated, StyleSheet, Easing, Image, AccessibilityInfo } from "react-native";
 import { type } from "../../constants/Typography";
 import { useThemeColors } from "../../constants/Colors";
 import { Button } from "../ui/Button";
@@ -149,6 +149,8 @@ export function LoadingOverlay({
   const insets = useSafeAreaInsets();
   const [msgIndex, setMsgIndex] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [mounted, setMounted] = useState(visible);
+  const overlayOpacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
   const msgOpacity = useRef(new Animated.Value(1)).current;
   const finishedRef = useRef(false);
   const celebrateEndRef = useRef(onCelebrateEnd);
@@ -167,9 +169,23 @@ export function LoadingOverlay({
   }, []);
 
   useEffect(() => {
-    setTabBarHidden(visible);
-    return () => setTabBarHidden(false);
-  }, [visible]);
+    if (visible) {
+      setMounted(true);
+      overlayOpacity.setValue(1);
+      setTabBarHidden(true);
+      return () => setTabBarHidden(false);
+    }
+    if (!mounted) return;
+    Animated.timing(overlayOpacity, {
+      toValue: 0,
+      duration: reduceMotion ? 80 : 220,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) setMounted(false);
+    });
+    setTabBarHidden(false);
+  }, [visible, overlayOpacity, reduceMotion, mounted]);
 
   useEffect(() => {
     if (!visible) {
@@ -218,49 +234,46 @@ export function LoadingOverlay({
 
   const message = phase === "success" ? "Ready to compare" : MESSAGES[msgIndex];
 
+  if (!mounted) return null;
+
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      presentationStyle="fullScreen"
-      statusBarTranslucent
-      onRequestClose={onCancel}
-      hardwareAccelerated
+    <Animated.View
+      pointerEvents={visible ? "auto" : "none"}
+      style={[
+        styles.screen,
+        {
+          backgroundColor: isDark ? "#000000" : "#FFFFFF",
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+          opacity: overlayOpacity,
+        },
+      ]}
     >
-      <View
-        style={[
-          styles.screen,
-          {
-            backgroundColor: isDark ? "#000000" : "#FFFFFF",
-            paddingTop: insets.top,
-            paddingBottom: insets.bottom,
-          },
-        ]}
-      >
-        <View style={styles.content}>
-          <OwlMascot phase={phase} isDark={isDark} reduceMotion={reduceMotion} />
-          <Animated.Text style={[styles.message, { opacity: phase === "success" ? 1 : msgOpacity, color: colors.ink }]}>
-            {message}
-          </Animated.Text>
-          <Text style={[styles.sub, { color: isDark ? "#A8A8A4" : "#6A6A66" }]}>
-            {phase === "success" ? "Opening comparison" : "Analyzing products"}
-          </Text>
-          {onCancel ? (
-            <View style={styles.cancelContainer}>
-              <Button title="Cancel" variant="ghost" onPress={onCancel} />
-            </View>
-          ) : null}
-        </View>
+      <View style={styles.content}>
+        <OwlMascot phase={phase} isDark={isDark} reduceMotion={reduceMotion} />
+        <Animated.Text style={[styles.message, { opacity: phase === "success" ? 1 : msgOpacity, color: colors.ink }]}>
+          {message}
+        </Animated.Text>
+        <Text style={[styles.sub, { color: isDark ? "#A8A8A4" : "#6A6A66" }]}>
+          {phase === "success" ? "Opening comparison" : "Analyzing products"}
+        </Text>
+        {onCancel ? (
+          <View style={styles.cancelContainer}>
+            <Button title="Cancel" variant="ghost" onPress={onCancel} />
+          </View>
+        ) : null}
       </View>
-    </Modal>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 9999,
+    elevation: 99,
   },
   content: { alignItems: "center", width: "100%", paddingHorizontal: 40 },
   stage: {

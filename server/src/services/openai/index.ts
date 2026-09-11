@@ -3,6 +3,7 @@ import {
   applyGroupedSpecsList,
   fallbackGroupFromHarvest,
   mergeOrphanSpecs,
+  normalizeAlternativesResult,
   normalizeComparisonResult,
 } from "./merge";
 import { buildAlternativesPrompt, buildExplainSpecPrompt, buildGroupPrompt, buildHarvestPrompt } from "./prompts";
@@ -86,21 +87,5 @@ export async function findAlternativesOpenAI(products: any[]): Promise<any> {
     schema: alternativesResponseSchema,
     timeoutMs: 45_000,
   });
-  return normalizeAlternatives(parsed);
-}
-
-function normalizeAlternatives(raw: any) {
-  const list = Array.isArray(raw?.alternatives) ? raw.alternatives : [];
-  return {
-    alternatives: list.map((item: any) => ({
-      name: String(item?.name || "").trim(),
-      estimatedPrice: String(item?.estimatedPrice || "").trim(),
-      reasonWhyBetter: String(item?.reasonWhyBetter || "").trim(),
-      imageUrl: String(item?.imageUrl || "").trim(),
-      url: String(item?.url || "").trim(),
-      highlights: Array.isArray(item?.highlights)
-        ? item.highlights.map((h: unknown) => String(h || "").trim()).filter(Boolean).slice(0, 5)
-        : [],
-    })),
-  };
+  return normalizeAlternativesResult(parsed);
 }

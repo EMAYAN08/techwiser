@@ -65,7 +65,7 @@ export function mergeOrphanSpecs(result: any, harvest: { products?: HarvestProdu
     result.groupedSpecs[otherKey] = [...(result.groupedSpecs[otherKey] || []), ...orphans];
     if (!result.groupIcons) result.groupIcons = {};
     if (!result.groupIcons[otherKey]) result.groupIcons[otherKey] = "other";
-    console.log(`[OpenAI] Merged ${orphans.length} harvested spec(s) into "${otherKey}"`);
+    console.log(`[LLM] Merged ${orphans.length} harvested spec(s) into "${otherKey}"`);
   }
 
   if (Array.isArray(result.products)) {
@@ -341,4 +341,20 @@ export function normalizeComparisonResult(result: any, productCount: number): an
   });
 
   return next;
+}
+
+export function normalizeAlternativesResult(raw: any) {
+  const list = Array.isArray(raw?.alternatives) ? raw.alternatives : [];
+  return {
+    alternatives: list.map((item: any) => ({
+      name: String(item?.name || "").trim(),
+      estimatedPrice: String(item?.estimatedPrice || "").trim(),
+      reasonWhyBetter: String(item?.reasonWhyBetter || "").trim(),
+      imageUrl: String(item?.imageUrl || "").trim(),
+      url: String(item?.url || "").trim(),
+      highlights: Array.isArray(item?.highlights)
+        ? item.highlights.map((h: unknown) => String(h || "").trim()).filter(Boolean).slice(0, 5)
+        : [],
+    })),
+  };
 }

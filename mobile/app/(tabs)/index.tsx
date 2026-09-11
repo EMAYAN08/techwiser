@@ -6,12 +6,12 @@ import * as Haptics from "../../utils/haptics";
 import { handleScroll } from "../../store/uiStore";
 import { URLInputGroup, URLInputHeader } from "../../components/home/URLInputGroup";
 import { RecentComparisons, RecentHeader } from "../../components/home/RecentComparisons";
-import { LoadingOverlay } from "../../components/home/LoadingOverlay";
 import { InputModeTabs, InputMode } from "../../components/home/InputModeTabs";
 import { NameSearchGroup } from "../../components/home/NameSearchGroup";
 import { QRInputGroup } from "../../components/home/QRInputGroup";
 import { BarcodeInputGroup } from "../../components/home/BarcodeInputGroup";
 import { useComparisonStore } from "../../store/useComparisonStore";
+import { registerLoadingOverlayHandlers } from "../../store/loadingOverlayBridge";
 import { useThemeColors } from "../../constants/Colors";
 import { space } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,6 +24,7 @@ export default function Home() {
     urls,
     isLoading,
     setLoading,
+    setLoadPhase,
     setActiveComparison,
     addRecentComparison,
   } = useComparisonStore();
@@ -35,8 +36,8 @@ export default function Home() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const cancelledRef = useRef(false);
   const navigatedRef = useRef(false);
-  const [loadPhase, setLoadPhase] = useState<"loading" | "success">("loading");
   const loadPhaseRef = useRef<"loading" | "success">("loading");
+  const loadPhase = useComparisonStore((s) => s.loadPhase);
   loadPhaseRef.current = loadPhase;
 
   useEffect(() => {
@@ -65,12 +66,15 @@ export default function Home() {
   const goToCompare = useCallback(() => {
     if (navigatedRef.current) return;
     navigatedRef.current = true;
-    setLoadPhase("loading");
-    setLoading(false);
     router.push("/compare");
-  }, [router, setLoading]);
+    setTimeout(() => {
+      if (useComparisonStore.getState().isLoading) {
+        useComparisonStore.getState().setLoading(false);
+      }
+    }, 1800);
+  }, [router]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     if (loadPhaseRef.current === "success") {
       goToCompare();
       return;
@@ -82,12 +86,20 @@ export default function Home() {
     }
     setLoadPhase("loading");
     setLoading(false);
-  };
+  }, [goToCompare, setLoadPhase, setLoading]);
 
   const handleCelebrateEnd = useCallback(() => {
     if (cancelledRef.current) return;
     goToCompare();
   }, [goToCompare]);
+
+  useEffect(() => {
+    registerLoadingOverlayHandlers({
+      onCancel: handleCancel,
+      onCelebrateEnd: handleCelebrateEnd,
+    });
+    return () => registerLoadingOverlayHandlers({});
+  }, [handleCancel, handleCelebrateEnd]);
 
   const handleCompare = async (overrideUrls?: string[] | unknown) => {
     const source = Array.isArray(overrideUrls) ? overrideUrls : urls;
@@ -136,15 +148,19 @@ export default function Home() {
       setLoadPhase("success");
     } catch (err: any) {
       if (err.name === "AbortError" || cancelledRef.current) return;
-      setLoadPhase("loading");
-      setLoading(false);
       abortControllerRef.current = null;
+      setLoadPhase("loading");
       let msg = err.message || "Failed to extract specs.";
       if (msg.includes("Network request timed out") || msg.includes("Failed to fetch")) {
         msg =
           "The connection timed out. Please ensure your backend server is running and accessible on the same network.";
       }
       router.push({ pathname: "/error", params: { message: msg } });
+      setTimeout(() => {
+        if (useComparisonStore.getState().isLoading) {
+          useComparisonStore.getState().setLoading(false);
+        }
+      }, 1800);
     }
   };
 
@@ -162,13 +178,6 @@ export default function Home() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg, paddingTop: Math.max(insets.top, 20) }]}>
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: Math.max(insets.top, 20), backgroundColor: colors.bg, zIndex: 999, elevation: 99 }} />
-      <LoadingOverlay
-        visible={isLoading}
-        phase={loadPhase}
-        onCancel={handleCancel}
-        onCelebrateEnd={handleCelebrateEnd}
-      />
-
       <Animated.View
         style={{
           position: "absolute",
