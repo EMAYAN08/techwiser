@@ -59,8 +59,8 @@ export function MascotPreloader() {
 
 const THUMBS_MS = 2000;
 const THUMBS_CAP_MS = 2600;
-const WALK_MS = 2400;
-const THINK_MS = 2400;
+const WALK_MS = 5000;
+const THINK_MS = 5000;
 
 type LoadClip = "walk" | "think";
 
