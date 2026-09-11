@@ -119,7 +119,8 @@ Otherwise suggest up to 3 strictly better alternatives (value, performance, or r
 
 Each alternative MUST use a specific model name including generation/year (e.g. "Sony WH-1000XM5", "ASUS ROG Zephyrus G14 (2024)").
 estimatedPrice like "$999".
-reasonWhyBetter: 1–2 sentences.
+reasonWhyBetter: 2–4 sentences covering who it is for and why it beats the compared products. Do not truncate.
+highlights: 2–4 short punchy tags in the same style as product badges, e.g. "Best Camera", "Better Value", "Longer Battery", "Best Display". Each tag 1–3 words.
 imageUrl: a real http(s) product image if you can find one, otherwise "".
 `.trim();
 }

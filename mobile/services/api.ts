@@ -45,6 +45,7 @@ export interface AlternativeProduct {
   reasonWhyBetter: string;
   url: string;
   imageUrl: string;
+  highlights?: string[];
 }
 
 export interface AlternativesResponse {

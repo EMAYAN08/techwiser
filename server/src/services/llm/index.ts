@@ -61,12 +61,21 @@ export async function findAlternatives(products: any[]): Promise<any> {
   const prompt = buildAlternativesPrompt(products);
 
   try {
-    return await generateGeminiJson({
+    const parsed = await generateGeminiJson({
       operation: "findAlternatives",
       modelName: MODEL_NAME,
       contents: prompt,
       responseSchema: alternativesResponseSchema,
     });
+    const list = Array.isArray(parsed?.alternatives) ? parsed.alternatives : [];
+    return {
+      alternatives: list.map((item: any) => ({
+        ...item,
+        highlights: Array.isArray(item?.highlights)
+          ? item.highlights.map((h: unknown) => String(h || "").trim()).filter(Boolean).slice(0, 5)
+          : [],
+      })),
+    };
   } catch (err: any) {
     console.error(`[LLM Service] findAlternatives Error:`, err.message || err);
     throw err;

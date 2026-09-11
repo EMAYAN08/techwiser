@@ -20,7 +20,6 @@ import { NavCircle } from "../../components/ui/NavCircle";
 import { useThemeColors } from "../../constants/Colors";
 import { radii, space } from "../../constants/Layout";
 import { exportProductToPDF } from "../../utils/exportPDF";
-import { GlassPanel } from "../../components/ui/GlassPanel";
 import { RetailerSticker } from "../../components/ui/RetailerSticker";
 
 function normalizeTitle(title: string): string {
@@ -237,7 +236,7 @@ export default function ProductDetailScreen() {
         contentContainerStyle={{
           paddingHorizontal: gutter,
           paddingTop: 12,
-          paddingBottom: 124 + insets.bottom,
+          paddingBottom: 100 + insets.bottom,
         }}
         style={styles.scroll}
       >
@@ -339,15 +338,22 @@ export default function ProductDetailScreen() {
         </View>
       </Animated.ScrollView>
 
-      <View style={[styles.footerWrap, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-        <GlassPanel style={styles.footerGlass} contentStyle={styles.footerInner} radius={0}>
-          <View style={{ flex: 1 }}>
-            <Button title="View Product" variant="ghost" onPress={() => Linking.openURL(product.url)} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Button title="Compare" variant="primary" onPress={handleCompare} />
-          </View>
-        </GlassPanel>
+      <View
+        style={[
+          styles.footer,
+          {
+            backgroundColor: colors.bg,
+            borderTopColor: colors.line,
+            paddingBottom: Math.max(insets.bottom, 16) + 8,
+          },
+        ]}
+      >
+        <View style={{ flex: 1 }}>
+          <Button title="View Product" variant="ghost" onPress={() => Linking.openURL(product.url)} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Button title="Compare" variant="primary" onPress={handleCompare} />
+        </View>
       </View>
     </View>
   );
@@ -448,27 +454,16 @@ const styles = StyleSheet.create({
   reviewCols: { gap: 16 },
   reviewBlock: { gap: 6 },
   reviewHeading: { ...type.eyebrow, marginBottom: 4 },
-  footerWrap: {
+  footer: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    zIndex: 10,
-  },
-  footerGlass: {
-    minHeight: 72,
-    borderLeftWidth: 0,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-  },
-  footerInner: {
     flexDirection: "row",
-    alignItems: "center",
     gap: 12,
     paddingHorizontal: space.gutter,
-    paddingTop: 12,
-    paddingBottom: 6,
+    paddingTop: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    zIndex: 10,
   },
 });

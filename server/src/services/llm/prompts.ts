@@ -60,6 +60,8 @@ ${JSON.stringify(products, null, 2)}
 If the provided products are already the absolute best in their class, return an empty array for alternatives.
 If there are strictly better alternatives (in value, performance, or recency) in the same price range, suggest up to 3 alternative products.
 IMPORTANT: You MUST provide the exact, specific product name including the common model number/generation (e.g., "Sony WH-1000XM5" instead of "Sony Headphones", or "ASUS ROG Zephyrus G14 (2024)" instead of "ASUS Laptop"). This exact string will be used to search Google Shopping, so it must be highly specific.
+reasonWhyBetter should be 2-4 complete sentences, not truncated.
+highlights: 2-4 short tags (1-3 words) like "Best Camera", "Better Value", "Longer Battery", "Best Display".
 Try to provide an official product image URL if you know one. If you don't know an image URL, omit it.
 `;
 }
