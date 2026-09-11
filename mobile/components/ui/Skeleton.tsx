@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   Animated,
@@ -8,25 +8,81 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useThemeColors } from "../../constants/Colors";
 import { radii } from "../../constants/Layout";
 
-type ShimmerCtx = {
-  progress: Animated.Value;
-  reduceMotion: boolean;
-};
+function useBoneColor(tone: "default" | "price" = "default") {
+  const { isDark } = useThemeColors();
+  if (tone === "price") return isDark ? "rgba(254,240,138,0.22)" : "#F3E7A3";
+  return isDark ? "rgba(255,255,255,0.09)" : "#E4E4DF";
+}
 
-const Ctx = createContext<ShimmerCtx | null>(null);
+function ShineBand({
+  progress,
+  isDark,
+}: {
+  progress: Animated.Value;
+  isDark: boolean;
+}) {
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const gid = `sk${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  const bandW = Math.max(box.w * 0.52, 112);
+  const translateX = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-bandW, box.w + 8],
+  });
+  const peak = "#FFFFFF";
+  const peakOpacity = isDark ? 0.16 : 0.95;
+
+  return (
+    <View
+      pointerEvents="none"
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        if (width !== box.w || height !== box.h) setBox({ w: width, h: height });
+      }}
+      style={StyleSheet.absoluteFillObject}
+    >
+      {box.w > 0 && box.h > 0 ? (
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            height: box.h,
+            width: bandW,
+            transform: [{ translateX }, { skewX: "-20deg" }],
+          }}
+        >
+          <Svg width={bandW} height={box.h} preserveAspectRatio="none">
+            <Defs>
+              <LinearGradient id={gid} x1="0%" y1="0%" x2="100%" y2="0%">
+                <Stop offset="0%" stopColor={peak} stopOpacity="0" />
+                <Stop offset="42%" stopColor={peak} stopOpacity={peakOpacity} />
+                <Stop offset="58%" stopColor={peak} stopOpacity={peakOpacity} />
+                <Stop offset="100%" stopColor={peak} stopOpacity="0" />
+              </LinearGradient>
+            </Defs>
+            <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${gid})`} />
+          </Svg>
+        </Animated.View>
+      ) : null}
+    </View>
+  );
+}
 
 export function ShimmerRoot({
   children,
   label,
   style,
+  clipStyle,
 }: {
   children: React.ReactNode;
   label: string;
   style?: StyleProp<ViewStyle>;
+  clipStyle?: StyleProp<ViewStyle>;
 }) {
+  const { isDark } = useThemeColors();
   const progress = useRef(new Animated.Value(0)).current;
   const [reduceMotion, setReduceMotion] = useState(false);
 
@@ -47,14 +103,24 @@ export function ShimmerRoot({
     const loop = reduceMotion
       ? Animated.loop(
           Animated.sequence([
-            Animated.timing(progress, { toValue: 1, duration: 900, useNativeDriver: true, easing: Easing.inOut(Easing.quad) }),
-            Animated.timing(progress, { toValue: 0, duration: 900, useNativeDriver: true, easing: Easing.inOut(Easing.quad) }),
+            Animated.timing(progress, {
+              toValue: 1,
+              duration: 900,
+              useNativeDriver: true,
+              easing: Easing.inOut(Easing.quad),
+            }),
+            Animated.timing(progress, {
+              toValue: 0,
+              duration: 900,
+              useNativeDriver: true,
+              easing: Easing.inOut(Easing.quad),
+            }),
           ])
         )
       : Animated.loop(
           Animated.timing(progress, {
             toValue: 1,
-            duration: 1400,
+            duration: 1600,
             easing: Easing.inOut(Easing.quad),
             useNativeDriver: true,
           })
@@ -66,18 +132,23 @@ export function ShimmerRoot({
     };
   }, [progress, reduceMotion]);
 
+  const pulseOpacity = reduceMotion
+    ? progress.interpolate({ inputRange: [0, 1], outputRange: [0.52, 1] })
+    : 1;
+
   return (
-    <Ctx.Provider value={{ progress, reduceMotion }}>
-      <View
-        accessible
-        accessibilityRole="progressbar"
-        accessibilityLabel={label}
-        accessibilityState={{ busy: true }}
-        style={style}
-      >
+    <View
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel={label}
+      accessibilityState={{ busy: true }}
+      style={style}
+    >
+      <Animated.View style={[styles.clip, clipStyle, { opacity: pulseOpacity }]}>
         {children}
-      </View>
-    </Ctx.Provider>
+        {!reduceMotion ? <ShineBand progress={progress} isDark={isDark} /> : null}
+      </Animated.View>
+    </View>
   );
 }
 
@@ -85,61 +156,61 @@ export function Bone({
   height,
   width = "100%",
   radius = 8,
+  tone = "default",
   style,
 }: {
   height: number;
   width?: number | `${number}%`;
   radius?: number;
+  tone?: "default" | "price";
   style?: StyleProp<ViewStyle>;
 }) {
-  const { isDark } = useThemeColors();
-  const ctx = useContext(Ctx);
-  const [measured, setMeasured] = useState(typeof width === "number" ? width : 180);
-  const bone = isDark ? "rgba(255,255,255,0.10)" : "#E6E6E1";
-  const shine = isDark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.88)";
-
-  const opacity =
-    ctx?.reduceMotion && ctx.progress
-      ? ctx.progress.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] })
-      : 1;
-  const translateX =
-    ctx && !ctx.reduceMotion
-      ? ctx.progress.interpolate({
-          inputRange: [0, 1],
-          outputRange: [-Math.max(measured, 40), Math.max(measured, 40)],
-        })
-      : 0;
-
+  const backgroundColor = useBoneColor(tone);
   return (
-    <Animated.View
-      onLayout={(e) => setMeasured(e.nativeEvent.layout.width)}
+    <View
       style={[
         {
           height,
           width,
           borderRadius: radius,
-          backgroundColor: bone,
-          overflow: "hidden",
-          opacity,
+          backgroundColor,
         },
         style,
       ]}
-    >
-      {ctx && !ctx.reduceMotion ? (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.shine,
-            {
-              width: Math.max(measured * 0.42, 36),
-              backgroundColor: shine,
-              transform: [{ translateX }, { skewX: "-20deg" }],
-            },
-          ]}
-        />
-      ) : null}
-    </Animated.View>
+    />
   );
+}
+
+export function FadeIn({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let alive = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
+      if (!alive) return;
+      if (reduce) {
+        opacity.setValue(1);
+        return;
+      }
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 320,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    });
+    return () => {
+      alive = false;
+    };
+  }, [opacity]);
+
+  return <Animated.View style={[{ flex: 1 }, style, { opacity }]}>{children}</Animated.View>;
 }
 
 export function AlternativesSkeleton({
@@ -149,38 +220,56 @@ export function AlternativesSkeleton({
   borderColor: string;
   surface: string;
 }) {
+  const { isDark } = useThemeColors();
   return (
-    <ShimmerRoot label="Loading alternatives" style={styles.fill}>
-      <View style={[styles.altCard, { backgroundColor: surface, borderColor }]}>
-        <View style={styles.altHeader}>
-          <Bone height={72} width={72} radius={radii.cardSm} />
-          <View style={styles.altCopy}>
-            <Bone height={16} width="92%" />
-            <Bone height={16} width="64%" />
-            <Bone height={22} width={88} radius={4} style={{ marginTop: 4 }} />
+    <View style={styles.fill}>
+      <ShimmerRoot
+        label="Loading alternatives"
+        style={styles.fill}
+        clipStyle={{ borderRadius: radii.card }}
+      >
+        <View style={[styles.altCard, { backgroundColor: surface, borderColor }]}>
+          <View
+            style={[
+              styles.altHeader,
+              { borderBottomColor: isDark ? "rgba(255,255,255,0.10)" : borderColor },
+            ]}
+          >
+            <View style={styles.altTopRow}>
+              <Bone height={72} width={72} radius={radii.cardSm} />
+              <View style={styles.altCopy}>
+                <Bone height={18} width="92%" radius={6} />
+                <Bone height={18} width="64%" radius={6} />
+                <View style={styles.priceRow}>
+                  <Bone height={22} width={88} radius={4} tone="price" />
+                  <Bone height={18} width={18} radius={4} />
+                </View>
+              </View>
+            </View>
+            <View style={styles.tagRow}>
+              <Bone height={34} width={92} radius={999} />
+              <Bone height={34} width={108} radius={999} />
+              <Bone height={34} width={84} radius={999} />
+            </View>
+          </View>
+          <View style={styles.altBody}>
+            <Bone height={13} width="100%" radius={6} />
+            <Bone height={13} width="97%" radius={6} />
+            <Bone height={13} width="91%" radius={6} />
+            <Bone height={13} width="95%" radius={6} />
+            <Bone height={13} width="86%" radius={6} />
+            <Bone height={13} width="93%" radius={6} />
+            <Bone height={13} width="72%" radius={6} />
+            <Bone height={13} width="80%" radius={6} />
           </View>
         </View>
-        <View style={styles.tagRow}>
-          <Bone height={34} width={92} radius={999} />
-          <Bone height={34} width={108} radius={999} />
-          <Bone height={34} width={84} radius={999} />
-        </View>
-        <View style={styles.lines}>
-          <Bone height={12} width="100%" />
-          <Bone height={12} width="96%" />
-          <Bone height={12} width="88%" />
-          <Bone height={12} width="92%" />
-          <Bone height={12} width="70%" />
-          <Bone height={12} width="84%" />
-          <Bone height={12} width="60%" />
-        </View>
-      </View>
-      <View style={styles.dots}>
+      </ShimmerRoot>
+      <View style={styles.dots} accessibilityElementsHidden>
         <Bone height={6} width={16} radius={99} />
         <Bone height={6} width={6} radius={99} />
         <Bone height={6} width={6} radius={99} />
       </View>
-    </ShimmerRoot>
+    </View>
   );
 }
 
@@ -194,19 +283,21 @@ export function ExplainSpecSkeleton({
   const rows = Math.max(2, Math.min(productCount || 2, 4));
   return (
     <ShimmerRoot label="Loading spec explanation" style={styles.explainWrap}>
-      <View style={styles.lines}>
-        <Bone height={14} width="100%" />
-        <Bone height={14} width="94%" />
-        <Bone height={14} width="78%" />
+      <View style={styles.concept}>
+        <Bone height={16} width="100%" radius={6} />
+        <Bone height={16} width="96%" radius={6} />
+        <Bone height={16} width="88%" radius={6} />
+        <Bone height={16} width="70%" radius={6} />
       </View>
       {Array.from({ length: rows }).map((_, i) => (
         <View key={i} style={[styles.explainRow, { borderTopColor: lineColor }]}>
           <View style={styles.explainName}>
-            <Bone height={14} width="58%" />
-            <Bone height={12} width={64} />
+            <Bone height={15} width="52%" radius={6} />
+            <Bone height={13} width={72} radius={6} />
           </View>
-          <Bone height={12} width="100%" />
-          <Bone height={12} width="86%" />
+          <Bone height={14} width="100%" radius={6} />
+          <Bone height={14} width="92%" radius={6} />
+          <Bone height={14} width="78%" radius={6} />
         </View>
       ))}
     </ShimmerRoot>
@@ -215,22 +306,27 @@ export function ExplainSpecSkeleton({
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  shine: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    opacity: 0.95,
+  clip: {
+    flex: 1,
+    overflow: "hidden",
   },
   altCard: {
     flex: 1,
     borderWidth: 1,
     borderRadius: radii.card,
-    padding: 18,
+    overflow: "hidden",
   },
-  altHeader: { flexDirection: "row", gap: 14, alignItems: "center" },
+  altHeader: {
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  altTopRow: { flexDirection: "row", gap: 14, alignItems: "center" },
   altCopy: { flex: 1, gap: 8, justifyContent: "center" },
-  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
-  lines: { gap: 10, marginTop: 16 },
+  priceRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 2 },
+  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
+  altBody: { flex: 1, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 24, gap: 10 },
   dots: {
     flexDirection: "row",
     alignItems: "center",
@@ -239,7 +335,8 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 2,
   },
-  explainWrap: { paddingTop: 4 },
+  explainWrap: { flex: 1, minHeight: 180 },
+  concept: { gap: 10, marginBottom: 8 },
   explainRow: {
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: 16,

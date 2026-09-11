@@ -9,7 +9,6 @@ import {
   Image,
   Animated,
   AccessibilityInfo,
-  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -27,6 +26,7 @@ import { NavCircle } from "../components/ui/NavCircle";
 import { RetailerSticker } from "../components/ui/RetailerSticker";
 import { getCategoryIcon } from "../components/comparison/CategoryIcon";
 import { AlternativesDeck } from "../components/comparison/AlternativesDeck";
+import { ExplainSpecSkeleton, FadeIn } from "../components/ui/Skeleton";
 import { type DetailedSpecRow, type DetailedSpecValue } from "../components/comparison/SpecBarRow";
 import { exportComparisonToPDF } from "../utils/exportPDF";
 import { explainSpec, fetchAlternatives, peekAlternativesCache, type SpecExplanationResponse } from "../services/api";
@@ -425,6 +425,13 @@ export default function CompareScreen() {
     data?: SpecExplanationResponse;
     error?: string;
   } | null>(null);
+  const specReq = useRef(0);
+  const altReq = useRef(0);
+
+  const closeSpecDetail = () => {
+    specReq.current += 1;
+    setSelectedSpecDetail(null);
+  };
 
   const handleSpecPress = async (label: string, values: string[]) => {
     if (!activeComparison) return;
@@ -439,14 +446,17 @@ export default function CompareScreen() {
       "Jargon Buster:",
     ];
     const randomTitle = FRIENDLY_TITLES[Math.floor(Math.random() * FRIENDLY_TITLES.length)];
+    const req = ++specReq.current;
 
     setSelectedSpecDetail({ label, values, loading: true, title: randomTitle });
 
     try {
       const productNames = activeComparison.products.map((p) => p.name);
       const data = await explainSpec(productNames, label, values);
+      if (req !== specReq.current) return;
       setSelectedSpecDetail((prev) => (prev ? { ...prev, loading: false, data } : null));
     } catch (error: unknown) {
+      if (req !== specReq.current) return;
       setSelectedSpecDetail((prev) =>
         prev ? { ...prev, loading: false, error: error instanceof Error ? error.message : "Unknown error" } : null
       );
@@ -601,18 +611,21 @@ export default function CompareScreen() {
         return;
       }
     }
+    const req = ++altReq.current;
     setAlternativesData({ loading: true });
     fetchAlternatives(activeComparison.products, { force })
       .then((data) => {
+        if (req !== altReq.current) return;
         setComparisonAlternatives(data);
         setAlternativesData({ loading: false, data });
       })
-      .catch((error: unknown) =>
+      .catch((error: unknown) => {
+        if (req !== altReq.current) return;
         setAlternativesData({
           loading: false,
           error: error instanceof Error ? error.message : "Unknown error",
-        })
-      );
+        });
+      });
   };
 
   const handleSelectCategory = (cat: string) => {
@@ -767,7 +780,7 @@ export default function CompareScreen() {
             style={[StyleSheet.absoluteFill, { zIndex: 5, padding: screenPadding, paddingBottom: insets.bottom + 24 }]}
           >
             <View style={[styles.aiOverlayCard, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-              <Pressable onPress={() => setSelectedSpecDetail(null)} hitSlop={12} style={styles.closeBtn}>
+              <Pressable onPress={closeSpecDetail} hitSlop={12} style={styles.closeBtn}>
                 <X size={20} color={colors.body} />
               </Pressable>
               <View style={styles.aiOverlayHeader}>
@@ -780,10 +793,10 @@ export default function CompareScreen() {
               </View>
 
               {selectedSpecDetail.loading ? (
-                <View style={styles.aiOverlayLoading}>
-                  <ActivityIndicator size="large" color={colors.spotify} />
-                  <Text style={[styles.aiOverlayLoadingText, { color: colors.body }]}>Analyzing spec...</Text>
-                </View>
+                <ExplainSpecSkeleton
+                  productCount={activeComparison.products.length}
+                  lineColor={colors.line}
+                />
               ) : selectedSpecDetail.error ? (
                 <View style={styles.aiOverlayError}>
                   <AnimatedErrorIcon color={colors.error} />
@@ -792,22 +805,24 @@ export default function CompareScreen() {
                   </Text>
                 </View>
               ) : selectedSpecDetail.data ? (
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  <Text style={[styles.aiOverlayConcept, { color: colors.ink }]}>
-                    {selectedSpecDetail.data.concept}
-                  </Text>
-                  <View style={styles.aiOverlayBreakdowns}>
-                    {selectedSpecDetail.data.breakdowns.map((b, idx) => (
-                      <View key={idx} style={[styles.aiOverlayBreakdownItem, { borderTopColor: colors.line }]}>
-                        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-                          <Text style={[styles.aiOverlayProductName, { color: colors.ink }]}>{b.productName}</Text>
-                          <Text style={[styles.aiOverlayValue, { color: colors.stone }]}> • {b.value}</Text>
+                <FadeIn>
+                  <ScrollView showsVerticalScrollIndicator={false}>
+                    <Text style={[styles.aiOverlayConcept, { color: colors.ink }]}>
+                      {selectedSpecDetail.data.concept}
+                    </Text>
+                    <View style={styles.aiOverlayBreakdowns}>
+                      {selectedSpecDetail.data.breakdowns.map((b, idx) => (
+                        <View key={idx} style={[styles.aiOverlayBreakdownItem, { borderTopColor: colors.line }]}>
+                          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                            <Text style={[styles.aiOverlayProductName, { color: colors.ink }]}>{b.productName}</Text>
+                            <Text style={[styles.aiOverlayValue, { color: colors.stone }]}> • {b.value}</Text>
+                          </View>
+                          <Text style={[styles.aiOverlayInsight, { color: colors.body }]}>{b.insight}</Text>
                         </View>
-                        <Text style={[styles.aiOverlayInsight, { color: colors.body }]}>{b.insight}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </ScrollView>
+                      ))}
+                    </View>
+                  </ScrollView>
+                </FadeIn>
               ) : null}
             </View>
           </BlurView>
@@ -1027,12 +1042,6 @@ const styles = StyleSheet.create({
     padding: 8,
     zIndex: 10,
   },
-  aiOverlayLoading: {
-    paddingVertical: 40,
-    alignItems: "center",
-    gap: 12,
-  },
-  aiOverlayLoadingText: { ...type.body, fontSize: 14 },
   aiOverlayError: {
     paddingVertical: 40,
     alignItems: "center",

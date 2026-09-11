@@ -19,7 +19,7 @@ import { type } from "../../constants/Typography";
 import { radii } from "../../constants/Layout";
 import { Button } from "../ui/Button";
 import { Chip } from "../ui/Chip";
-import { AlternativesSkeleton } from "../ui/Skeleton";
+import { AlternativesSkeleton, FadeIn } from "../ui/Skeleton";
 import type { AlternativeProduct } from "../../services/api";
 
 const OPEN_BOX = require("../../assets/icons/open-box.png");
@@ -127,10 +127,11 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
   }
 
   return (
-    <View
-      style={styles.root}
-      onLayout={(e) => onLayout(e.nativeEvent.layout.width, e.nativeEvent.layout.height)}
-    >
+    <FadeIn>
+      <View
+        style={styles.root}
+        onLayout={(e) => onLayout(e.nativeEvent.layout.width, e.nativeEvent.layout.height)}
+      >
       <Animated.ScrollView
         horizontal
         pagingEnabled
@@ -233,7 +234,8 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
           ))}
         </View>
       ) : null}
-    </View>
+      </View>
+    </FadeIn>
   );
 }
 
