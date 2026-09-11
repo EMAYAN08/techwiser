@@ -20,20 +20,21 @@ import { type } from "../../constants/Typography";
 import { radii } from "../../constants/Layout";
 import { Button } from "../ui/Button";
 import { Chip } from "../ui/Chip";
-import { AltProductMark } from "./AltProductMark";
 import type { AlternativeProduct } from "../../services/api";
 
-function AltImage({ uri, colors }: { uri?: string; colors: { fog: string; stone: string; spotify: string; ink: string } }) {
+const OPEN_BOX = require("../../assets/icons/open-box.png");
+
+function AltImage({ uri }: { uri?: string }) {
   const valid = Boolean(uri && uri.trim().startsWith("http"));
   const [error, setError] = useState(false);
-  if (!valid || error) {
-    return (
-      <View style={styles.imageFallback}>
-        <AltProductMark accent={colors.spotify} ink={colors.ink} />
-      </View>
-    );
-  }
-  return <Image source={{ uri }} style={styles.image} resizeMode="contain" onError={() => setError(true)} />;
+  return (
+    <Image
+      source={!valid || error ? OPEN_BOX : { uri }}
+      style={styles.image}
+      resizeMode="contain"
+      onError={() => setError(true)}
+    />
+  );
 }
 
 type Props = {
@@ -164,7 +165,7 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
                 >
                   <View style={[styles.header, { borderBottomColor: isDark ? "rgba(255,255,255,0.10)" : colors.line }]}>
                     <View style={styles.topRow}>
-                      <AltImage uri={item.imageUrl} colors={colors} />
+                      <AltImage uri={item.imageUrl} />
                       <View style={styles.topCopy}>
                         <Text style={[styles.name, { color: colors.ink }]} numberOfLines={3}>
                           {item.name}
@@ -198,7 +199,7 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
                   <ScrollView
                     style={styles.reasonScroll}
                     contentContainerStyle={styles.reasonContent}
-                    showsVerticalScrollIndicator
+                    showsVerticalScrollIndicator={false}
                     bounces
                     nestedScrollEnabled
                     directionalLockEnabled
