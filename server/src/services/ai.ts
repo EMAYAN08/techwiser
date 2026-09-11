@@ -7,22 +7,17 @@ function preferGemini(): boolean {
   return (process.env.LLM_PROVIDER || "openai").toLowerCase() === "gemini";
 }
 
-async function withGeminiFallback<T>(label: string, openaiCall: () => Promise<T>, geminiCall: () => Promise<T>): Promise<T> {
+async function withProvider<T>(label: string, openaiCall: () => Promise<T>, geminiCall: () => Promise<T>): Promise<T> {
   if (preferGemini()) {
     console.log(`[LLM] ${label} via Gemini (LLM_PROVIDER=gemini)`);
     return geminiCall();
   }
-  try {
-    return await openaiCall();
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.warn(`[LLM] OpenAI ${label} failed (${message}). Falling back to Gemini.`);
-    return geminiCall();
-  }
+  console.log(`[LLM] ${label} via OpenAI`);
+  return openaiCall();
 }
 
 export function generateAiComparison(productDataList: ProductPayload[]): Promise<any> {
-  return withGeminiFallback(
+  return withProvider(
     "compare",
     () => generateOpenAIComparison(productDataList),
     () => generateComparison(productDataList)
@@ -30,7 +25,7 @@ export function generateAiComparison(productDataList: ProductPayload[]): Promise
 }
 
 export function explainSpecAi(productNames: string[], specLabel: string, specValues: string[]): Promise<any> {
-  return withGeminiFallback(
+  return withProvider(
     "explain-spec",
     () => explainSpecOpenAI(productNames, specLabel, specValues),
     () => explainSpec(productNames, specLabel, specValues)
@@ -38,7 +33,7 @@ export function explainSpecAi(productNames: string[], specLabel: string, specVal
 }
 
 export function findAlternativesAi(products: any[]): Promise<any> {
-  return withGeminiFallback(
+  return withProvider(
     "alternatives",
     () => findAlternativesOpenAI(products),
     () => findAlternatives(products)
