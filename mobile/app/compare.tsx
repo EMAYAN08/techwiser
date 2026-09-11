@@ -44,6 +44,27 @@ function specValuesAreEqual(values: string[]): boolean {
   return present.length === values.length && present.length >= 2 && present.every((v) => v === present[0]);
 }
 
+function normSpecLabel(label: string): string {
+  return String(label || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function specValueForProduct(product: { rawSpecs?: Array<{ label?: string; value?: string }>; specs?: Array<{ label?: string; value?: string }> }, label: string, fallback?: string): string {
+  const needle = normSpecLabel(label);
+  const lists = [product?.rawSpecs, product?.specs];
+  for (const list of lists) {
+    if (!Array.isArray(list)) continue;
+    const hit = list.find((s) => normSpecLabel(String(s?.label || "")) === needle);
+    if (hit && hit.value != null && String(hit.value).trim() && String(hit.value) !== "—") {
+      return String(hit.value);
+    }
+  }
+  if (fallback != null && String(fallback).trim()) return String(fallback);
+  return "—";
+}
+
 function AnimatedErrorIcon({ color }: { color: string }) {
   const pulse = useRef(new Animated.Value(0.4)).current;
   useEffect(() => {
@@ -548,15 +569,22 @@ function CompareScreenBody() {
       return Object.entries(gs).map(([key, specsArray]: [string, any]) => {
         const rows = (Array.isArray(specsArray) ? specsArray : []).map((spec: any) => {
           const specValues = Array.isArray(spec?.values) ? spec.values.map((v: unknown) => (v == null ? "—" : String(v))) : [];
-          const tied = specValuesAreEqual(specValues);
+          const displays = products.map((p, pIndex) => specValueForProduct(p, spec?.label || "", specValues[pIndex]));
+          const tied = specValuesAreEqual(displays);
+          let winnerIndex = typeof spec?.winnerIndex === "number" ? spec.winnerIndex : -1;
+          if (winnerIndex >= 0 && specValues[winnerIndex]) {
+            const winCanon = String(specValues[winnerIndex]).toLowerCase().replace(/[^a-z0-9.%+-]+/g, "");
+            const mapped = displays.findIndex((d) => String(d).toLowerCase().replace(/[^a-z0-9.%+-]+/g, "") === winCanon);
+            if (mapped >= 0) winnerIndex = mapped;
+          }
           const values = products.map((p, pIndex) => ({
             productId: p.id,
             productName: p.name,
             productColor: getRetailerColor(p.retailer),
-            displayValue: specValues[pIndex] ? specValues[pIndex] : "—",
+            displayValue: displays[pIndex] ? displays[pIndex] : "—",
             numericValue: null,
-            isWinner: !tied && spec?.winnerIndex === pIndex,
-            isDraw: tied || spec?.winnerIndex === -1,
+            isWinner: !tied && winnerIndex === pIndex,
+            isDraw: tied || winnerIndex === -1,
           }));
           return { label: spec?.label || "Spec", values, unit: spec?.unit || "" };
         });
@@ -571,7 +599,8 @@ function CompareScreenBody() {
         const lead = productA.specs[i];
         if (!lead) continue;
         const values = products.map((p) => {
-          const s = p.specs[i];
+          const list = p.specs || [];
+          const s = list.find((row) => row.label === lead.label) || list[i];
           return {
             productId: p.id,
             productName: p.name,
@@ -598,7 +627,9 @@ function CompareScreenBody() {
     return keyDifferences
       .filter((diff) => diff && typeof diff === "object")
       .map((diff) => {
-        const values = Array.isArray(diff.values) ? diff.values.map((v) => (v == null ? "—" : String(v))) : [];
+        const values = Array.isArray(diff.values)
+          ? products.map((p, i) => specValueForProduct(p, diff.label, diff.values[i] == null ? "—" : String(diff.values[i])))
+          : products.map((p) => specValueForProduct(p, diff.label, "—"));
         let winnerIndex = null;
         let isDraw = specValuesAreEqual(values);
 

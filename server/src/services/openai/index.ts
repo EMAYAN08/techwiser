@@ -1,10 +1,12 @@
 import { openaiJson } from "./client";
 import {
+  alignHarvestToInputs,
   applyGroupedSpecsList,
   fallbackGroupFromHarvest,
   mergeOrphanSpecs,
   normalizeAlternativesResult,
   normalizeComparisonResult,
+  realignGroupedToInputs,
 } from "./merge";
 import { buildAlternativesPrompt, buildExplainSpecPrompt, buildGroupPrompt, buildHarvestPrompt } from "./prompts";
 import { alternativesResponseSchema, explainSpecResponseSchema, groupResponseSchema, harvestResponseSchema } from "./schemas";
@@ -20,6 +22,7 @@ export async function generateOpenAIComparison(
     schema: harvestResponseSchema,
     timeoutMs: 90_000,
   });
+  alignHarvestToInputs(harvest, productDataList);
 
   const harvestedCount = (harvest.products || []).reduce(
     (n: number, p: { specs?: unknown[] }) => n + (p.specs?.length || 0),
@@ -57,6 +60,7 @@ export async function generateOpenAIComparison(
     grouped = fallbackGroupFromHarvest(harvest, productDataList);
   }
 
+  realignGroupedToInputs(grouped, harvest, productDataList);
   mergeOrphanSpecs(grouped, harvest, productDataList.length);
   return normalizeComparisonResult(grouped, productDataList.length);
 }

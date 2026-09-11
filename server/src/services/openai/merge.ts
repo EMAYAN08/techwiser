@@ -34,6 +34,203 @@ function findHarvestValue(product: HarvestProduct | undefined, needle: string): 
   return undefined;
 }
 
+function findRawValue(product: { rawSpecs?: { label?: string; value?: string }[]; specs?: { label?: string; value?: string }[] } | undefined, needle: string): string | undefined {
+  const lists = [product?.rawSpecs, product?.specs];
+  for (const list of lists) {
+    for (const spec of list || []) {
+      if (normLabel(spec.label || "") === needle && spec.value != null && String(spec.value).trim()) {
+        return String(spec.value);
+      }
+    }
+  }
+  return undefined;
+}
+
+function normUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    return `${u.hostname.replace(/^www\./i, "")}${u.pathname.replace(/\/$/, "")}`.toLowerCase();
+  } catch {
+    return String(url || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\/$/, "");
+  }
+}
+
+function tokenSet(value: string): string[] {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 1);
+}
+
+function nameScore(a: string, b: string): number {
+  const A = new Set(tokenSet(a));
+  const B = new Set(tokenSet(b));
+  if (!A.size || !B.size) return 0;
+  let n = 0;
+  for (const t of A) if (B.has(t)) n += 1;
+  return n / Math.max(A.size, B.size);
+}
+
+export function alignListToInputs<T>(
+  items: T[],
+  inputs: { url: string; title: string }[],
+  getters: { url?: (item: T) => string; name?: (item: T) => string }
+): { aligned: T[]; sourceIndex: number[] } {
+  const n = inputs.length;
+  const aligned: Array<T | undefined> = Array.from({ length: n });
+  const sourceIndex = Array.from({ length: n }, () => -1);
+  const used = new Set<number>();
+
+  if (getters.url) {
+    for (let i = 0; i < n; i++) {
+      const want = normUrl(inputs[i].url);
+      if (!want) continue;
+      const idx = items.findIndex((item, j) => !used.has(j) && normUrl(getters.url!(item)) === want);
+      if (idx >= 0) {
+        used.add(idx);
+        aligned[i] = items[idx];
+        sourceIndex[i] = idx;
+      }
+    }
+  }
+
+  if (getters.name) {
+    for (let i = 0; i < n; i++) {
+      if (aligned[i]) continue;
+      let best = -1;
+      let bestScore = 0.34;
+      for (let j = 0; j < items.length; j++) {
+        if (used.has(j)) continue;
+        const name = getters.name(items[j]);
+        const score = Math.max(nameScore(name, inputs[i].title), nameScore(name, inputs[i].url));
+        if (score > bestScore) {
+          bestScore = score;
+          best = j;
+        }
+      }
+      if (best >= 0) {
+        used.add(best);
+        aligned[i] = items[best];
+        sourceIndex[i] = best;
+      }
+    }
+  }
+
+  let cursor = 0;
+  for (let i = 0; i < n; i++) {
+    if (aligned[i]) continue;
+    while (cursor < items.length && used.has(cursor)) cursor += 1;
+    if (cursor < items.length) {
+      used.add(cursor);
+      aligned[i] = items[cursor];
+      sourceIndex[i] = cursor;
+      cursor += 1;
+    } else if (items.length) {
+      aligned[i] = items[Math.min(i, items.length - 1)];
+      sourceIndex[i] = Math.min(i, items.length - 1);
+    }
+  }
+
+  return {
+    aligned: aligned.map((item, i) => item ?? items[Math.min(i, Math.max(items.length - 1, 0))]),
+    sourceIndex,
+  };
+}
+
+function permuteValues(values: string[], sourceIndex: number[]): string[] {
+  return sourceIndex.map((src, i) => {
+    if (src >= 0 && src < values.length) return values[src];
+    return values[i] ?? "—";
+  });
+}
+
+function remapWinner(oldWinner: number, sourceIndex: number[]): number {
+  if (!Number.isFinite(oldWinner) || oldWinner < 0) return -1;
+  const next = sourceIndex.indexOf(oldWinner);
+  return next >= 0 ? next : -1;
+}
+
+export function alignHarvestToInputs(
+  harvest: { products?: HarvestProduct[] },
+  productDataList: { url: string; title: string }[]
+): { products?: HarvestProduct[] } {
+  const products = Array.isArray(harvest?.products) ? harvest.products : [];
+  if (!products.length || !productDataList.length) return harvest;
+  const { aligned } = alignListToInputs(products, productDataList, {
+    name: (p) => `${p.name || ""} ${p.brand || ""}`,
+  });
+  harvest.products = aligned;
+  return harvest;
+}
+
+function overlayValuesFromHarvest(
+  values: string[],
+  label: string,
+  harvestProducts: HarvestProduct[]
+): string[] {
+  const needle = normLabel(label);
+  return values.map((value, i) => {
+    const harvested = findHarvestValue(harvestProducts[i], needle);
+    return harvested && harvested.trim() ? harvested : value;
+  });
+}
+
+export function realignGroupedToInputs(
+  result: any,
+  harvest: { products?: HarvestProduct[] },
+  productDataList: { url: string; title: string }[]
+): void {
+  const count = productDataList.length;
+  const harvestProducts = harvest?.products || [];
+  if (!result || typeof result !== "object") return;
+
+  let sourceIndex = productDataList.map((_, i) => i);
+  if (Array.isArray(result.products) && result.products.length) {
+    const aligned = alignListToInputs(result.products as any[], productDataList, {
+      url: (p: any) => p?.url || "",
+      name: (p: any) => `${p?.name || ""} ${p?.brand || ""}`,
+    });
+    sourceIndex = aligned.sourceIndex;
+    result.products = aligned.aligned.map((p: any, i: number) => ({
+      ...p,
+      url: p?.url || productDataList[i]?.url || "",
+    }));
+  }
+
+  const permuteSpec = (spec: any) => {
+    const oldValues = padValues(spec?.values, Math.max(count, Array.isArray(spec?.values) ? spec.values.length : 0));
+    const values = overlayValuesFromHarvest(permuteValues(oldValues, sourceIndex), spec?.label || "", harvestProducts);
+    return {
+      ...spec,
+      values,
+      winnerIndex: remapWinner(typeof spec?.winnerIndex === "number" ? spec.winnerIndex : -1, sourceIndex),
+    };
+  };
+
+  if (result.groupedSpecs && typeof result.groupedSpecs === "object") {
+    for (const key of Object.keys(result.groupedSpecs)) {
+      const specs = result.groupedSpecs[key];
+      result.groupedSpecs[key] = Array.isArray(specs) ? specs.map(permuteSpec) : [];
+    }
+  }
+
+  if (Array.isArray(result.keyDifferences)) {
+    result.keyDifferences = result.keyDifferences.map((diff: any) => ({
+      ...diff,
+      values: overlayValuesFromHarvest(
+        permuteValues(padValues(diff?.values, count), sourceIndex),
+        diff?.label || "",
+        harvestProducts
+      ),
+    }));
+  }
+}
+
 export function mergeOrphanSpecs(result: any, harvest: { products?: HarvestProduct[] }, productCount: number): void {
   if (!result.groupedSpecs || typeof result.groupedSpecs !== "object") {
     result.groupedSpecs = {};
@@ -339,6 +536,25 @@ export function normalizeComparisonResult(result: any, productCount: number): an
       rawSpecs,
     };
   });
+
+  for (const specs of Object.values(next.groupedSpecs) as Array<{ label: string; values: string[]; winnerIndex: number }[]>) {
+    for (const spec of specs) {
+      const needle = normLabel(spec.label);
+      spec.values = spec.values.map((value, i) => findRawValue(next.products[i], needle) || value);
+      if (typeof spec.winnerIndex === "number" && spec.winnerIndex >= 0) {
+        const win = canonicalizeSpecValue(spec.values[spec.winnerIndex] || "");
+        if (win) {
+          const mapped = spec.values.findIndex((v) => canonicalizeSpecValue(v) === win);
+          if (mapped >= 0) spec.winnerIndex = mapped;
+        }
+      }
+    }
+  }
+  for (const diff of next.keyDifferences) {
+    const needle = normLabel(diff.label);
+    diff.values = diff.values.map((value: string, i: number) => findRawValue(next.products[i], needle) || value);
+  }
+  applyTieWinners(next.groupedSpecs);
 
   return next;
 }

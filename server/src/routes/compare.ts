@@ -6,6 +6,33 @@ import { partitionScrapeResults, scrapeUrlsSequentially } from "../services/scra
 
 const router = Router();
 
+function urlsMatch(a?: string, b?: string): boolean {
+  if (!a || !b) return false;
+  const norm = (url: string) => {
+    try {
+      const u = new URL(url);
+      return `${u.hostname.replace(/^www\./i, "")}${u.pathname.replace(/\/$/, "")}`.toLowerCase();
+    } catch {
+      return url.trim().toLowerCase().replace(/\/$/, "");
+    }
+  };
+  return norm(a) === norm(b);
+}
+
+function matchScrapedProduct(product: any, scrapedData: any[], index: number) {
+  const byUrl = scrapedData.find((d) => urlsMatch(d.url, product?.url));
+  if (byUrl) return byUrl;
+  const name = String(product?.name || "").toLowerCase();
+  if (name) {
+    const byTitle = scrapedData.find((d) => {
+      const title = String(d.title || "").toLowerCase();
+      return title && (title.includes(name.slice(0, 18)) || name.includes(title.slice(0, 18)));
+    });
+    if (byTitle) return byTitle;
+  }
+  return scrapedData[index];
+}
+
 function isBestBuyCanada(url?: string): boolean {
   if (!url) return false;
   try {
@@ -57,7 +84,7 @@ router.post("/compare", async (req: Request, res: Response) => {
     comparisonResult.products = comparisonResult.products.map((p: any, i: number) => {
       p.id = `product-${i}`;
       p.retailerColor = RETAILER_COLORS[p.retailer?.toLowerCase().replace(/[^a-z]/g, "")] || "#333333";
-      const matchedData = scrapedData[i];
+      const matchedData = matchScrapedProduct(p, scrapedData, i);
       p.imageUrl = matchedData?.imageUrl || p.imageUrl || null;
       p.url = matchedData?.url || p.url;
       const scrapedPrice =

@@ -1,9 +1,11 @@
 import {
+  alignHarvestToInputs,
   applyGroupedSpecsList,
   fallbackGroupFromHarvest,
   mergeOrphanSpecs,
   normalizeAlternativesResult,
   normalizeComparisonResult,
+  realignGroupedToInputs,
 } from "../openai/merge";
 import { generateGeminiJson } from "./client";
 import { buildAlternativesPrompt, buildExplainSpecPrompt, buildGroupPrompt, buildHarvestPrompt } from "./prompts";
@@ -21,6 +23,7 @@ export async function generateComparison(
     contents: buildHarvestPrompt(productDataList),
     responseSchema: harvestResponseSchema,
   });
+  alignHarvestToInputs(harvest, productDataList);
 
   const harvestedCount = (harvest.products || []).reduce(
     (n: number, p: { specs?: unknown[] }) => n + (p.specs?.length || 0),
@@ -57,6 +60,7 @@ export async function generateComparison(
     grouped = fallbackGroupFromHarvest(harvest, productDataList);
   }
 
+  realignGroupedToInputs(grouped, harvest, productDataList);
   mergeOrphanSpecs(grouped, harvest, productDataList.length);
   return normalizeComparisonResult(grouped, productDataList.length);
 }

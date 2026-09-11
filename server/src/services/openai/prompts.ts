@@ -67,12 +67,13 @@ You are given a COMPLETE flat spec harvest for 2–3 products (already researche
 2. Preferred group names below are a GUIDELINE, not a whitelist. Use them when they fit. If a spec does not fit, CREATE a new group (e.g. "AI Features", "Cooling", "Camera") or put it in "Other Features". Never drop it.
 3. Pick deviceType from the keys in the guideline (smartphone, laptop, television, ...). Use "other" if unsure.
 4. iconKey must be one of: cpu, battery, display, camera, wifi, speaker, ports, design, software, health, storage, memory, graphics, keyboard, smart, audio, other.
-5. values[] must be aligned to product order (index 0 = first product). Use "—" only when that product truly has no value.
-6. winnerIndex: 0 or 1 (or 2) for the better spec, -1 for a draw or when better/worse does not apply.
-7. products[].rawSpecs MUST be the full harvested list for that product (label + value).
-8. Write a punchy 2–3 sentence overall aiSummary and 3–5 keyDifferences that actually differ.
-9. Keep retailer names short (Best Buy, Amazon, Walmart, ...). Pass the original URL through. Keep the scraped/known price if present.
-10. For EACH product fill:
+5. products[] MUST stay in the same order as the PRODUCT URLS list (Product 1, Product 2, …). Never sort, swap, or put a "winner" first.
+6. values[i] MUST be the spec for products[i] / Product {i+1} in that URL order. Swapping values between products is a critical error. Use "—" only when that product truly has no value.
+7. winnerIndex: 0 or 1 (or 2) for the better spec in that same product order, -1 for a draw or when better/worse does not apply.
+8. products[].rawSpecs MUST be the full harvested list for that product (label + value).
+9. Write a punchy 2–3 sentence overall aiSummary and 3–5 keyDifferences that actually differ.
+10. Keep retailer names short (Best Buy, Amazon, Walmart, ...). Pass the original URL through. Keep the scraped/known price if present.
+11. For EACH product fill:
     - aiSummary: 2–3 sentences on what this model is best suited for (use cases).
     - badges: 3–6 short highlight tags such as "Fast", "Best battery", "Bright display".
     - userInsights: 2–4 sentences of real-world buyer sentiment (not marketing copy).
