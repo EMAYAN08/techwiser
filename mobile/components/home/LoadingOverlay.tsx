@@ -16,22 +16,30 @@ const MESSAGES = [
 
 const WALK_LIGHT = require("../../assets/mascot/owl-walk-light.gif");
 const WALK_DARK = require("../../assets/mascot/owl-walk-dark.gif");
+const THINK_LIGHT = require("../../assets/mascot/owl-think-light.gif");
+const THINK_DARK = require("../../assets/mascot/owl-think-dark.gif");
 const THUMBS_LIGHT = require("../../assets/mascot/owl-thumbs-light.gif");
 const THUMBS_DARK = require("../../assets/mascot/owl-thumbs-dark.gif");
-const WALK_STILL = require("../../assets/mascot/owl-walk-still.png");
-const THUMBS_STILL = require("../../assets/mascot/owl-thumbs-still.png");
-const SHADOW_LIGHT = require("../../assets/mascot/owl-shadow-light.png");
-const SHADOW_DARK = require("../../assets/mascot/owl-shadow-dark.png");
+const WALK_STILL_LIGHT = require("../../assets/mascot/owl-walk-still-light.png");
+const WALK_STILL_DARK = require("../../assets/mascot/owl-walk-still-dark.png");
+const THINK_STILL_LIGHT = require("../../assets/mascot/owl-think-still-light.png");
+const THINK_STILL_DARK = require("../../assets/mascot/owl-think-still-dark.png");
+const THUMBS_STILL_LIGHT = require("../../assets/mascot/owl-thumbs-still-light.png");
+const THUMBS_STILL_DARK = require("../../assets/mascot/owl-thumbs-still-dark.png");
 
 export const MASCOT_ASSETS = [
   WALK_LIGHT,
   WALK_DARK,
+  THINK_LIGHT,
+  THINK_DARK,
   THUMBS_LIGHT,
   THUMBS_DARK,
-  WALK_STILL,
-  THUMBS_STILL,
-  SHADOW_LIGHT,
-  SHADOW_DARK,
+  WALK_STILL_LIGHT,
+  WALK_STILL_DARK,
+  THINK_STILL_LIGHT,
+  THINK_STILL_DARK,
+  THUMBS_STILL_LIGHT,
+  THUMBS_STILL_DARK,
 ];
 
 export function MascotPreloader() {
@@ -51,80 +59,89 @@ export function MascotPreloader() {
 
 const THUMBS_MS = 2000;
 const THUMBS_CAP_MS = 2600;
+const WALK_MS = 2400;
+const THINK_MS = 2400;
 
-function GroundShadow({
-  isDark,
-  phase,
-  reduceMotion,
-}: {
-  isDark: boolean;
-  phase: "loading" | "success";
-  reduceMotion: boolean;
-}) {
-  const pulse = useRef(new Animated.Value(0.5)).current;
+type LoadClip = "walk" | "think";
 
-  useEffect(() => {
-    if (reduceMotion) {
-      pulse.setValue(0.5);
-      return;
-    }
-    pulse.setValue(0);
-    const dur = phase === "success" ? 900 : 520;
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: dur,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 0,
-          duration: dur,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    loop.start();
-    return () => {
-      loop.stop();
-      pulse.stopAnimation();
+function pickAssets(clip: "walk" | "think" | "thumbs", isDark: boolean) {
+  if (clip === "thumbs") {
+    return {
+      gif: isDark ? THUMBS_DARK : THUMBS_LIGHT,
+      still: isDark ? THUMBS_STILL_DARK : THUMBS_STILL_LIGHT,
     };
-  }, [phase, reduceMotion, pulse]);
-
-  const scaleX = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.84, 1.06] });
-  const scaleY = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.1] });
-  const opacity = pulse.interpolate({
-    inputRange: [0, 1],
-    outputRange: isDark ? [0.42, 0.78] : [0.38, 0.72],
-  });
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[styles.shadow, { opacity, transform: [{ scaleX }, { scaleY }] }]}
-    >
-      <Image source={isDark ? SHADOW_DARK : SHADOW_LIGHT} style={styles.shadowImg} resizeMode="contain" />
-    </Animated.View>
-  );
+  }
+  if (clip === "think") {
+    return {
+      gif: isDark ? THINK_DARK : THINK_LIGHT,
+      still: isDark ? THINK_STILL_DARK : THINK_STILL_LIGHT,
+    };
+  }
+  return {
+    gif: isDark ? WALK_DARK : WALK_LIGHT,
+    still: isDark ? WALK_STILL_DARK : WALK_STILL_LIGHT,
+  };
 }
 
 function OwlMascot({
   phase,
   isDark,
   reduceMotion,
+  active,
 }: {
   phase: "loading" | "success";
   isDark: boolean;
   reduceMotion: boolean;
+  active: boolean;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
+  const fade = useRef(new Animated.Value(1)).current;
+  const skipFade = useRef(true);
   const [gifFailed, setGifFailed] = useState(false);
+  const [clip, setClip] = useState<LoadClip>("walk");
 
   useEffect(() => {
     setGifFailed(false);
-  }, [phase, isDark]);
+  }, [phase, isDark, clip]);
+
+  useEffect(() => {
+    if (!active || phase === "success" || reduceMotion) {
+      setClip("walk");
+      return;
+    }
+    let cancelled = false;
+    let handle: ReturnType<typeof setTimeout> | undefined;
+    const schedule = (current: LoadClip) => {
+      const wait = current === "walk" ? WALK_MS : THINK_MS;
+      const next: LoadClip = current === "walk" ? "think" : "walk";
+      handle = setTimeout(() => {
+        if (cancelled) return;
+        setClip(next);
+        schedule(next);
+      }, wait);
+    };
+    setClip("walk");
+    schedule("walk");
+    return () => {
+      cancelled = true;
+      if (handle) clearTimeout(handle);
+    };
+  }, [active, phase, reduceMotion]);
+
+  useEffect(() => {
+    if (skipFade.current) {
+      skipFade.current = false;
+      fade.setValue(1);
+      return;
+    }
+    fade.setValue(0.35);
+    Animated.timing(fade, {
+      toValue: 1,
+      duration: reduceMotion ? 0 : 160,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, [clip, phase, fade, reduceMotion]);
 
   useEffect(() => {
     if (phase !== "success" || reduceMotion) {
@@ -135,29 +152,17 @@ function OwlMascot({
     Animated.spring(scale, { toValue: 1, friction: 6, tension: 120, useNativeDriver: true }).start();
   }, [phase, reduceMotion, scale]);
 
-  const still = phase === "success" ? THUMBS_STILL : WALK_STILL;
-  const gif =
-    reduceMotion || gifFailed
-      ? null
-      : phase === "success"
-        ? isDark
-          ? THUMBS_DARK
-          : THUMBS_LIGHT
-        : isDark
-          ? WALK_DARK
-          : WALK_LIGHT;
+  const pose: "walk" | "think" | "thumbs" = phase === "success" ? "thumbs" : clip;
+  const { gif, still } = pickAssets(pose, isDark);
+  const showGif = !reduceMotion && !gifFailed;
+  const label =
+    pose === "thumbs" ? "Comparison ready" : pose === "think" ? "Owl thinking" : "Owl checking products";
 
   return (
     <View style={styles.stage}>
-      <GroundShadow isDark={isDark} phase={phase} reduceMotion={reduceMotion} />
-      <Animated.View style={[styles.mascotLift, { transform: [{ scale }] }]}>
-        <Image
-          source={still}
-          style={styles.mascot}
-          resizeMode="contain"
-          accessibilityLabel={phase === "success" ? "Comparison ready" : "Owl checking products"}
-        />
-        {gif ? (
+      <Animated.View style={[styles.mascotLift, { opacity: fade, transform: [{ scale }] }]}>
+        <Image source={still} style={styles.mascot} resizeMode="contain" accessibilityLabel={label} />
+        {showGif ? (
           <Image
             source={gif}
             style={styles.mascotGif}
@@ -275,7 +280,7 @@ export function LoadingOverlay({
         ]}
       >
         <View style={styles.content}>
-          <OwlMascot phase={phase} isDark={isDark} reduceMotion={reduceMotion} />
+          <OwlMascot phase={phase} isDark={isDark} reduceMotion={reduceMotion} active={visible} />
           <Animated.Text style={[styles.message, { opacity: phase === "success" ? 1 : msgOpacity, color: colors.ink }]}>
             {message}
           </Animated.Text>
@@ -306,50 +311,37 @@ const styles = StyleSheet.create({
     width: 220,
     height: 210,
     alignItems: "center",
-    justifyContent: "flex-end",
+    justifyContent: "center",
     marginBottom: 28,
   },
-  shadow: {
-    position: "absolute",
-    bottom: 10,
-    width: 168,
-    height: 56,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  shadowImg: {
-    width: 168,
-    height: 56,
-  },
   mascotLift: {
-    width: 188,
-    height: 188,
+    width: 200,
+    height: 200,
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 1,
   },
   mascot: {
-    width: 188,
-    height: 188,
+    width: 200,
+    height: 200,
   },
   mascotGif: {
     position: "absolute",
-    width: 188,
-    height: 188,
+    width: 200,
+    height: 200,
   },
   preloader: {
     position: "absolute",
-    width: 188,
-    height: 188,
-    left: -400,
-    top: -400,
+    width: 200,
+    height: 200,
+    left: -420,
+    top: -420,
     opacity: 0,
     overflow: "hidden",
   },
   preloaderImg: {
     position: "absolute",
-    width: 188,
-    height: 188,
+    width: 200,
+    height: 200,
   },
   message: {
     ...type.body,
