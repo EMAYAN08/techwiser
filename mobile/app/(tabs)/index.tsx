@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View, Text, Animated } from "react-native";
 import { Typography } from "../../constants/Typography";
 import { useRouter } from "expo-router";
@@ -33,6 +33,11 @@ export default function Home() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const panelFade = useRef(new Animated.Value(1)).current;
   const abortControllerRef = useRef<AbortController | null>(null);
+  const cancelledRef = useRef(false);
+  const navigatedRef = useRef(false);
+  const [loadPhase, setLoadPhase] = useState<"loading" | "success">("loading");
+  const loadPhaseRef = useRef<"loading" | "success">("loading");
+  loadPhaseRef.current = loadPhase;
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -57,21 +62,44 @@ export default function Home() {
   const validUrls = urls.filter((url: string) => url.trim().length > 0);
   const canCompare = validUrls.length >= 2 && inputMode === "url";
 
+  const goToCompare = useCallback(() => {
+    if (navigatedRef.current) return;
+    navigatedRef.current = true;
+    setLoadPhase("loading");
+    setLoading(false);
+    router.push("/compare");
+  }, [router, setLoading]);
+
   const handleCancel = () => {
+    if (loadPhaseRef.current === "success") {
+      goToCompare();
+      return;
+    }
+    cancelledRef.current = true;
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    setLoadPhase("loading");
     setLoading(false);
   };
+
+  const handleCelebrateEnd = useCallback(() => {
+    if (cancelledRef.current) return;
+    goToCompare();
+  }, [goToCompare]);
 
   const handleCompare = async (overrideUrls?: string[] | unknown) => {
     const source = Array.isArray(overrideUrls) ? overrideUrls : urls;
     const compareUrls = source.filter((url: string) => typeof url === "string" && url.trim().length > 0);
     if (compareUrls.length < 2 || isLoading) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    cancelledRef.current = false;
+    navigatedRef.current = false;
+    setLoadPhase("loading");
     setLoading(true, "Fetching product pages...");
     abortControllerRef.current = new AbortController();
+    const startedAt = Date.now();
 
     try {
       const apiUrl = getApiBase();
@@ -90,6 +118,7 @@ export default function Home() {
 
       const { data, error } = await response.json();
       if (error) throw new Error(error);
+      if (cancelledRef.current) return;
 
       setActiveComparison(data);
       addRecentComparison({
@@ -99,11 +128,15 @@ export default function Home() {
         urls: compareUrls,
         result: data,
       });
-      setLoading(false);
       abortControllerRef.current = null;
-      router.push("/compare");
+
+      const remain = Math.max(0, 900 - (Date.now() - startedAt));
+      if (remain) await new Promise((r) => setTimeout(r, remain));
+      if (cancelledRef.current) return;
+      setLoadPhase("success");
     } catch (err: any) {
-      if (err.name === "AbortError") return;
+      if (err.name === "AbortError" || cancelledRef.current) return;
+      setLoadPhase("loading");
       setLoading(false);
       abortControllerRef.current = null;
       let msg = err.message || "Failed to extract specs.";
@@ -129,7 +162,12 @@ export default function Home() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg, paddingTop: Math.max(insets.top, 20) }]}>
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: Math.max(insets.top, 20), backgroundColor: colors.bg, zIndex: 999, elevation: 99 }} />
-      <LoadingOverlay visible={isLoading} onCancel={handleCancel} />
+      <LoadingOverlay
+        visible={isLoading}
+        phase={loadPhase}
+        onCancel={handleCancel}
+        onCelebrateEnd={handleCelebrateEnd}
+      />
 
       <Animated.View
         style={{

@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, Animated, StyleSheet, Easing, Modal } from "react-native";
+import { View, Text, Animated, StyleSheet, Easing, Modal, Image, AccessibilityInfo } from "react-native";
 import { type } from "../../constants/Typography";
 import { useThemeColors } from "../../constants/Colors";
 import { Button } from "../ui/Button";
 import { setTabBarHidden } from "../../store/uiStore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Haptics from "../../utils/haptics";
 
 const MESSAGES = [
   "Fetching product pages...",
@@ -12,6 +13,16 @@ const MESSAGES = [
   "Aligning data with AI...",
   "Calculating the winner...",
 ];
+
+const WALK_LIGHT = require("../../assets/mascot/owl-walk-light.gif");
+const WALK_DARK = require("../../assets/mascot/owl-walk-dark.gif");
+const THUMBS_LIGHT = require("../../assets/mascot/owl-thumbs-light.gif");
+const THUMBS_DARK = require("../../assets/mascot/owl-thumbs-dark.gif");
+const WALK_STILL = require("../../assets/mascot/owl-walk-still.png");
+const THUMBS_STILL = require("../../assets/mascot/owl-thumbs-still.png");
+
+const THUMBS_MS = 2000;
+const THUMBS_CAP_MS = 2600;
 
 function ServerStack({ colors }: { colors: any }) {
   const progress = useRef(new Animated.Value(0)).current;
@@ -92,11 +103,83 @@ function ServerStack({ colors }: { colors: any }) {
   );
 }
 
-export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCancel?: () => void }) {
+function OwlMascot({
+  phase,
+  isDark,
+  reduceMotion,
+}: {
+  phase: "loading" | "success";
+  isDark: boolean;
+  reduceMotion: boolean;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const [gifFailed, setGifFailed] = useState(false);
+
+  useEffect(() => {
+    if (phase !== "success" || reduceMotion) {
+      scale.setValue(1);
+      return;
+    }
+    scale.setValue(0.92);
+    Animated.spring(scale, { toValue: 1, friction: 6, tension: 120, useNativeDriver: true }).start();
+  }, [phase, reduceMotion, scale]);
+
+  const source = reduceMotion || gifFailed
+    ? phase === "success"
+      ? THUMBS_STILL
+      : WALK_STILL
+    : phase === "success"
+      ? isDark
+        ? THUMBS_DARK
+        : THUMBS_LIGHT
+      : isDark
+        ? WALK_DARK
+        : WALK_LIGHT;
+
+  return (
+    <Animated.View style={[styles.mascotWrap, { transform: [{ scale }] }]}>
+      <Image
+        source={source}
+        style={styles.mascot}
+        resizeMode="contain"
+        accessibilityLabel={phase === "success" ? "Comparison ready" : "Owl checking products"}
+        onError={() => setGifFailed(true)}
+      />
+    </Animated.View>
+  );
+}
+
+export function LoadingOverlay({
+  visible,
+  phase = "loading",
+  onCancel,
+  onCelebrateEnd,
+}: {
+  visible: boolean;
+  phase?: "loading" | "success";
+  onCancel?: () => void;
+  onCelebrateEnd?: () => void;
+}) {
   const { colors, isDark } = useThemeColors();
   const insets = useSafeAreaInsets();
   const [msgIndex, setMsgIndex] = useState(0);
+  const [reduceMotion, setReduceMotion] = useState(false);
   const msgOpacity = useRef(new Animated.Value(1)).current;
+  const finishedRef = useRef(false);
+  const celebrateEndRef = useRef(onCelebrateEnd);
+  celebrateEndRef.current = onCelebrateEnd;
+
+  useEffect(() => {
+    let alive = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((v) => {
+      if (alive) setReduceMotion(v);
+    });
+    const sub = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
+    return () => {
+      alive = false;
+      sub.remove();
+    };
+  }, []);
 
   useEffect(() => {
     setTabBarHidden(visible);
@@ -107,8 +190,10 @@ export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCanc
     if (!visible) {
       setMsgIndex(0);
       msgOpacity.setValue(1);
+      finishedRef.current = false;
       return;
     }
+    if (phase === "success") return;
     const interval = setInterval(() => {
       Animated.timing(msgOpacity, {
         toValue: 0,
@@ -124,7 +209,29 @@ export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCanc
       });
     }, 2500);
     return () => clearInterval(interval);
-  }, [visible, msgOpacity]);
+  }, [visible, phase, msgOpacity]);
+
+  useEffect(() => {
+    if (!visible || phase !== "success") return;
+    finishedRef.current = false;
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    const finish = () => {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
+      celebrateEndRef.current?.();
+    };
+
+    const delay = reduceMotion ? 380 : THUMBS_MS;
+    const t = setTimeout(finish, delay);
+    const cap = setTimeout(finish, THUMBS_CAP_MS);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(cap);
+    };
+  }, [visible, phase, reduceMotion]);
+
+  const message = phase === "success" ? "Ready to compare" : MESSAGES[msgIndex];
 
   return (
     <Modal
@@ -146,11 +253,14 @@ export function LoadingOverlay({ visible, onCancel }: { visible: boolean; onCanc
         ]}
       >
         <View style={styles.content}>
+          <OwlMascot phase={phase} isDark={isDark} reduceMotion={reduceMotion} />
           <ServerStack colors={colors} />
-          <Animated.Text style={[styles.message, { opacity: msgOpacity, color: colors.ink }]}>
-            {MESSAGES[msgIndex]}
+          <Animated.Text style={[styles.message, { opacity: phase === "success" ? 1 : msgOpacity, color: colors.ink }]}>
+            {message}
           </Animated.Text>
-          <Text style={[styles.sub, { color: isDark ? "#A8A8A4" : "#6A6A66" }]}>Analyzing products</Text>
+          <Text style={[styles.sub, { color: isDark ? "#A8A8A4" : "#6A6A66" }]}>
+            {phase === "success" ? "Opening comparison" : "Analyzing products"}
+          </Text>
           {onCancel ? (
             <View style={styles.cancelContainer}>
               <Button title="Cancel" variant="ghost" onPress={onCancel} />
@@ -169,6 +279,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   content: { alignItems: "center", width: "100%", paddingHorizontal: 40 },
+  mascotWrap: {
+    width: 132,
+    height: 132,
+    marginBottom: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mascot: {
+    width: 132,
+    height: 132,
+  },
   serverContainer: {
     height: 100,
     overflow: "hidden",
