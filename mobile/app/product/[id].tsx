@@ -17,10 +17,11 @@ import { useComparisonStore } from "../../store/useComparisonStore";
 import { Button } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
 import { NavCircle } from "../../components/ui/NavCircle";
-import { useThemeColors, getRetailerColor, formatRetailerName } from "../../constants/Colors";
+import { useThemeColors } from "../../constants/Colors";
 import { radii, space } from "../../constants/Layout";
 import { exportProductToPDF } from "../../utils/exportPDF";
 import { GlassPanel } from "../../components/ui/GlassPanel";
+import { RetailerSticker } from "../../components/ui/RetailerSticker";
 
 function normalizeTitle(title: string): string {
   const cleaned = title.replace(/5G|Unlocked|Smartphone|Dual SIM/gi, "").trim();
@@ -35,32 +36,6 @@ function PriceChip({ price }: { price: string }) {
       <Text style={styles.priceChipText} numberOfLines={1}>
         {price}
       </Text>
-    </View>
-  );
-}
-
-function hexLuminance(hex: string): number {
-  const raw = hex.replace("#", "");
-  if (raw.length < 6) return 0;
-  const r = parseInt(raw.slice(0, 2), 16) / 255;
-  const g = parseInt(raw.slice(2, 4), 16) / 255;
-  const b = parseInt(raw.slice(4, 6), 16) / 255;
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function RetailerSticker({ retailer }: { retailer?: string }) {
-  const { isDark } = useThemeColors();
-  const fill = getRetailerColor(retailer, false);
-  const label = formatRetailerName(retailer).toUpperCase();
-  const fg = hexLuminance(fill) > 0.65 ? "#111111" : "#FFFFFF";
-  return (
-    <View style={styles.stickerWrap}>
-      {!isDark ? <View style={styles.stickerShadow} /> : null}
-      <View style={[styles.stickerFace, { backgroundColor: fill }]}>
-        <Text style={[styles.stickerText, { color: fg }]} numberOfLines={1}>
-          {label}
-        </Text>
-      </View>
     </View>
   );
 }
@@ -364,8 +339,8 @@ export default function ProductDetailScreen() {
         </View>
       </Animated.ScrollView>
 
-      <View style={[styles.footerWrap, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-        <GlassPanel style={styles.footerGlass} contentStyle={styles.footerInner} radius={22}>
+      <View style={[styles.footerWrap, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+        <GlassPanel style={styles.footerGlass} contentStyle={styles.footerInner} radius={0}>
           <View style={{ flex: 1 }}>
             <Button title="View Product" variant="ghost" onPress={() => Linking.openURL(product.url)} />
           </View>
@@ -435,30 +410,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#1C1C1C",
   },
-  stickerWrap: {
-    position: "relative",
-  },
-  stickerShadow: {
-    position: "absolute",
-    top: 2,
-    left: 2,
-    right: -2,
-    bottom: -2,
-    borderRadius: 6,
-    backgroundColor: "#111111",
-  },
-  stickerFace: {
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  stickerText: {
-    fontFamily: "Satoshi-Bold",
-    fontSize: 10,
-    lineHeight: 12,
-    letterSpacing: 0.6,
-    fontWeight: "800",
-  },
   dockedThumb: {
     position: "absolute",
     right: 0,
@@ -502,17 +453,22 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: space.gutter,
     zIndex: 10,
   },
   footerGlass: {
     minHeight: 72,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
   },
   footerInner: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: space.gutter,
+    paddingTop: 12,
+    paddingBottom: 6,
   },
 });

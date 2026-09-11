@@ -14,7 +14,7 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "../utils/haptics";
-import { ArrowLeft, Crown, Sparkles, Trophy, Info, Share, X, AlertTriangle } from "lucide-react-native";
+import { ArrowLeft, Crown, Sparkles, Trophy, Share, X, AlertTriangle } from "lucide-react-native";
 import { BlurView } from "expo-blur";
 
 import { useComparisonStore } from "../store/useComparisonStore";
@@ -24,7 +24,7 @@ import { radii } from "../constants/Layout";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { NavCircle } from "../components/ui/NavCircle";
-import { RetailerPill } from "../components/ui/RetailerPill";
+import { RetailerSticker } from "../components/ui/RetailerSticker";
 import { getCategoryIcon } from "../components/comparison/CategoryIcon";
 import { AlternativesDeck } from "../components/comparison/AlternativesDeck";
 import { type DetailedSpecRow, type DetailedSpecValue } from "../components/comparison/SpecBarRow";
@@ -77,8 +77,7 @@ interface ProductHeaderCardProps {
 }
 
 function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: ProductHeaderCardProps) {
-  const { colors, isDark } = useThemeColors();
-  const retColor = getRetailerColor(product.retailer, isDark);
+  const { colors } = useThemeColors();
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(8)).current;
 
@@ -115,7 +114,7 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
             isRecommended && { borderColor: colors.spotify, borderWidth: 2 },
           ]}
         >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'stretch', alignItems: 'flex-start', minHeight: 22, width: '100%', marginBottom: 0 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'stretch', alignItems: 'flex-start', minHeight: 22, width: '100%', marginBottom: 4 }}>
             <View>
               {isRecommended && (
                 <View style={[styles.crownWrap, { backgroundColor: colors.spotifyWash }]}>
@@ -123,25 +122,7 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
                 </View>
               )}
             </View>
-            <BlurView
-              intensity={isDark ? 30 : 60}
-              tint={isDark ? "dark" : "light"}
-              style={[
-                styles.topRightBadge,
-                compact && styles.topRightBadgeCompact,
-                { 
-                  backgroundColor: `${retColor}26`, 
-                  borderColor: `${retColor}4D`, 
-                  borderWidth: StyleSheet.hairlineWidth,
-                  overflow: "hidden" 
-                }
-              ]}
-            >
-              <Text style={[styles.retailerText, { color: retColor }]} numberOfLines={1} ellipsizeMode="tail">
-                {product.retailer}
-              </Text>
-              <Info size={10} color={retColor} strokeWidth={2.5} />
-            </BlurView>
+            <RetailerSticker retailer={product.retailer} compact />
           </View>
 
           <View

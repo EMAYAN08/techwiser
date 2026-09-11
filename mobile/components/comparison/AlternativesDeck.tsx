@@ -1,18 +1,19 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Image,
   Pressable,
-  FlatList,
+  ScrollView,
   Linking,
   ActivityIndicator,
   useWindowDimensions,
+  Animated,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from "react-native";
-import { PackageOpen, Trophy, ChevronLeft, ChevronRight } from "lucide-react-native";
+import { Trophy } from "lucide-react-native";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { type } from "../../constants/Typography";
@@ -21,24 +22,34 @@ import { Button } from "../ui/Button";
 import { GlassPanel } from "../ui/GlassPanel";
 import type { AlternativeProduct } from "../../services/api";
 
-function AltImage({ uri, colors }: { uri?: string; colors: { fog: string; stone: string } }) {
-  const [error, setError] = useState(false);
-  const valid = Boolean(uri && uri.trim().startsWith("http"));
-  if (!valid || error) {
+const EMPTY_BOX = "https://img.icons8.com/3d-fluency/200/cardboard-box.png";
+const EMPTY_BOX_FALLBACK = "https://img.icons8.com/3d-fluency/200/open-box.png";
+
+function AltImage({ uri }: { uri?: string }) {
+  const [src, setSrc] = useState(uri && uri.trim().startsWith("http") ? uri : EMPTY_BOX);
+  const [failedEmpty, setFailedEmpty] = useState(false);
+
+  const onError = () => {
+    if (src === uri) {
+      setSrc(EMPTY_BOX);
+      return;
+    }
+    if (src === EMPTY_BOX) {
+      setSrc(EMPTY_BOX_FALLBACK);
+      return;
+    }
+    setFailedEmpty(true);
+  };
+
+  if (failedEmpty) {
     return (
-      <View style={[styles.imageFallback, { backgroundColor: colors.fog }]}>
-        <PackageOpen size={40} color={colors.stone} />
+      <View style={styles.imageFallback}>
+        <Text style={styles.boxEmoji}>📦</Text>
       </View>
     );
   }
-  return (
-    <Image
-      source={{ uri }}
-      style={styles.image}
-      resizeMode="contain"
-      onError={() => setError(true)}
-    />
-  );
+
+  return <Image source={{ uri: src }} style={styles.image} resizeMode="contain" onError={onError} />;
 }
 
 type Props = {
@@ -51,7 +62,7 @@ type Props = {
 export function AlternativesDeck({ loading, error, alternatives, onRetry }: Props) {
   const { colors, isDark } = useThemeColors();
   const { width: screenWidth } = useWindowDimensions();
-  const listRef = useRef<FlatList<AlternativeProduct>>(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
   const [index, setIndex] = useState(0);
   const [page, setPage] = useState({ width: Math.max(280, screenWidth - 40), height: 420 });
 
@@ -59,13 +70,7 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
     if (w > 0 && h > 0) setPage({ width: w, height: h });
   }, []);
 
-  const goTo = (next: number) => {
-    const clamped = Math.max(0, Math.min(alternatives.length - 1, next));
-    if (clamped === index) return;
-    listRef.current?.scrollToIndex({ index: clamped, animated: true });
-    setIndex(clamped);
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
+  const cardHeight = Math.max(page.height - (alternatives.length > 1 ? 28 : 0), 200);
 
   const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const next = Math.round(e.nativeEvent.contentOffset.x / Math.max(page.width, 1));
@@ -83,6 +88,28 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
     Linking.openURL(href);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
+
+  const interpolations = useMemo(
+    () =>
+      alternatives.map((_, i) => ({
+        scale: scrollX.interpolate({
+          inputRange: [(i - 1) * page.width, i * page.width, (i + 1) * page.width],
+          outputRange: [0.9, 1, 0.9],
+          extrapolate: "clamp",
+        }),
+        opacity: scrollX.interpolate({
+          inputRange: [(i - 1) * page.width, i * page.width, (i + 1) * page.width],
+          outputRange: [0.52, 1, 0.52],
+          extrapolate: "clamp",
+        }),
+        lift: scrollX.interpolate({
+          inputRange: [(i - 1) * page.width, i * page.width, (i + 1) * page.width],
+          outputRange: [10, 0, 10],
+          extrapolate: "clamp",
+        }),
+      })),
+    [alternatives, page.width, scrollX]
+  );
 
   if (loading) {
     return (
@@ -121,89 +148,83 @@ export function AlternativesDeck({ loading, error, alternatives, onRetry }: Prop
       style={styles.root}
       onLayout={(e) => onLayout(e.nativeEvent.layout.width, e.nativeEvent.layout.height)}
     >
-      <FlatList
-        ref={listRef}
-        data={alternatives}
-        keyExtractor={(item, i) => `${item.name}-${i}`}
+      <Animated.ScrollView
         horizontal
         pagingEnabled
         decelerationRate="fast"
         bounces
-        style={{ height: Math.max(page.height - (alternatives.length > 1 ? 44 : 0), 200) }}
         showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+          useNativeDriver: true,
+        })}
         onMomentumScrollEnd={onMomentumEnd}
-        getItemLayout={(_, i) => ({ length: page.width, offset: page.width * i, index: i })}
-        onScrollToIndexFailed={({ index: failed }) => {
-          setTimeout(() => listRef.current?.scrollToIndex({ index: failed, animated: true }), 80);
-        }}
-        renderItem={({ item }) => (
-          <View
-            style={{
-              width: page.width,
-              height: Math.max(page.height - (alternatives.length > 1 ? 44 : 0), 200),
-              paddingBottom: 8,
-            }}
-          >
-            <Pressable style={styles.cardPress} onPress={() => openAlt(item)}>
-              <GlassPanel style={styles.card} contentStyle={styles.cardInner}>
-                <View style={[styles.imageWell, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.55)" }]}>
-                  <AltImage uri={item.imageUrl} colors={colors} />
-                </View>
-                <Text style={[styles.name, { color: colors.ink }]} numberOfLines={2}>
-                  {item.name}
-                </Text>
-                {item.estimatedPrice ? (
-                  <View style={styles.priceChip}>
-                    <Text style={styles.priceChipText}>{item.estimatedPrice}</Text>
+        onScrollEndDrag={onMomentumEnd}
+      >
+        {alternatives.map((item, i) => (
+          <View key={`${item.name}-${i}`} style={{ width: page.width, height: cardHeight }}>
+            <Animated.View
+              style={[
+                styles.cardMotion,
+                {
+                  opacity: interpolations[i]?.opacity,
+                  transform: [{ translateY: interpolations[i]?.lift || 0 }, { scale: interpolations[i]?.scale || 1 }],
+                },
+              ]}
+            >
+              <Pressable style={styles.cardPress} onPress={() => openAlt(item)}>
+                <GlassPanel style={styles.card} contentStyle={styles.cardInner}>
+                  <View style={styles.topRow}>
+                    <View
+                      style={[
+                        styles.imageWell,
+                        { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.62)" },
+                      ]}
+                    >
+                      <AltImage uri={item.imageUrl} />
+                    </View>
+                    <View style={styles.topCopy}>
+                      <Text style={[styles.name, { color: colors.ink }]} numberOfLines={3}>
+                        {item.name}
+                      </Text>
+                      {item.estimatedPrice ? (
+                        <View style={styles.priceChip}>
+                          <Text style={styles.priceChipText}>{item.estimatedPrice}</Text>
+                        </View>
+                      ) : null}
+                    </View>
                   </View>
-                ) : null}
-                <Text style={[styles.reason, { color: colors.body }]} numberOfLines={6}>
-                  {item.reasonWhyBetter}
-                </Text>
-                <Text style={[styles.cta, { color: colors.stone }]}>Tap to view listings</Text>
-              </GlassPanel>
-            </Pressable>
+                  <ScrollView
+                    style={styles.reasonScroll}
+                    contentContainerStyle={styles.reasonContent}
+                    showsVerticalScrollIndicator={false}
+                    nestedScrollEnabled
+                  >
+                    <Text style={[styles.reason, { color: colors.body }]}>{item.reasonWhyBetter}</Text>
+                  </ScrollView>
+                  <Text style={[styles.cta, { color: colors.stone }]}>Tap to view listings</Text>
+                </GlassPanel>
+              </Pressable>
+            </Animated.View>
           </View>
-        )}
-      />
+        ))}
+      </Animated.ScrollView>
 
       {alternatives.length > 1 ? (
-        <View style={styles.controls}>
-          <Pressable
-            onPress={() => goTo(index - 1)}
-            disabled={index === 0}
-            hitSlop={10}
-            style={[styles.chevron, { opacity: index === 0 ? 0.28 : 1 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Previous alternative"
-          >
-            <ChevronLeft size={22} color={colors.ink} strokeWidth={2.25} />
-          </Pressable>
-          <View style={styles.dots}>
-            {alternatives.map((_, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  {
-                    backgroundColor: i === index ? colors.ink : colors.stone,
-                    opacity: i === index ? 1 : 0.35,
-                    width: i === index ? 16 : 6,
-                  },
-                ]}
-              />
-            ))}
-          </View>
-          <Pressable
-            onPress={() => goTo(index + 1)}
-            disabled={index === alternatives.length - 1}
-            hitSlop={10}
-            style={[styles.chevron, { opacity: index === alternatives.length - 1 ? 0.28 : 1 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Next alternative"
-          >
-            <ChevronRight size={22} color={colors.ink} strokeWidth={2.25} />
-          </Pressable>
+        <View style={styles.dots}>
+          {alternatives.map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor: i === index ? colors.ink : colors.stone,
+                  opacity: i === index ? 1 : 0.35,
+                  width: i === index ? 16 : 6,
+                },
+              ]}
+            />
+          ))}
         </View>
       ) : null}
     </View>
@@ -221,43 +242,38 @@ const styles = StyleSheet.create({
   },
   statusText: { ...type.body, textAlign: "center" },
   emptyTitle: { ...type.productName, fontSize: 18, textAlign: "center" },
+  cardMotion: { flex: 1, marginHorizontal: 2, marginVertical: 4 },
   cardPress: { flex: 1 },
-  card: {
-    flex: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.16,
-    shadowRadius: 24,
-    elevation: 8,
-  },
+  card: { flex: 1 },
   cardInner: {
     flex: 1,
-    padding: 20,
+    padding: 18,
   },
+  topRow: { flexDirection: "row", gap: 14, marginBottom: 14, alignItems: "center" },
   imageWell: {
-    flex: 1,
-    minHeight: 140,
+    width: 108,
+    height: 108,
     borderRadius: radii.cardSm,
-    marginBottom: 16,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
-  image: { width: "100%", height: "100%" },
+  image: { width: "86%", height: "86%" },
   imageFallback: {
     width: "100%",
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
   },
-  name: { ...type.productName, fontSize: 20, lineHeight: 24, marginBottom: 10 },
+  boxEmoji: { fontSize: 48 },
+  topCopy: { flex: 1, minWidth: 0, justifyContent: "center" },
+  name: { ...type.productName, fontSize: 18, lineHeight: 22, marginBottom: 8 },
   priceChip: {
     alignSelf: "flex-start",
     backgroundColor: "#FEF08A",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
-    marginBottom: 12,
     transform: [{ rotate: "-1deg" }],
   },
   priceChipText: {
@@ -266,17 +282,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#1C1C1C",
   },
-  reason: { ...type.body, fontSize: 15, lineHeight: 22, flexShrink: 1 },
-  cta: { ...type.caption, marginTop: 12, letterSpacing: 0.3 },
-  controls: {
+  reasonScroll: { flex: 1 },
+  reasonContent: { paddingBottom: 8 },
+  reason: { ...type.body, fontSize: 15, lineHeight: 23 },
+  cta: { ...type.caption, marginTop: 10, letterSpacing: 0.3 },
+  dots: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 16,
-    paddingTop: 10,
-    paddingBottom: 4,
+    gap: 6,
+    paddingTop: 8,
+    paddingBottom: 2,
   },
-  chevron: { padding: 4 },
-  dots: { flexDirection: "row", alignItems: "center", gap: 6 },
   dot: { height: 6, borderRadius: 99 },
 });
