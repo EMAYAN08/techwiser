@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AlternativesResponse } from "../services/api";
+import type { AlternativesResponse, SpecExplanationResponse } from "../services/api";
 
 export interface Spec {
   label: string;
@@ -41,6 +41,7 @@ export interface ComparisonResult {
   aiSummary: string;
   createdAt: string;
   alternatives?: AlternativesResponse;
+  specExplanations?: Record<string, SpecExplanationResponse>;
 }
 
 export interface Comparison {
@@ -63,7 +64,12 @@ interface ComparisonStore {
   setUrls: (urls: string[]) => void;
   setLoading: (isLoading: boolean, message?: string) => void;
   setActiveComparison: (result: ComparisonResult | null) => void;
-  setComparisonAlternatives: (data: AlternativesResponse) => void;
+  setComparisonAlternatives: (comparisonId: string, data: AlternativesResponse) => void;
+  setComparisonSpecExplanation: (
+    comparisonId: string,
+    specKey: string,
+    data: SpecExplanationResponse
+  ) => void;
   addRecentComparison: (comparison: Comparison) => void;
   clearRecentComparisons: () => void;
   removeProductFromHistory: (productId: string) => void;
@@ -405,14 +411,34 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
   setLoading: (isLoading, message) =>
     set({ isLoading, loadingMessage: message ?? "Analyzing products..." }),
   setActiveComparison: (result) => set({ activeComparison: result }),
-  setComparisonAlternatives: (data) =>
+  setComparisonAlternatives: (comparisonId, data) =>
     set((state) => {
-      if (!state.activeComparison) return {};
+      if (!state.activeComparison || state.activeComparison.id !== comparisonId) return {};
       const next = { ...state.activeComparison, alternatives: data };
       return {
         activeComparison: next,
         recentComparisons: state.recentComparisons.map((comp) =>
-          comp.result?.id === next.id ? { ...comp, result: { ...comp.result, alternatives: data } } : comp
+          comp.result?.id === comparisonId ? { ...comp, result: { ...comp.result, alternatives: data } } : comp
+        ),
+      };
+    }),
+  setComparisonSpecExplanation: (comparisonId, specKey, data) =>
+    set((state) => {
+      if (!state.activeComparison || state.activeComparison.id !== comparisonId) return {};
+      if (!specKey) return {};
+      const next = {
+        ...state.activeComparison,
+        specExplanations: {
+          ...(state.activeComparison.specExplanations || {}),
+          [specKey]: data,
+        },
+      };
+      return {
+        activeComparison: next,
+        recentComparisons: state.recentComparisons.map((comp) =>
+          comp.result?.id === comparisonId
+            ? { ...comp, result: { ...comp.result, specExplanations: next.specExplanations } }
+            : comp
         ),
       };
     }),

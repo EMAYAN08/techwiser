@@ -29,7 +29,7 @@ import { AlternativesDeck } from "../components/comparison/AlternativesDeck";
 import { ExplainSpecSkeleton, FadeIn } from "../components/ui/Skeleton";
 import { type DetailedSpecRow, type DetailedSpecValue } from "../components/comparison/SpecBarRow";
 import { exportComparisonToPDF } from "../utils/exportPDF";
-import { explainSpec, fetchAlternatives, peekAlternativesCache, type SpecExplanationResponse } from "../services/api";
+import { explainSpec, fetchAlternatives, peekAlternativesCache, peekExplainSpecCache, specExplanationKey, type AlternativesResponse, type SpecExplanationResponse } from "../services/api";
 
 const OVERVIEW_KEY = "Overview";
 
@@ -411,10 +411,19 @@ function EmptyState({ onBack }: { onBack: () => void }) {
 
 export default function CompareScreen() {
   const router = useRouter();
+  const activeComparison = useComparisonStore((s) => s.activeComparison);
+  if (!activeComparison) {
+    return <EmptyState onBack={() => router.back()} />;
+  }
+  return <CompareScreenBody key={activeComparison.id} />;
+}
+
+function CompareScreenBody() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { colors, isDark } = useThemeColors();
-  const { activeComparison, setComparisonAlternatives } = useComparisonStore();
+  const { activeComparison, setComparisonAlternatives, setComparisonSpecExplanation } = useComparisonStore();
   const [selectedCategory, setSelectedCategory] = useState<string>(OVERVIEW_KEY);
 
   const [selectedSpecDetail, setSelectedSpecDetail] = useState<{
@@ -427,6 +436,17 @@ export default function CompareScreen() {
   } | null>(null);
   const specReq = useRef(0);
   const altReq = useRef(0);
+  const [alternativesData, setAlternativesData] = useState<{
+    comparisonId: string;
+    loading: boolean;
+    data?: AlternativesResponse;
+    error?: string;
+  } | null>(() => {
+    const cmp = useComparisonStore.getState().activeComparison;
+    if (!cmp) return null;
+    const hit = cmp.alternatives || peekAlternativesCache(cmp.id, cmp.products);
+    return hit ? { comparisonId: cmp.id, loading: false, data: hit } : null;
+  });
 
   const closeSpecDetail = () => {
     specReq.current += 1;
@@ -446,17 +466,33 @@ export default function CompareScreen() {
       "Jargon Buster:",
     ];
     const randomTitle = FRIENDLY_TITLES[Math.floor(Math.random() * FRIENDLY_TITLES.length)];
-    const req = ++specReq.current;
+    const specKey = specExplanationKey(label, values);
+    const cached =
+      activeComparison.specExplanations?.[specKey] || peekExplainSpecCache(activeComparison.id, label, values);
 
+    if (cached) {
+      specReq.current += 1;
+      if (!activeComparison.specExplanations?.[specKey]) {
+        setComparisonSpecExplanation(activeComparison.id, specKey, cached);
+      }
+      setSelectedSpecDetail({ label, values, loading: false, title: randomTitle, data: cached });
+      return;
+    }
+
+    const req = ++specReq.current;
+    const comparisonId = activeComparison.id;
     setSelectedSpecDetail({ label, values, loading: true, title: randomTitle });
 
     try {
       const productNames = activeComparison.products.map((p) => p.name);
-      const data = await explainSpec(productNames, label, values);
+      const data = await explainSpec(productNames, label, values, { comparisonId });
       if (req !== specReq.current) return;
+      if (useComparisonStore.getState().activeComparison?.id !== comparisonId) return;
+      setComparisonSpecExplanation(comparisonId, specKey, data);
       setSelectedSpecDetail((prev) => (prev ? { ...prev, loading: false, data } : null));
     } catch (error: unknown) {
       if (req !== specReq.current) return;
+      if (useComparisonStore.getState().activeComparison?.id !== comparisonId) return;
       setSelectedSpecDetail((prev) =>
         prev ? { ...prev, loading: false, error: error instanceof Error ? error.message : "Unknown error" } : null
       );
@@ -473,13 +509,15 @@ export default function CompareScreen() {
     if (activeComparison) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-  }, [activeComparison]);
+  }, [activeComparison?.id]);
 
   if (!activeComparison) {
     return <EmptyState onBack={() => router.back()} />;
   }
 
   const { products, keyDifferences, aiSummary } = activeComparison;
+  const scopedAlts =
+    alternativesData && alternativesData.comparisonId === activeComparison.id ? alternativesData : null;
   const productA = products[0];
 
   const valueColumnWidth = useMemo(
@@ -595,33 +633,35 @@ export default function CompareScreen() {
     await exportComparisonToPDF(activeComparison, isDark);
   };
 
-  const [alternativesData, setAlternativesData] = useState<{ loading: boolean; data?: any; error?: string } | null>(
-    () => {
-      const hit = activeComparison?.alternatives || peekAlternativesCache(activeComparison?.products || []);
-      return hit ? { loading: false, data: hit } : null;
-    }
-  );
-
   const loadAlternatives = (force = false) => {
     if (!activeComparison) return;
+    const comparisonId = activeComparison.id;
     if (!force) {
-      const hit = alternativesData?.data || activeComparison.alternatives || peekAlternativesCache(activeComparison.products);
+      if (alternativesData?.comparisonId === comparisonId && alternativesData.data) {
+        return;
+      }
+      const hit =
+        (activeComparison.id === comparisonId ? activeComparison.alternatives : undefined) ||
+        peekAlternativesCache(comparisonId, activeComparison.products);
       if (hit) {
-        setAlternativesData({ loading: false, data: hit });
+        setAlternativesData({ comparisonId, loading: false, data: hit });
         return;
       }
     }
     const req = ++altReq.current;
-    setAlternativesData({ loading: true });
-    fetchAlternatives(activeComparison.products, { force })
+    setAlternativesData({ comparisonId, loading: true });
+    fetchAlternatives(activeComparison.products, { force, comparisonId })
       .then((data) => {
         if (req !== altReq.current) return;
-        setComparisonAlternatives(data);
-        setAlternativesData({ loading: false, data });
+        if (useComparisonStore.getState().activeComparison?.id !== comparisonId) return;
+        setComparisonAlternatives(comparisonId, data);
+        setAlternativesData({ comparisonId, loading: false, data });
       })
       .catch((error: unknown) => {
         if (req !== altReq.current) return;
+        if (useComparisonStore.getState().activeComparison?.id !== comparisonId) return;
         setAlternativesData({
+          comparisonId,
           loading: false,
           error: error instanceof Error ? error.message : "Unknown error",
         });
@@ -751,9 +791,9 @@ export default function CompareScreen() {
             }}
           >
             <AlternativesDeck
-              loading={!alternativesData || alternativesData.loading}
-              error={alternativesData?.error}
-              alternatives={alternativesData?.data?.alternatives || []}
+              loading={!scopedAlts || scopedAlts.loading}
+              error={scopedAlts?.error}
+              alternatives={scopedAlts?.data?.alternatives || []}
               onRetry={retryAlternatives}
             />
           </View>
