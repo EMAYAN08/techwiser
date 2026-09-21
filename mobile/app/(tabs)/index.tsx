@@ -7,9 +7,7 @@ import { handleScroll, resetScrollTracking } from "../../store/uiStore";
 import { URLInputGroup, URLInputHeader } from "../../components/home/URLInputGroup";
 import { RecentComparisons, RecentHeader } from "../../components/home/RecentComparisons";
 import { InputModeTabs, InputMode } from "../../components/home/InputModeTabs";
-import { NameSearchGroup } from "../../components/home/NameSearchGroup";
 import { QRInputGroup } from "../../components/home/QRInputGroup";
-import { BarcodeInputGroup } from "../../components/home/BarcodeInputGroup";
 import { useComparisonStore } from "../../store/useComparisonStore";
 import { registerLoadingOverlayHandlers } from "../../store/loadingOverlayBridge";
 import { useThemeColors } from "../../constants/Colors";
@@ -234,7 +232,7 @@ export default function Home() {
             {inputMode !== "url" && (
               <View style={{ backgroundColor: colors.bg, paddingBottom: 12, paddingTop: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Text style={[{ color: colors.stone, ...Typography.eyebrow, textTransform: 'uppercase' }]}>
-                  {inputMode === "name" ? "PRODUCT NAMES" : inputMode === "upc" ? "BARCODE SCANNER" : "QR SCANNER"}
+                  QR SCANNER
                 </Text>
               </View>
             )}
@@ -252,8 +250,6 @@ export default function Home() {
               canCompare={canCompare}
             />
           )}
-          {inputMode === "name" && <NameSearchGroup onCompare={handleCompare} isLoading={isLoading} />}
-          {inputMode === "upc" && <BarcodeInputGroup onCompare={handleCompare} isLoading={isLoading} />}
           {inputMode === "qr" && <QRInputGroup onCompare={handleCompare} isLoading={isLoading} />}
         </Animated.View>
 

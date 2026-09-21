@@ -13,7 +13,7 @@ import { usePathname, Tabs } from "expo-router";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
-import { Zap, BookOpen, Settings as SettingsIcon, Tag, LucideIcon } from "lucide-react-native";
+import { Zap, BookOpen, Settings as SettingsIcon, LucideIcon } from "lucide-react-native";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { radii, size } from "../../constants/Layout";
@@ -28,13 +28,12 @@ interface TabDef {
 const TABS: TabDef[] = [
   { name: "index", label: "Home", Icon: Zap },
   { name: "library", label: "Library", Icon: BookOpen },
-  { name: "price", label: "Price", Icon: Tag },
   { name: "settings", label: "Settings", Icon: SettingsIcon },
 ];
 
 function isTabPath(path: string) {
   const p = (path || "/").replace(/\/$/, "") || "/";
-  return p === "/" || p === "/library" || p === "/price" || p === "/settings";
+  return p === "/" || p === "/library" || p === "/settings";
 }
 
 function useActivePath() {
@@ -304,7 +303,7 @@ export default function TabLayout() {
       >
         <Tabs.Screen name="index" options={{ title: "Home" }} />
         <Tabs.Screen name="library" options={{ title: "Library" }} />
-        <Tabs.Screen name="price" options={{ title: "Price" }} />
+        <Tabs.Screen name="price" options={{ href: null, title: "Price" }} />
         <Tabs.Screen name="settings" options={{ title: "Settings" }} />
       </Tabs>
     </View>

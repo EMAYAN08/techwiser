@@ -1,12 +1,12 @@
 import React, { useRef } from "react";
 import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
-import Svg, { Rect, Circle, Path, Ellipse } from "react-native-svg";
+import Svg, { Rect, Ellipse } from "react-native-svg";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { fonts } from "../../constants/Typography";
 import { size } from "../../constants/Layout";
 
-export type InputMode = "url" | "name" | "upc" | "qr";
+export type InputMode = "url" | "qr";
 
 type ModeTint = {
   icon: string;
@@ -17,8 +17,6 @@ type ModeTint = {
 
 const TINTS: Record<InputMode, ModeTint> = {
   url: { icon: "#3B6EA5", accent: "#7FA3C9", wash: "#DCE6F0", wellDark: "#2A3340" },
-  name: { icon: "#B85C5C", accent: "#D68F8F", wash: "#F5E6E6", wellDark: "#3D2B2B" },
-  upc: { icon: "#8A6A3B", accent: "#C4A574", wash: "#F3E9D6", wellDark: "#3A3328" },
   qr: { icon: "#7A5C99", accent: "#A38FC4", wash: "#EBE6F2", wellDark: "#302B3D" },
 };
 
@@ -30,8 +28,6 @@ interface Tab {
 const TABS: Tab[] = [
   { id: "url", label: "URL" },
   { id: "qr", label: "QR Code" },
-  { id: "name", label: "Name" },
-  { id: "upc", label: "Barcode" },
 ];
 
 function GlyphUrl({ color, accent }: { color: string; accent: string }) {
@@ -55,40 +51,6 @@ function GlyphUrl({ color, accent }: { color: string; accent: string }) {
         strokeWidth={2.7}
         transform="rotate(-38 21.8 17)"
       />
-    </Svg>
-  );
-}
-
-function GlyphName({ color, accent }: { color: string; accent: string }) {
-  return (
-    <Svg width={34} height={34} viewBox="0 0 34 34" fill="none">
-      <Circle cx="15" cy="15" r="8.2" stroke={color} strokeWidth={2.8} />
-      <Circle cx="15" cy="15" r="4.4" fill={accent} opacity={0.45} />
-      <Path d="M21.2 21.2 27 27" stroke={color} strokeWidth={3.2} strokeLinecap="round" />
-    </Svg>
-  );
-}
-
-function GlyphBarcode({ color, accent }: { color: string; accent: string }) {
-  const bars = [
-    { x: 8.5, w: 2.2, h: 16, c: color },
-    { x: 12.7, w: 1.5, h: 16, c: accent },
-    { x: 16.2, w: 3, h: 16, c: color },
-    { x: 21.2, w: 1.5, h: 16, c: accent },
-    { x: 24.7, w: 2.2, h: 16, c: color },
-  ];
-  return (
-    <Svg width={34} height={34} viewBox="0 0 34 34" fill="none">
-      {/* Viewfinder Corners */}
-      <Path d="M5 12V7a2 2 0 0 1 2-2h4" stroke={color} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M29 12V7a2 2 0 0 0-2-2h-4" stroke={color} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M5 22v5a2 2 0 0 0 2 2h4" stroke={color} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M29 22v5a2 2 0 0 1-2 2h-4" stroke={color} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
-      
-      {/* Barcode Lines */}
-      {bars.map((b, i) => (
-        <Rect key={i} x={b.x} y={17 - b.h / 2} width={b.w} height={b.h} rx={0.5} fill={b.c} />
-      ))}
     </Svg>
   );
 }
@@ -127,8 +89,6 @@ function ModeGlyph({
   hole: string;
 }) {
   if (id === "url") return <GlyphUrl color={color} accent={accent} />;
-  if (id === "name") return <GlyphName color={color} accent={accent} />;
-  if (id === "upc") return <GlyphBarcode color={color} accent={accent} />;
   return <GlyphQr color={color} accent={accent} hole={hole} />;
 }
 
@@ -229,10 +189,11 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "flex-start",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    gap: 36,
   },
   item: {
-    flex: 1,
+    width: 88,
     alignItems: "center",
     gap: 8,
   },
