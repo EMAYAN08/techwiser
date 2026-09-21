@@ -11,6 +11,8 @@ import { radii, space } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 
+const SITE = "https://emayan08.github.io/techwiser";
+
 export default function SettingsScreen() {
   const { preference, setPreference } = useThemeStore();
   const { hapticsEnabled, setHapticsEnabled } = useSettingsStore();
@@ -138,20 +140,35 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <Text style={[styles.sectionTitle, { color: colors.stone }]}>About</Text>
+        <Text style={[styles.sectionTitle, { color: colors.stone }]}>Legal & support</Text>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
           <Row
             label="Privacy Policy"
             icon="shield"
-            onPress={() => Linking.openURL("https://github.com/EMAYAN08/techwiser")}
+            onPress={() => Linking.openURL(`${SITE}/privacy.html`)}
           />
           <View style={[styles.divider, { backgroundColor: colors.line }]} />
           <Row
-            label="Terms of Service"
+            label="Terms of Use"
             icon="file-text"
-            onPress={() => Linking.openURL("https://github.com/EMAYAN08/techwiser")}
+            onPress={() => Linking.openURL(`${SITE}/terms.html`)}
           />
           <View style={[styles.divider, { backgroundColor: colors.line }]} />
+          <Row
+            label="Support & Feedback"
+            icon="message-circle"
+            onPress={() => Linking.openURL(`${SITE}/support.html`)}
+          />
+          <View style={[styles.divider, { backgroundColor: colors.line }]} />
+          <Row
+            label="Website"
+            icon="globe"
+            onPress={() => Linking.openURL(`${SITE}/`)}
+          />
+        </View>
+
+        <Text style={[styles.sectionTitle, { color: colors.stone }]}>About</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
           <Row
             label="App version"
             icon="info"

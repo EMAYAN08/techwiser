@@ -22,8 +22,7 @@ These will get a first-time binary rejected if you ship today:
 | Display name is `"mobile"` | `mobile/app.json` | Set `"name": "SpecMatch"` (or the final store name) |
 | No iOS bundle identifier | `mobile/app.json` → `ios.bundleIdentifier` | Add something like `ca.specmatch.app` |
 | No EAS project | `mobile/` | Run `npx eas init` and commit `eas.json` |
-| Privacy Policy row opens GitHub | `mobile/app/(tabs)/settings.tsx` | Point at a public HTTPS HTML privacy page |
-| Terms of Service row opens GitHub | same file | Point at a public HTTPS HTML terms page |
+| Privacy / terms / support URLs | Public site | Live at [emayan08.github.io/techwiser](https://emayan08.github.io/techwiser/) — paste these into App Store Connect |
 | No `PrivacyInfo.xcprivacy` | iOS build | Add a privacy manifest (Expo generates one if you configure it) |
 | No production API URL | `mobile/utils/apiBase.ts` | Ship a stable HTTPS backend, not Expo tunnel |
 | Icon / splash still generic | `mobile/assets/icon.png` | 1024×1024 marketing icon, no alpha, no baked rounded corners |
@@ -107,7 +106,11 @@ Done when the 1024 icon uploads without an alpha error and screenshots show the 
 
 Apple requires a **public HTTPS HTML** privacy policy, linked in **two** places: App Store Connect metadata **and** inside the app.
 
-1. Host pages such as `https://specmatch.ca/privacy` and `https://specmatch.ca/terms` (GitHub repo, Google Doc, or PDF **will be rejected**).
+1. These pages are live on GitHub Pages (HTML, no login):
+   - Privacy: https://emayan08.github.io/techwiser/privacy.html
+   - Terms: https://emayan08.github.io/techwiser/terms.html
+   - Support: https://emayan08.github.io/techwiser/support.html
+   Source is `/site` in this repo. Do **not** paste the GitHub repository URL, a Google Doc, or a PDF into App Store Connect.
 2. The privacy page must say, in plain language:
    - What you collect: product URLs / barcodes the user submits, optional photos they pick for scanning, comparison history stored **on device**
    - What you do **not** collect: no account, no email, no precise location, no contacts

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Support & Feedback — SpecMatch</title>
+  <meta name="description" content="SpecMatch support, FAQ, and feedback. App Store support URL.">
+  <link rel="canonical" href="https://emayan08.github.io/techwiser/support.html">
+  <meta name="theme-color" content="#FAF7F2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1A1714" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="assets/favicon.png">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html">
+        <img src="assets/icon.png" width="30" height="30" alt="">
+        <b>SpecMatch</b>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a class="cta" href="support.html" aria-current="page">Support</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="legal-page">
+    <div class="wrap">
+      <p class="eyebrow">Help</p>
+      <h1>Support & feedback</h1>
+      <p class="lede" style="margin-top:12px;margin-bottom:36px">Something stuck, a spec looks wrong, or you need a privacy request handled — this is the page.</p>
+
+      <div class="grid-3" style="margin-bottom:48px">
+        <article class="card">
+          <p class="kicker">Operator</p>
+          <h3>Emayan Vadivel</h3>
+          <p>Halifax, Nova Scotia, Canada. We read every request. Privacy requests are labelled and handled first.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">Response</p>
+          <h3>Usually within 48 hours</h3>
+          <p>Apple App Review: we watch submissions and reply in Resolution Center the same day whenever we can.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">No account</p>
+          <h3>Nothing to log into</h3>
+          <p>If the app asks for camera or photos, you can skip it and paste URLs instead.</p>
+        </article>
+      </div>
+
+      <div class="prose">
+        <h2>FAQ</h2>
+        <h3>The comparison never finishes</h3>
+        <p>Need two supported Canadian retailer links, and a network path to our API. Try two in-stock Best Buy Canada product pages. If it still fails, send the two URLs through the form below.</p>
+        <h3>Camera or Photos permission</h3>
+        <p>Only used to read a barcode or QR. URL compare works if you tap Don’t Allow. You can change this later in iOS Settings → SpecMatch.</p>
+        <h3>A spec looks swapped or wrong</h3>
+        <p>AI reads public pages; retailers format tables differently. Screenshot the row and send both product URLs so we can fix the mapping.</p>
+        <h3>How do I delete my data?</h3>
+        <p>Settings → Clear search history removes on-device comparisons. For server logs that might still include a URL you submitted, send a privacy request below.</p>
+        <h3>Does SpecMatch use AI?</h3>
+        <p>Yes. Product page text is sent to OpenAI, with Google Gemini as a fallback. Photos from your library are not uploaded. Details are in the <a href="privacy.html">Privacy Policy</a>.</p>
+      </div>
+
+      <div class="card" style="margin-top:40px;max-width:40rem">
+        <p class="kicker">Write to us</p>
+        <h2>Feedback form</h2>
+        <p style="color:var(--ink2);margin:8px 0 4px">Opens a pre-filled GitHub issue (public). Use “Privacy request” if you want logs removed.</p>
+        <form class="feedback" id="feedback-form">
+          <label for="topic">Topic</label>
+          <select id="topic" name="topic">
+            <option>Support</option>
+            <option>Feedback</option>
+            <option>Privacy request</option>
+            <option>App Review</option>
+            <option>Wrong spec</option>
+          </select>
+          <label for="name">Name (optional)</label>
+          <input id="name" name="name" maxlength="80" autocomplete="name">
+          <label for="contact">How we can reach you (optional)</label>
+          <input id="contact" name="contact" maxlength="120" placeholder="Email or @handle">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" required placeholder="What happened, and which product URLs if it is a comparison issue."></textarea>
+          <button class="btn btn-ink" type="submit">Send via GitHub</button>
+        </form>
+        <p class="note">Prefer a private channel? Include a contact method in the form. Do not paste passwords or payment details.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>© 2026 SpecMatch</p>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </nav>
+    </div>
+  </footer>
+  <script>
+    document.getElementById("feedback-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var topic = document.getElementById("topic").value;
+      var name = document.getElementById("name").value.trim();
+      var contact = document.getElementById("contact").value.trim();
+      var message = document.getElementById("message").value.trim();
+      var body = [
+        "**Topic:** " + topic,
+        name ? "**Name:** " + name : "",
+        contact ? "**Contact:** " + contact : "",
+        "",
+        message
+      ].filter(Boolean).join("\n");
+      var url = "https://github.com/EMAYAN08/techwiser/issues/new?title=" +
+        encodeURIComponent("[" + topic + "] SpecMatch") +
+        "&body=" + encodeURIComponent(body);
+      window.location.href = url;
+    });
+  </script>
+</body>
+</html>

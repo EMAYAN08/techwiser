@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy — SpecMatch</title>
+  <meta name="description" content="SpecMatch privacy policy: what data we collect, how AI is used, and how to request deletion.">
+  <link rel="canonical" href="https://emayan08.github.io/techwiser/privacy.html">
+  <meta name="theme-color" content="#FAF7F2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1A1714" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="assets/favicon.png">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html">
+        <img src="assets/icon.png" width="30" height="30" alt="">
+        <b>SpecMatch</b>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="privacy.html" aria-current="page">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a class="cta" href="support.html">Support</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="legal-page">
+    <div class="wrap prose">
+      <p class="eyebrow">Legal</p>
+      <h1>Privacy Policy</h1>
+      <p class="meta">Effective 21 September 2026 · Applies to the SpecMatch iOS app and this website · Operator: Emayan Vadivel, Halifax, Nova Scotia, Canada</p>
+
+      <p>SpecMatch is a product-comparison app. There is <strong>no account, no sign-in, and no advertising identifier tracking</strong>. This policy describes what happens when you compare products.</p>
+
+      <h2>1. Who we are</h2>
+      <p>SpecMatch is operated by Emayan Vadivel in Halifax, Nova Scotia, Canada. For privacy requests use the <a href="support.html">Support</a> page. This policy is meant to satisfy Apple Guideline 5.1.1 and PIPEDA.</p>
+
+      <h2>2. Data we do not collect</h2>
+      <ul>
+        <li>Name, email, phone number, or account credentials (we have no accounts)</li>
+        <li>Precise location, contacts, calendar, or microphone</li>
+        <li>Payment information (the app is free; no in-app purchases)</li>
+        <li>Data used to track you across other companies’ apps or websites</li>
+      </ul>
+
+      <h2>3. Data we process when you compare</h2>
+      <h3>Product URLs, barcodes, and QR contents you submit</h3>
+      <p>When you paste retailer links or scan a barcode/QR that resolves to a product page, those identifiers are sent to the SpecMatch API so we can fetch the <strong>public product listing</strong> and build a comparison. We do not ask you to log into a retailer.</p>
+      <h3>Public product page content</h3>
+      <p>Our server retrieves the retailer page you pointed us at (title, price text, specification tables, images already published on that page). That text is sent to an AI provider to extract and group specifications.</p>
+      <h3>On-device comparison history</h3>
+      <p>Recent comparisons are stored <strong>only on your device</strong> so you can reopen them. You can delete this anytime in Settings → Clear search history. We cannot see this history from our servers.</p>
+      <h3>Photos (optional)</h3>
+      <p>If you pick a photo from your library so SpecMatch can read a barcode or QR code, the image is decoded <strong>on the device</strong>. The photo is not uploaded. Only the resulting URL or barcode value is sent to the API.</p>
+      <h3>Camera (optional)</h3>
+      <p>The camera is used only after you tap Scan. Live frames are used to detect a barcode or QR. Frames are not stored and are not sent to the AI.</p>
+      <h3>Technical logs</h3>
+      <p>The API may keep short-lived server logs (timestamp, requested URL host, success/failure) to keep the service reliable and to investigate abuse. We do not sell logs.</p>
+
+      <h2>4. Third-party AI</h2>
+      <p>To extract and compare specifications we send product-page text to:</p>
+      <ul>
+        <li><strong>OpenAI</strong> — primary model for harvest, grouping, spec explanations, and alternatives</li>
+        <li><strong>Google (Gemini)</strong> — fallback if OpenAI is unavailable</li>
+      </ul>
+      <p>We send retailer listing content you asked us to compare — not your name, not your photos, not a user id. Those providers process the text under their own privacy terms in order to return a comparison. We do not use that content to train a SpecMatch model.</p>
+      <p>Hosting, DNS, and GitHub Pages (this website) are also subprocessors for delivering the app and these legal pages.</p>
+
+      <h2>5. Why we process data</h2>
+      <p>The only purposes are: (a) performing the comparison you requested, (b) operating and securing the API, and (c) responding if you contact support. We do not use this data for advertising.</p>
+
+      <h2>6. Retention</h2>
+      <ul>
+        <li>On-device history — until you clear it or delete the app</li>
+        <li>In-flight comparison payloads — discarded after the response is returned</li>
+        <li>Server logs — typically under 30 days, unless needed for a security investigation</li>
+      </ul>
+
+      <h2>7. Your choices</h2>
+      <ul>
+        <li>Compare with URLs only — never grant camera or photos</li>
+        <li>Deny a permission — the rest of the app still works</li>
+        <li>Clear search history in Settings</li>
+        <li>Delete the app to remove all on-device data</li>
+        <li>Ask us to delete any server logs that might still include a URL you submitted — use <a href="support.html">Support</a> with the subject “Privacy request”</li>
+      </ul>
+
+      <h2>8. Children</h2>
+      <p>SpecMatch is not directed at children under 13 and is not in the Kids Category. We do not knowingly collect personal information from children.</p>
+
+      <h2>9. International processing</h2>
+      <p>You are in Canada. OpenAI, Google, and our hosting providers may process data in the United States or other countries. By using SpecMatch you understand that comparison text may leave Canada for that processing.</p>
+
+      <h2>10. Changes</h2>
+      <p>If we add accounts, analytics, or ads, we will update this page and the App Store privacy labels before that binary ships. The effective date at the top will change.</p>
+
+      <h2>11. Contact</h2>
+      <p>Emayan Vadivel · Halifax, Nova Scotia, Canada · <a href="support.html">specmatch support</a></p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>© 2026 SpecMatch</p>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="terms.html">Terms</a>
+        <a href="support.html">Support</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
