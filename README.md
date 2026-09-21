@@ -1,28 +1,36 @@
-# My Product Monorepo
+# SpecMatch
 
-This repository contains the full stack for my new product.
+Mobile app that compares tech products from Canadian retailer URLs — specs, AI summary, and side-by-side trade-offs.
 
 ## Structure
-- `/mobile` - React Native (Expo) frontend application
-- `/server` - Node.js (Express) backend API
-- `/docs` - Product documentation, design specs, and PRD
-- `/.agents` - AI Agent instructions, skills, and configuration
 
-## Getting Started
+- `/mobile` — React Native (Expo) app
+- `/server` — Node.js (Express) API
+- `/docs` — PRD, design specs, and store submission guide
+- `/.agents` — AI agent instructions
 
-### 1. Mobile App
+## Getting started
+
+### Mobile
+
 ```bash
 cd mobile
 npm install
 npx expo start
 ```
 
-### 2. Backend Server
+### Backend
+
 ```bash
 cd server
 npm install
 npm run dev
 ```
 
-## AI Agent Development
-When prompting Antigravity, agents will automatically read instructions from `docs/` and `.agents/skills/` to ensure they follow your strict architectural constraints and design aesthetics.
+## App Store
+
+Step-by-step approval guide (icons, privacy, review notes, EAS submit):
+
+**[docs/APP_STORE.md](docs/APP_STORE.md)**
+
+Track progress on the GitHub issue: **App Store checklist**.
