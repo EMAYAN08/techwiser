@@ -32,6 +32,8 @@ npm run dev
 
 [emayan08.github.io/techwiser](https://emayan08.github.io/techwiser/)
 
+First publish (one time): GitHub → **Settings → Pages → Build and deployment → Source: GitHub Actions**. Then re-run the **Deploy GitHub Pages** workflow, or push any change under `site/`.
+
 | Page | URL |
 | --- | --- |
 | Home | https://emayan08.github.io/techwiser/ |
