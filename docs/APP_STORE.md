@@ -1,6 +1,6 @@
 # SpecMatch — App Store approval guide
 
-How to get the iOS app approved. Use this with the [App Store checklist issue](https://github.com/EMAYAN08/techwiser/issues) — check items off there as you finish them.
+How to get the iOS app approved. Use this with the [App Store checklist issue](https://github.com/EMAYAN08/techwiser/issues/2) — check items off there as you finish them.
 
 This app is an Expo React Native product comparison tool (camera / photo barcode + QR, URL compare, AI spec extraction, no user accounts). Apple will review it as a **Shopping** or **Lifestyle** app that talks to your backend and to an LLM.
 

@@ -33,4 +33,4 @@ Step-by-step approval guide (icons, privacy, review notes, EAS submit):
 
 **[docs/APP_STORE.md](docs/APP_STORE.md)**
 
-Track progress on the GitHub issue: **App Store checklist**.
+Track progress on the GitHub issue: **[App Store checklist](https://github.com/EMAYAN08/techwiser/issues/2)** (boxes are clickable).
