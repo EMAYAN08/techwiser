@@ -1,0 +1,68 @@
+{
+  "status": 200,
+  "topKeys": [
+    "category",
+    "subcategory",
+    "deviceType",
+    "aiSummary",
+    "keyDifferences",
+    "products",
+    "groupedSpecs",
+    "groupIcons",
+    "id",
+    "createdAt"
+  ],
+  "productKeys": [
+    "name",
+    "brand",
+    "retailer",
+    "url",
+    "price",
+    "description",
+    "whatsInTheBox",
+    "userInsights",
+    "userPros",
+    "userCons",
+    "badges",
+    "aiSummary",
+    "rawSpecs",
+    "id",
+    "retailerColor",
+    "imageUrl"
+  ],
+  "specsLen": 0,
+  "rawSpecsLen": 34,
+  "groupedSpecsKeys": [
+    "Performance",
+    "Display",
+    "Camera",
+    "Battery",
+    "Design",
+    "Connectivity",
+    "Other Features"
+  ],
+  "groupedSpecsSampleCounts": {
+    "Performance": 2,
+    "Display": 3,
+    "Camera": 3,
+    "Battery": 1,
+    "Design": 4,
+    "Connectivity": 5,
+    "Other Features": 20
+  },
+  "groupIcons": {
+    "Performance": "cpu",
+    "Display": "display",
+    "Camera": "camera",
+    "Battery": "battery",
+    "Design": "design",
+    "Connectivity": "wifi",
+    "Other Features": "other"
+  },
+  "deviceType": "smartphone",
+  "hasAi": true,
+  "keyDiffCount": 5,
+  "price0": "$1149.99",
+  "image0": "https://multimedia.bbycastatic.ca/multimedia/products/1500x1500/183/18391/183911",
+  "retailer0": "Best Buy"
+}

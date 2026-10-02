@@ -56,7 +56,7 @@ export function QRInputGroup({
   const [toast, setToast] = useState<{ text: string; tone: ToastTone } | null>(null);
   const [flashTick, setFlashTick] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [shownHint, setShownHint] = useState("Scan 2–3 product QR codes to compare.");
+  const [shownHint, setShownHint] = useState("Scan 2–4 product QR codes to compare.");
 
   const scannerEnter = useRef(new Animated.Value(0)).current;
   const ctaEnter = useRef(new Animated.Value(0)).current;
@@ -285,7 +285,7 @@ export function QRInputGroup({
   const canCompare = readyUrls.length >= 2 && !isLoading;
   const slotsLeft = MAX_QR_PRODUCTS - items.length;
 
-  let hint = "Scan 2–3 product QR codes to compare.";
+  let hint = "Scan 2–4 product QR codes to compare.";
   if (readyUrls.length === 1) hint = "Scan 1 more to compare.";
   else if (readyUrls.length >= 2 && slotsLeft > 0) {
     hint = `${readyUrls.length} ready · ${slotsLeft} slot${slotsLeft === 1 ? "" : "s"} left.`;

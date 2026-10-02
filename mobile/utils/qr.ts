@@ -1,4 +1,4 @@
-export const MAX_QR_PRODUCTS = 3;
+export const MAX_QR_PRODUCTS = 4;
 
 export const SUPPORTED_DOMAINS = [
   "bestbuy.ca",
