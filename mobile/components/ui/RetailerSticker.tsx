@@ -36,7 +36,7 @@ export function RetailerSticker({
 
 const styles = StyleSheet.create({
   wrap: { position: "relative" },
-  wrapCompact: { maxWidth: 108 },
+  wrapCompact: { maxWidth: "100%" },
   shadow: {
     position: "absolute",
     top: 2,

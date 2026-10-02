@@ -82,11 +82,31 @@ function AnimatedErrorIcon({ color }: { color: string }) {
   );
 }
 
-function normalizeTitle(title: string): string {
-  const cleaned = title.replace(/5G|Unlocked|Smartphone|Dual SIM/gi, "").trim();
+function normalizeTitle(title: string, compact = false): string {
+  let cleaned = title
+    .replace(/^\s*(Brand New|New|Refurbished(?:\s*\([^)]*\))?|Open Box)\s*[-–—:]\s*/i, "")
+    .replace(/\b(5G|Unlocked|Smartphone|Dual SIM)\b/gi, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  // Prefer recognizable brand + model for narrow 3-up cards
+  const brandModel = cleaned.match(
+    /^(Apple\s+iPhone\s+[\w.+]+|Google\s+Pixel\s+[\w.+]+|Samsung\s+Galaxy\s+[\w.+]+(?:\s+[\w.+]+)?|Sony\s+[\w.+]+|OnePlus\s+[\w.+]+)/i
+  );
+  if (brandModel) cleaned = brandModel[1];
+
+  if (!compact) return cleaned;
+
+  const maxChars = 22;
+  if (cleaned.length <= maxChars) return cleaned;
   const words = cleaned.split(/\s+/).filter(Boolean);
-  if (words.length > 3) return words.slice(0, 3).join(" ");
-  return cleaned;
+  let out = "";
+  for (const w of words) {
+    const next = out ? `${out} ${w}` : w;
+    if (next.length > maxChars) break;
+    out = next;
+  }
+  return out || cleaned.slice(0, maxChars).trim();
 }
 
 interface ProductHeaderCardProps {
@@ -165,17 +185,23 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
           </View>
 
           <Text
-            style={[styles.headerName, compact && styles.headerNameCompact, { color: colors.ink }]}
+            style={[styles.headerName, compact && styles.headerNameCompact, { color: colors.ink, alignSelf: "stretch" }]}
             numberOfLines={compact ? 3 : 2}
             ellipsizeMode="tail"
           >
-            {normalizeTitle(product.name)}
+            {normalizeTitle(product.name, compact)}
           </Text>
 
           {product.price && product.price !== "N/A" && (
-            <View style={{ backgroundColor: '#FEF08A', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4, transform: [{ rotate: '-1deg' }] }}>
+            <View
+              style={[
+                styles.pricePill,
+                compact && styles.pricePillCompact,
+                !compact && { transform: [{ rotate: "-1deg" }] },
+              ]}
+            >
               <Text
-                style={[styles.productPrice, compact && styles.productPriceCompact, { color: '#1C1C1C', fontWeight: '700' }]}
+                style={[styles.productPrice, compact && styles.productPriceCompact, { color: "#1C1C1C", fontWeight: "700" }]}
                 numberOfLines={1}
               >
                 {product.price}
@@ -240,11 +266,13 @@ function KeyDifferencesCard({
           >
             {(Array.isArray(diff.values) ? diff.values : []).map((val, idx) => {
               const win = !diff.isDraw && diff.winnerIndex === idx;
+              const triple = (Array.isArray(diff.values) ? diff.values : []).length >= 3;
               return (
                 <View
                   key={idx}
                   style={[
                     styles.diffCol,
+                    triple && styles.diffColCompact,
                     {
                       backgroundColor: win ? colors.spotifyWash : colors.fog,
                       borderColor: win ? colors.spotify : colors.stone,
@@ -257,7 +285,14 @@ function KeyDifferencesCard({
                       <Trophy size={9} color={colors.spotifyInk} strokeWidth={2.5} />
                     </View>
                   )}
-                  <Text style={[styles.diffValue, { color: colors.ink, fontWeight: win ? "700" : "400" }]}>
+                  <Text
+                    style={[
+                      styles.diffValue,
+                      triple && styles.diffValueCompact,
+                      { color: colors.ink, fontWeight: win ? "700" : "400" },
+                    ]}
+                    numberOfLines={3}
+                  >
                     {val || "—"}
                   </Text>
                 </View>
@@ -278,10 +313,12 @@ interface ValueCardProps {
 
 function ValueCard({ value, colors, width }: ValueCardProps) {
   const isWinner = value.isWinner && !value.isDraw;
+  const compact = width < 120;
   return (
     <View
       style={[
         styles.valueCard,
+        compact && styles.valueCardCompact,
         {
           width,
           backgroundColor: isWinner ? colors.spotifyWash : colors.fog,
@@ -297,7 +334,12 @@ function ValueCard({ value, colors, width }: ValueCardProps) {
         </View>
       )}
       <Text
-        style={[styles.valueCardText, { color: colors.ink, fontWeight: isWinner ? "700" : "400" }]}
+        style={[
+          styles.valueCardText,
+          compact && styles.valueCardTextCompact,
+          { color: colors.ink, fontWeight: isWinner ? "700" : "400" },
+        ]}
+        numberOfLines={3}
       >
         {value.displayValue}
       </Text>
@@ -988,9 +1030,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   headerNameCompact: {
-    fontSize: 11,
-    lineHeight: 13,
-    letterSpacing: -0.1,
+    fontSize: 12,
+    lineHeight: 15,
+    letterSpacing: -0.15,
   },
   productPrice: {
     ...type.caption,
@@ -998,7 +1040,38 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   productPriceCompact: {
+    fontSize: 11,
+  },
+  pricePill: {
+    backgroundColor: "#FEF08A",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 4,
+    maxWidth: "100%",
+  },
+  pricePillCompact: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  diffColCompact: {
+    paddingHorizontal: 6,
+    paddingVertical: 8,
+    minHeight: 44,
+  },
+  diffValueCompact: {
     fontSize: 12,
+    lineHeight: 15,
+  },
+  valueCardCompact: {
+    paddingHorizontal: 6,
+    paddingVertical: 8,
+    minHeight: 44,
+  },
+  valueCardTextCompact: {
+    fontSize: 12,
+    lineHeight: 15,
   },
   pillsWrap: {
     paddingVertical: 14,
