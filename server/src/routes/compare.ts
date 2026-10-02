@@ -4,7 +4,7 @@ import { extractPriceFromText, formatDisplayPrice, isMissingPrice } from "../lib
 import { generateAiComparison } from "../services/ai";
 import { partitionScrapeResults, scrapeUrlsSequentially } from "../services/scraper";
 
-const MAX_COMPARE_URLS = 4;
+const MAX_COMPARE_URLS = 3;
 
 const router = Router();
 

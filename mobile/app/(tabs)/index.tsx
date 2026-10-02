@@ -204,7 +204,7 @@ export default function Home() {
           <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.ink }]}>
             Compare
           </Animated.Text>
-          <Text style={[styles.subheader, { color: colors.stone }]}>Any 2–4 tech products.</Text>
+          <Text style={[styles.subheader, { color: colors.stone }]}>Any 2–3 tech products.</Text>
         </View>
 
         <View style={{ height: TABS_HEIGHT, paddingHorizontal: space.gutter, paddingBottom: 8, backgroundColor: colors.bg }}>

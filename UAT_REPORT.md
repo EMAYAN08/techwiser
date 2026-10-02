@@ -43,12 +43,11 @@
 
 **Quality notes:** Prices and images complete. One key-diff row shows iPhone ingress as "—" while Pixel shows IP68 — incomplete extraction, not a crash. Water Protection wording is a bit inconsistent with IP68 (LLM quality).
 
-### 2. 3 and 4 products; refuse 5
+### 2. 3 products; refuse 4+
 | Case | Result |
 | --- | --- |
 | Scrape 3 | PASS — iPhone 16, Pixel 9a, Pixel 9 |
-| Scrape 4 | PASS — + Galaxy S24 refurbished |
-| Compare with 5 URLs | PASS — HTTP 400 `A maximum of 4 product URLs is allowed.` |
+| Compare with 4 URLs | PASS — HTTP 400 `A maximum of 3 product URLs is allowed.` |
 
 ### 3. Invalid / empty / single / unsupported / garbage
 | Case | Result |
@@ -101,11 +100,11 @@
 ## Bugs found and fixed
 
 1. **`stripHtml` entity decode was a no-op again** (`server/src/services/scraper/bestbuy.ts`) — `&amp;`/`&lt;`/`&gt;`/`&quot;` patterns had been corrupted to match literal `&`/`<`/`>`/`"`; restored real entity decoding. Test now passes.
-2. **Home copy said “Any 2–3 tech products.”** while PRD/max is **2–4** — updated to “Any 2–4”. Same for QR hints (“Scan 2–4…”).
-3. **`MAX_QR_PRODUCTS` was 3** — raised to **4** to match URL compare limit.
+2. **Home copy and QR hints** now say **2–3** products to match `MAX_COMPARE_URLS = 3` / `MAX_QR_PRODUCTS = 3`.
+3. **`MAX_QR_PRODUCTS`** aligned at **3** with URL compare limit.
 4. **URL validation accepted retailer home pages** (domain-only) — now requires a **product-page shape** (Best Buy needs `/product/` + SKU; Amazon ASIN path; etc.).
-5. **Duplicate URLs could enable Compare** — client now uses `uniqueSupportedProductUrls`; server rejects duplicate-only sets and caps at **max 4**.
-6. **Server `/api/compare` had no max-URL or http(s) sanity checks** — added max 4, http(s) validation, and dedupe.
+5. **Duplicate URLs could enable Compare** — client now uses `uniqueSupportedProductUrls`; server rejects duplicate-only sets and caps at **max 3**.
+6. **Server `/api/compare` had no max-URL or http(s) sanity checks** — added max 3, http(s) validation, and dedupe.
 
 ---
 
@@ -128,7 +127,7 @@ Artifacts: `docs/test-artifacts/uat-edge-cases.json`, `docs/test-artifacts/uat-r
 | Native simulator | Not available — no on-device swipe-delete / camera QR / haptics feel testing |
 | Expo web | Metro served; strings verified in web bundle; full Detox/Maestro not in repo |
 | Local full AI compare | No LLM keys in this environment — full AI verified on Render |
-| Deployed max-4/dedupe | Fixes land on branch; Render still runs previous deploy until merged+redeployed |
+| Deployed max-3/dedupe | Compare capped at 2–3 products on main |
 
 ---
 

@@ -48,9 +48,9 @@ describe("looksLikeProductPage", () => {
 });
 
 describe("compare limits", () => {
-  it("matches PRD 2–4 product range", () => {
+  it("matches PRD 2–3 product range", () => {
     expect(MIN_COMPARE_URLS).toBe(2);
-    expect(MAX_COMPARE_URLS).toBe(4);
+    expect(MAX_COMPARE_URLS).toBe(3);
   });
 });
 

@@ -90,7 +90,7 @@ No dedicated mobile tool exists that:
 | US-01 | Tech advisor | Paste 2 product URLs and see a side-by-side spec comparison | I can answer customer questions in under 10 seconds | P0 |
 | US-02 | Tech advisor | See an AI-generated summary of "who each product is best for" | I can communicate trade-offs without reading every spec line | P0 |
 | US-03 | Tech advisor | See key differences highlighted (not all 40 specs) | I know where to direct the customer's attention | P0 |
-| US-04 | Tech advisor | Add up to 4 products to a comparison | I can handle three-way comparisons without reloading | P1 |
+| US-04 | Tech advisor | Add up to 3 products to a comparison | I can handle three-way comparisons without reloading | P1 |
 | US-05 | Tech advisor | See recently compared product pairs | I don't have to re-enter URLs I already used this shift | P1 |
 | US-06 | Tech advisor | Paste a URL with one tap (clipboard paste button) | I don't have to type long product URLs | P0 |
 | US-07 | Tech advisor | See which retailer each product is from | I know the source of the spec data | P0 |
@@ -121,7 +121,7 @@ No dedicated mobile tool exists that:
 ## 5. Functional Requirements
 
 ### F-001 — URL Input
-- **F-001.1:** App accepts 2 to 4 product page URLs as input
+- **F-001.1:** App accepts 2 to 3 product page URLs as input
 - **F-001.2:** Each input field shows a paste button that reads from the system clipboard
 - **F-001.3:** App validates URLs as product pages (not home pages or search pages) before enabling the compare button
 - **F-001.4:** App detects the Canadian retailer from the URL domain and displays its name and brand color
@@ -151,7 +151,7 @@ No dedicated mobile tool exists that:
 - **F-004.4:** Equal values receive neutral styling
 - **F-004.5:** Key difference rows appear in a distinct section above the full spec table
 - **F-004.6:** Full spec table is grouped by category with collapsible sections
-- **F-004.7:** Layout handles 2, 3, and 4 products without horizontal overflow
+- **F-004.7:** Layout handles 2 and 3 products without horizontal overflow
 
 ### F-005 — Price Display (Phase 1 placeholder, Phase 2 active)
 - **F-005.1 (Phase 1):** Price section renders as a visible "Coming soon" skeleton — not hidden
@@ -191,7 +191,7 @@ No dedicated mobile tool exists that:
 - **NF-001:** App cold start time < 2 seconds on a 3-year-old mid-range device
 - **NF-002:** Spec extraction + AI comparison < 8 seconds total (P90)
 - **NF-003:** Cached comparison load < 300ms
-- **NF-004:** Smooth 60fps scrolling in the spec table with 4 products and 40+ rows
+- **NF-004:** Smooth 60fps scrolling in the spec table with 3 products and 40+ rows
 
 ### Reliability
 - **NF-005:** App works offline for cached comparisons (graceful degradation, not crash)

@@ -33,7 +33,7 @@
 
 ### Mobile logic
 - URL validation against supported Canadian retailers (`utils/validators.ts`)
-- Compare limits aligned with PRD (2–4 products)
+- Compare limits aligned with PRD (2–3 products)
 - Product kind classification (phone / laptop / TV / appliances / tablet)
 - Retailer key normalization
 - Title normalization for comparison cards
@@ -56,7 +56,7 @@ Official **Best Buy Canada** product URLs (read-only; no cart / no sign-in):
 
 1. **`stripHtml` entity decode no-op** (`server/src/services/scraper/bestbuy.ts`) — `&amp;` was replaced with itself; now correctly decodes `&nbsp;`, `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&#39;`.
 2. **Compare button ignored retailer validation** (`mobile/app/(tabs)/index.tsx`) — previously any non-empty string enabled Compare; now requires `isSupportedProductUrl` and `MIN_COMPARE_URLS`.
-3. **Max products capped at 3 vs PRD 2–4** — `addUrl` / “Add product” UI now use `MAX_COMPARE_URLS = 4`.
+3. **Max products set to 2–3** — `addUrl` / “Add product” UI and server use `MAX_COMPARE_URLS = 3`.
 4. **`StyleSheet.absoluteFillObject` type errors** (Expo/RN 0.86) — replaced with `StyleSheet.absoluteFill` in `AlternativesDeck`, `GlassPanel`, `Skeleton`.
 5. **`ComingSoonPanel` impossible `"upc"` comparison** — prop type was `Extract<InputMode, "upc" | "qr">` but `InputMode` is only `"url" | "qr"`; narrowed to `"upc" | "qr"`.
 6. **Stale mock Best Buy SKUs** in recent-comparison seed data (404 on live API) — updated to real CA SKUs discovered via Best Buy search API.

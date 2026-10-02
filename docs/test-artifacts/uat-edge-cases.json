@@ -1,5 +1,5 @@
 {
-  "startedAt": "2026-10-02T14:27:30.027Z",
+  "startedAt": "2026-10-02T17:46:29.575Z",
   "base": "http://127.0.0.1:3000",
   "fullCompare": false,
   "environmentNotes": [
@@ -27,7 +27,7 @@
           "message": "Backend is running!"
         }
       },
-      "at": "2026-10-02T14:27:30.134Z"
+      "at": "2026-10-02T17:46:29.648Z"
     },
     {
       "id": "discover_fourth_product",
@@ -37,7 +37,7 @@
         "sku": "17741364",
         "name": "Refurbished (Excellent) - Samsung Galaxy S24 128GB - Onyx Black - Unlocked"
       },
-      "at": "2026-10-02T14:27:30.710Z"
+      "at": "2026-10-02T17:46:30.294Z"
     },
     {
       "id": "bb_official_iphone",
@@ -49,7 +49,7 @@
         "price": 1149.99,
         "hasImage": true
       },
-      "at": "2026-10-02T14:27:30.898Z"
+      "at": "2026-10-02T17:46:30.422Z"
     },
     {
       "id": "bb_official_pixel9a",
@@ -61,7 +61,7 @@
         "price": 599.97,
         "hasImage": true
       },
-      "at": "2026-10-02T14:27:31.039Z"
+      "at": "2026-10-02T17:46:30.698Z"
     },
     {
       "id": "bb_official_pixel9",
@@ -73,7 +73,7 @@
         "price": 729,
         "hasImage": true
       },
-      "at": "2026-10-02T14:27:31.421Z"
+      "at": "2026-10-02T17:46:31.110Z"
     },
     {
       "id": "bb_official_fourth",
@@ -84,7 +84,7 @@
         "name": "Refurbished (Excellent) - Samsung Galaxy S24 128GB - Onyx Black - Unlocked",
         "price": 429.94
       },
-      "at": "2026-10-02T14:27:31.837Z"
+      "at": "2026-10-02T17:46:31.624Z"
     },
     {
       "id": "edge_missing_urls",
@@ -92,7 +92,7 @@
       "detail": {
         "error": "An array of at least 2 URLs is required."
       },
-      "at": "2026-10-02T14:27:31.854Z"
+      "at": "2026-10-02T17:46:31.631Z"
     },
     {
       "id": "edge_single_url",
@@ -100,7 +100,7 @@
       "detail": {
         "error": "An array of at least 2 URLs is required."
       },
-      "at": "2026-10-02T14:27:31.859Z"
+      "at": "2026-10-02T17:46:31.634Z"
     },
     {
       "id": "edge_empty_strings",
@@ -108,7 +108,7 @@
       "detail": {
         "error": "All entries must be valid http(s) product URLs."
       },
-      "at": "2026-10-02T14:27:31.861Z"
+      "at": "2026-10-02T17:46:31.637Z"
     },
     {
       "id": "edge_garbage",
@@ -116,7 +116,7 @@
       "detail": {
         "error": "All entries must be valid http(s) product URLs."
       },
-      "at": "2026-10-02T14:27:31.864Z"
+      "at": "2026-10-02T17:46:31.639Z"
     },
     {
       "id": "edge_unsupported_retailer",
@@ -125,15 +125,15 @@
         "status": 500,
         "error": "Failed to parse specifications and compare products via AI."
       },
-      "at": "2026-10-02T14:27:44.733Z"
+      "at": "2026-10-02T17:46:41.558Z"
     },
     {
-      "id": "edge_five_urls_refused",
+      "id": "edge_four_urls_refused",
       "ok": true,
       "detail": {
-        "error": "A maximum of 4 product URLs is allowed."
+        "error": "A maximum of 3 product URLs is allowed."
       },
-      "at": "2026-10-02T14:27:44.738Z"
+      "at": "2026-10-02T17:46:41.563Z"
     },
     {
       "id": "edge_404_skus",
@@ -142,7 +142,7 @@
         "status": 500,
         "error": "Failed to parse specifications and compare products via AI."
       },
-      "at": "2026-10-02T14:27:55.114Z"
+      "at": "2026-10-02T17:46:52.557Z"
     },
     {
       "id": "edge_malformed_sku_mixed",
@@ -152,7 +152,7 @@
         "error": "Failed to parse specifications and compare products via AI.",
         "note": "One bad + one good may 502 if <2 scraped"
       },
-      "at": "2026-10-02T14:28:01.440Z"
+      "at": "2026-10-02T17:46:58.851Z"
     },
     {
       "id": "happy_scrape_2",
@@ -177,7 +177,7 @@
         ],
         "failedUrls": []
       },
-      "at": "2026-10-02T14:28:03.514Z"
+      "at": "2026-10-02T17:47:00.957Z"
     },
     {
       "id": "happy_scrape_3",
@@ -197,29 +197,15 @@
         ],
         "failedUrls": []
       },
-      "at": "2026-10-02T14:28:07.523Z"
+      "at": "2026-10-02T17:47:04.884Z"
     },
     {
-      "id": "happy_scrape_4",
+      "id": "edge_compare_four_refused",
       "ok": true,
       "detail": {
-        "status": 200,
-        "count": 4,
-        "titles": [
-          "Apple iPhone 16 128GB - Black - Unlocked",
-          "Google Pixel 9a 128GB - Obsidian - Unlocked",
-          "Brand New - Google Pixel 9 128GB - Obsidian - Unlocked",
-          "Refurbished (Excellent) - Samsung Galaxy S24 128GB - Onyx Black - Unlocked"
-        ],
-        "prices": [
-          "$1149.99",
-          "$599.97",
-          "$729",
-          "$429.94"
-        ],
-        "failedUrls": []
+        "error": "A maximum of 3 product URLs is allowed."
       },
-      "at": "2026-10-02T14:28:13.202Z"
+      "at": "2026-10-02T17:47:04.888Z"
     },
     {
       "id": "edge_duplicate_urls_scrape",
@@ -233,7 +219,7 @@
         ],
         "note": "Client now dedupes before compare; server may still accept duplicates for scrape"
       },
-      "at": "2026-10-02T14:28:16.750Z"
+      "at": "2026-10-02T17:47:08.436Z"
     },
     {
       "id": "edge_cancel_mid_load_abort",
@@ -241,13 +227,13 @@
       "detail": {
         "note": "Mirrors mobile AbortController cancel on loading overlay"
       },
-      "at": "2026-10-02T14:28:16.833Z"
+      "at": "2026-10-02T17:47:08.520Z"
     },
     {
       "id": "happy_full_compare_2",
       "ok": true,
       "detail": "skipped (pass --full-compare)",
-      "at": "2026-10-02T14:28:16.833Z"
+      "at": "2026-10-02T17:47:08.520Z"
     },
     {
       "id": "edge_alternatives_empty_payload",
@@ -255,10 +241,10 @@
       "detail": {
         "error": "Invalid payload. Required: products (array)."
       },
-      "at": "2026-10-02T14:28:16.837Z"
+      "at": "2026-10-02T17:47:08.525Z"
     }
   ],
-  "finishedAt": "2026-10-02T14:28:16.837Z",
+  "finishedAt": "2026-10-02T17:47:08.525Z",
   "summary": {
     "passed": 21,
     "failed": 0,

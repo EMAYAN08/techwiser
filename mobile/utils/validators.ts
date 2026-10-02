@@ -14,7 +14,7 @@ export const SUPPORTED_DOMAINS = [
 export type UrlValidationState = "idle" | "valid" | "invalid";
 
 /** Max products in a single comparison (PRD F-001.1). */
-export const MAX_COMPARE_URLS = 4;
+export const MAX_COMPARE_URLS = 3;
 
 /** Min products required to run a comparison. */
 export const MIN_COMPARE_URLS = 2;

@@ -26,17 +26,16 @@ describe("POST /api/compare validation", () => {
     expect(res.status).toBe(400);
   });
 
-  it("rejects more than 4 urls", async () => {
+  it("rejects more than 3 urls", async () => {
     const urls = [
       "https://www.bestbuy.ca/en-ca/product/a/1",
       "https://www.bestbuy.ca/en-ca/product/b/2",
       "https://www.bestbuy.ca/en-ca/product/c/3",
       "https://www.bestbuy.ca/en-ca/product/d/4",
-      "https://www.bestbuy.ca/en-ca/product/e/5",
     ];
     const res = await request(app).post("/api/compare").send({ urls });
     expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/maximum of 4/i);
+    expect(res.body.error).toMatch(/maximum of 3/i);
   });
 
   it("rejects garbage non-url entries", async () => {

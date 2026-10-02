@@ -232,9 +232,9 @@ async function main() {
     record("edge_unsupported_retailer", r.status >= 400, { status: r.status, error: r.json?.error, failedUrls: r.json?.failedUrls });
   }
   {
-    const five = [IPHONE, PIXEL9A, PIXEL9, fourth?.url || IPHONE, IPHONE];
-    const r = await post("/api/compare", { urls: five });
-    record("edge_five_urls_refused", r.status === 400 && /maximum of 4/i.test(String(r.json?.error || "")), r.json);
+    const four = [IPHONE, PIXEL9A, PIXEL9, fourth?.url || IPHONE];
+    const r = await post("/api/compare", { urls: four });
+    record("edge_four_urls_refused", r.status === 400 && /maximum of 3/i.test(String(r.json?.error || "")), r.json);
   }
   {
     const r = await post("/api/compare", {
@@ -288,21 +288,17 @@ async function main() {
     });
   }
 
-  // --- 4 products scrape ---
-  if (fourth?.url) {
-    const r = await post("/api/test-scrape", {
-      urls: [IPHONE, PIXEL9A, PIXEL9, fourth.url],
-    });
-    const data = r.json?.data || [];
-    record("happy_scrape_4", r.status === 200 && data.length >= 4, {
-      status: r.status,
-      count: data.length,
-      titles: data.map((d) => d.title),
-      prices: data.map((d) => d.priceText),
-      failedUrls: r.json?.failedUrls,
-    });
-  } else {
-    record("happy_scrape_4", false, "skipped — no fourth SKU");
+  // --- 4 products compare refused (max is 3) ---
+  {
+    const fourUrls = fourth?.url
+      ? [IPHONE, PIXEL9A, PIXEL9, fourth.url]
+      : [IPHONE, PIXEL9A, PIXEL9, IPHONE.replace("18391154", "18391155")];
+    const r = await post("/api/compare", { urls: fourUrls });
+    record(
+      "edge_compare_four_refused",
+      r.status === 400 && /maximum of 3/i.test(String(r.json?.error || "")),
+      r.json
+    );
   }
 
   // --- Duplicate URLs scrape ---
