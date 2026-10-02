@@ -14,7 +14,7 @@ import { useThemeColors } from "../../constants/Colors";
 import { space } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getApiBase } from "../../utils/apiBase";
-import { isSupportedProductUrl, MIN_COMPARE_URLS } from "../../utils/validators";
+import { isSupportedProductUrl, MIN_COMPARE_URLS, uniqueSupportedProductUrls } from "../../utils/validators";
 
 export default function Home() {
   const router = useRouter();
@@ -57,7 +57,7 @@ export default function Home() {
     });
   };
 
-  const validUrls = urls.filter((url: string) => isSupportedProductUrl(url));
+  const validUrls = uniqueSupportedProductUrls(urls);
   const canCompare = validUrls.length >= MIN_COMPARE_URLS && inputMode === "url";
 
   const goToCompare = useCallback(() => {
@@ -100,7 +100,9 @@ export default function Home() {
 
   const handleCompare = async (overrideUrls?: string[] | unknown) => {
     const source = Array.isArray(overrideUrls) ? overrideUrls : urls;
-    const compareUrls = source.filter((url: string) => typeof url === "string" && isSupportedProductUrl(url));
+    const compareUrls = uniqueSupportedProductUrls(
+      source.filter((url: unknown): url is string => typeof url === "string")
+    );
     if (compareUrls.length < MIN_COMPARE_URLS || isLoading) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     cancelledRef.current = false;
@@ -202,7 +204,7 @@ export default function Home() {
           <Animated.Text style={[styles.header, { opacity: fadeAnim, color: colors.ink }]}>
             Compare
           </Animated.Text>
-          <Text style={[styles.subheader, { color: colors.stone }]}>Any 2–3 tech products.</Text>
+          <Text style={[styles.subheader, { color: colors.stone }]}>Any 2–4 tech products.</Text>
         </View>
 
         <View style={{ height: TABS_HEIGHT, paddingHorizontal: space.gutter, paddingBottom: 8, backgroundColor: colors.bg }}>

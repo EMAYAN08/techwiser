@@ -1,0 +1,134 @@
+{
+  "status": 200,
+  "topKeys": [
+    "category",
+    "subcategory",
+    "deviceType",
+    "aiSummary",
+    "keyDifferences",
+    "products",
+    "groupedSpecs",
+    "groupIcons",
+    "id",
+    "createdAt"
+  ],
+  "productKeys": [
+    "name",
+    "brand",
+    "retailer",
+    "url",
+    "price",
+    "description",
+    "whatsInTheBox",
+    "userInsights",
+    "userPros",
+    "userCons",
+    "badges",
+    "aiSummary",
+    "rawSpecs",
+    "id",
+    "retailerColor",
+    "imageUrl"
+  ],
+  "specsLen": 0,
+  "rawSpecsLen": 34,
+  "groupedSpecsKeys": [
+    "Performance",
+    "Display",
+    "Camera",
+    "Battery",
+    "Design",
+    "Connectivity",
+    "Other Features"
+  ],
+  "groupedSpecsSampleCounts": {
+    "Performance": 2,
+    "Display": 3,
+    "Camera": 3,
+    "Battery": 1,
+    "Design": 4,
+    "Connectivity": 5,
+    "Other Features": 20
+  },
+  "groupIcons": {
+    "Performance": "cpu",
+    "Display": "display",
+    "Camera": "camera",
+    "Battery": "battery",
+    "Design": "design",
+    "Connectivity": "wifi",
+    "Other Features": "other"
+  },
+  "deviceType": "smartphone",
+  "hasAi": true,
+  "keyDiffCount": 5,
+  "price0": "$1149.99",
+  "image0": "https://multimedia.bbycastatic.ca/multimedia/products/1500x1500/183/18391/183911",
+  "retailer0": "Best Buy",
+  "aiSummary": "The Apple iPhone 16 and Google Pixel 9a both cater to users seeking high-performance smartphones with modern features. While the iPhone 16 excels in video capabilities and integration within the Apple ecosystem, the Pixel 9a stands out with its longer battery life and superior water resistance, making it ideal for various environments.",
+  "keyDifferences": [
+    {
+      "label": "Camera Features",
+      "values": [
+        "48MP rear camera with 4K video (iPhone 16)",
+        "48MP rear camera, 13MP front camera (Pixel 9a)"
+      ]
+    },
+    {
+      "label": "Battery Life",
+      "values": [
+        "Up to 22 hours video playback",
+        "Over 30 hours"
+      ]
+    },
+    {
+      "label": "Water Protection",
+      "values": [
+        "Water Resistant",
+        "No"
+      ]
+    },
+    {
+      "label": "Operating System",
+      "values": [
+        "iOS 18 (iPhone 16)",
+        "Android 15 (Pixel 9a)"
+      ]
+    },
+    {
+      "label": "Weight",
+      "values": [
+        "0.17 kg",
+        "0.19 kg"
+      ]
+    }
+  ],
+  "products": [
+    {
+      "name": "Apple iPhone 16 128GB - Black - Unlocked",
+      "price": "$1149.99",
+      "retailer": "Best Buy",
+      "imageUrl": "https://multimedia.bbycastatic.ca/multimedia/products/1500x1500/183/18391/18391154.jpg",
+      "badges": [
+        "Fast",
+        "Great Camera",
+        "Premium Build"
+      ],
+      "specsLen": 0,
+      "rawSpecsLen": 34
+    },
+    {
+      "name": "Google Pixel 9a 128GB - Obsidian - Unlocked",
+      "price": "$599.97",
+      "retailer": "Best Buy",
+      "imageUrl": "https://multimedia.bbycastatic.ca/multimedia/products/1500x1500/192/19206/19206094.jpg",
+      "badges": [
+        "Affordable",
+        "Great Battery",
+        "Camera Quality"
+      ],
+      "specsLen": 0,
+      "rawSpecsLen": 31
+    }
+  ]
+}

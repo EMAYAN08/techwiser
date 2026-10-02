@@ -4,6 +4,8 @@ import { extractPriceFromText, formatDisplayPrice, isMissingPrice } from "../lib
 import { generateAiComparison } from "../services/ai";
 import { partitionScrapeResults, scrapeUrlsSequentially } from "../services/scraper";
 
+const MAX_COMPARE_URLS = 4;
+
 const router = Router();
 
 function urlsMatch(a?: string, b?: string): boolean {
@@ -51,11 +53,48 @@ router.post("/compare", async (req: Request, res: Response) => {
       return;
     }
 
-    console.log(`Starting comparison for ${urls.length} URLs...`);
+    if (urls.length > MAX_COMPARE_URLS) {
+      res.status(400).json({ error: `A maximum of ${MAX_COMPARE_URLS} product URLs is allowed.` });
+      return;
+    }
+
+    const invalid = urls.filter((u: unknown) => {
+      if (typeof u !== "string" || !u.trim()) return true;
+      try {
+        const parsed = new URL(u.trim());
+        return !["http:", "https:"].includes(parsed.protocol);
+      } catch {
+        return true;
+      }
+    });
+    if (invalid.length) {
+      res.status(400).json({ error: "All entries must be valid http(s) product URLs." });
+      return;
+    }
+
+    const seen = new Set<string>();
+    const uniqueUrls: string[] = [];
+    for (const raw of urls as string[]) {
+      try {
+        const u = new URL(raw.trim());
+        const key = `${u.hostname.replace(/^www\./i, "").toLowerCase()}${u.pathname.replace(/\/$/, "")}`.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        uniqueUrls.push(raw.trim());
+      } catch {
+        uniqueUrls.push(raw.trim());
+      }
+    }
+    if (uniqueUrls.length < 2) {
+      res.status(400).json({ error: "Provide at least 2 distinct product URLs." });
+      return;
+    }
+
+    console.log(`Starting comparison for ${uniqueUrls.length} URLs...`);
 
     // Scrape retailer URLs sequentially to avoid triggering strict anti-bot rate limits
-    const scrapeResults = await scrapeUrlsSequentially(urls);
-    const { scrapedData, failedUrls } = partitionScrapeResults(urls, scrapeResults);
+    const scrapeResults = await scrapeUrlsSequentially(uniqueUrls);
+    const { scrapedData, failedUrls } = partitionScrapeResults(uniqueUrls, scrapeResults);
 
     if (scrapedData.length < 2) {
       res.status(502).json({ error: "Failed to scrape enough URLs for a comparison.", failedUrls });

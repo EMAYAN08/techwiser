@@ -25,6 +25,36 @@ describe("POST /api/compare validation", () => {
       .send({ urls: ["https://www.bestbuy.ca/en-ca/product/x/18391154"] });
     expect(res.status).toBe(400);
   });
+
+  it("rejects more than 4 urls", async () => {
+    const urls = [
+      "https://www.bestbuy.ca/en-ca/product/a/1",
+      "https://www.bestbuy.ca/en-ca/product/b/2",
+      "https://www.bestbuy.ca/en-ca/product/c/3",
+      "https://www.bestbuy.ca/en-ca/product/d/4",
+      "https://www.bestbuy.ca/en-ca/product/e/5",
+    ];
+    const res = await request(app).post("/api/compare").send({ urls });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/maximum of 4/i);
+  });
+
+  it("rejects garbage non-url entries", async () => {
+    const res = await request(app)
+      .post("/api/compare")
+      .send({ urls: ["not-a-url", "also bad"] });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/valid http/i);
+  });
+
+  it("rejects duplicate-only url sets", async () => {
+    const url = "https://www.bestbuy.ca/en-ca/product/apple-iphone-16-128gb-black-unlocked/18391154";
+    const res = await request(app)
+      .post("/api/compare")
+      .send({ urls: [url, url + "/"] });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/distinct/i);
+  });
 });
 
 describe("POST /api/test-scrape validation", () => {
