@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   extractPriceFromText,
+  extractRankedPriceFromHtml,
   extractShopifyPriceFromHtml,
   formatDisplayPrice,
   isMissingPrice,
   looksLikeMinorCurrencyUnits,
   normalizeMoneyAmount,
+  pickCurrentPrice,
+  pricesFromOffers,
   resolveProductPrice,
 } from "../lib/price";
 
@@ -103,5 +106,33 @@ describe("resolveProductPrice", () => {
 
   it("falls back to LLM when scrape missing", () => {
     expect(resolveProductPrice({ scrapedPrice: null, llmPrice: "$729" })).toBe("$729");
+  });
+});
+
+describe("sale vs list price", () => {
+  it("prefers JSON-LD current price over StrikethroughPrice", () => {
+    const price = pricesFromOffers({
+      price: 1999,
+      priceCurrency: "CAD",
+      priceSpecification: {
+        price: 2299,
+        priceType: "https://schema.org/StrikethroughPrice",
+        priceCurrency: "CAD",
+      },
+    });
+    expect(price).toBe("$1999");
+  });
+
+  it("keeps a single unlabeled price", () => {
+    expect(pickCurrentPrice([{ amount: 1149.99, role: "unknown" }])).toBe("$1149.99");
+    expect(pricesFromOffers({ price: "1998.99" })).toBe("$1998.99");
+  });
+
+  it("reads visible current price over a regular-price node", () => {
+    const html = `
+      <div class="current-price-value"><span itemprop="price">$1,999.00</span></div>
+      <div class="regular-price"><span>$2,299.00</span></div>
+    `;
+    expect(extractRankedPriceFromHtml(html)).toBe("$1999");
   });
 });

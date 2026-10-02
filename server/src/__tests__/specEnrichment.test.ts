@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  alignMarketingResolution,
   enrichComparisonSpecs,
   enrichProductSpecs,
   extractWeightKgFromText,
+  inferChipset,
   inferLaptopWeightKg,
   inferResolutionFromModel,
+  isFaceIdOnlyDevice,
   normalizeWeightComparisons,
   shouldOverrideResolution,
 } from "../lib/specEnrichment";
@@ -122,5 +125,92 @@ describe("enrichComparisonSpecs end-to-end", () => {
       /1440|QHD|2560/i
     );
     expect(result.keyDifferences[0].values[1]).toMatch(/1440|QHD|2560/i);
+  });
+});
+
+describe("chipset and biometric enrichment", () => {
+  it("fills iPhone 16 chipset and clears false fingerprint when Face ID is present", () => {
+    const specs = enrichProductSpecs(
+      [
+        { label: "Fingerprint Scanning", value: "Yes" },
+        { label: "Face ID", value: "Yes" },
+      ],
+      { title: "Apple iPhone 16 128GB" }
+    );
+    expect(specs.find((s) => /chipset/i.test(s.label))?.value).toMatch(/A18/i);
+    expect(specs.find((s) => /chipset/i.test(s.label))?.value).not.toMatch(/Pro/);
+    expect(specs.find((s) => /fingerprint/i.test(s.label))?.value).toBe("No");
+    expect(specs.find((s) => /face id/i.test(s.label))?.value).toBe("Yes");
+  });
+
+  it("maps Pixel 9a to Tensor G4 and does not strip fingerprint", () => {
+    expect(inferChipset("Google Pixel 9a 128GB")).toMatch(/Tensor G4/i);
+    const specs = enrichProductSpecs(
+      [{ label: "Fingerprint Scanning", value: "Yes" }],
+      { title: "Google Pixel 9a" }
+    );
+    expect(specs.find((s) => /fingerprint/i.test(s.label))?.value).toBe("Yes");
+    expect(specs.find((s) => /chipset/i.test(s.label))?.value).toMatch(/Tensor G4/i);
+  });
+
+  it("keeps Touch ID / iPhone SE fingerprint", () => {
+    expect(isFaceIdOnlyDevice("Apple iPhone SE (3rd generation)")).toBe(false);
+    const specs = enrichProductSpecs(
+      [{ label: "Fingerprint Scanning", value: "Yes" }, { label: "Touch ID", value: "Yes" }],
+      { title: "Apple iPhone SE" }
+    );
+    expect(specs.find((s) => /fingerprint/i.test(s.label))?.value).toBe("Yes");
+  });
+
+  it("does not replace an existing laptop processor", () => {
+    const specs = enrichProductSpecs(
+      [{ label: "Processor", value: "Intel Core Ultra 7 255H" }, { label: "Model", value: "UX3405CA-RS71T-CA" }],
+      { title: "ASUS Zenbook 14" }
+    );
+    expect(specs.find((s) => s.label === "Processor")?.value).toMatch(/Ultra 7/);
+  });
+});
+
+describe("shared resolution wording", () => {
+  it("rewrites an FHD title and display when the model is QHD", () => {
+    const result: any = {
+      products: [
+        {
+          name: 'LG 27" FHD StanbyME-2 TV',
+          rawSpecs: [
+            { label: "Model", value: "27LX6TYGA.ACC" },
+            { label: "Native Resolution", value: "1080p" },
+            { label: "Display", value: "27 inch FHD" },
+          ],
+        },
+      ],
+      keyDifferences: [{ label: "Native Resolution", values: ["1080p"] }],
+    };
+    enrichComparisonSpecs(result);
+    expect(result.products[0].name).toMatch(/QHD/i);
+    expect(result.products[0].name).not.toMatch(/\bFHD\b/);
+    expect(result.products[0].rawSpecs.find((s: any) => s.label === "Display").value).toMatch(/QHD/i);
+    expect(result.keyDifferences[0].values[0]).toMatch(/1440|QHD/i);
+  });
+
+  it("does not rewrite 1920x1200 laptop panels", () => {
+    expect(alignMarketingResolution("14 inch 1920 x 1200", "1440p QHD")).toBe("14 inch 1920 x 1200");
+    const specs = enrichProductSpecs(
+      [{ label: "Display", value: "14 inch 1920 x 1200" }, { label: "Model", value: "UX3405CA" }],
+      { title: "ASUS Zenbook 14 OLED" }
+    );
+    expect(specs.find((s) => s.label === "Display")?.value).toBe("14 inch 1920 x 1200");
+  });
+
+  it("prefers OEM laptop weight over a heavier shipping kg in text", () => {
+    const specs = enrichProductSpecs(
+      [
+        { label: "Model", value: "UX3405CA-RS71T-CA" },
+        { label: "Processor", value: "Intel Core Ultra 7 255H" },
+        { label: "Weight", value: "Unknown" },
+      ],
+      { title: "ASUS Zenbook 14 OLED", retailerText: "Shipping weight 2.454 kg" }
+    );
+    expect(specs.find((s) => s.label === "Weight")?.value).toBe("1.28 kg");
   });
 });

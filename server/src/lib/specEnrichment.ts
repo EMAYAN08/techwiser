@@ -101,6 +101,115 @@ export function extractWeightKgFromText(text: string): string | null {
   return null;
 }
 
+
+/** Rank marketing resolution tokens. 0 = unknown / not a panel class (e.g. 1920x1200). */
+export function resolutionRank(text: string): number {
+  const s = text || "";
+  if (/\b8k\b|7680/i.test(s)) return 5;
+  if (/\b4k\b|2160|3840|\buhd\b/i.test(s)) return 4;
+  if (/\bqhd\b|1440|2560/i.test(s)) return 3;
+  if (/\bfhd\b|full\s*hd|\b1080p\b|1920\s*[x×]\s*1080/i.test(s)) return 2;
+  if (/\b720p\b|1366\s*[x×]\s*768/i.test(s)) return 1;
+  return 0;
+}
+
+/**
+ * When a title or display field claims FHD/1080 but a higher canonical resolution is known,
+ * rewrite those tokens. Does not touch 1920×1200 or unlabeled sizes.
+ */
+export function alignMarketingResolution(text: string, canonical: string): string {
+  if (!text || !canonical) return text;
+  const canonRank = resolutionRank(canonical);
+  if (canonRank < 3) return text;
+  if (resolutionRank(text) >= canonRank && !/\b(fhd|full\s*hd|1080p)\b/i.test(text)) return text;
+  if (!/\b(fhd|full\s*hd|1080p|1920\s*[x×]\s*1080)\b/i.test(text)) return text;
+  // Only upgrade explicit FHD/1080 claims, not a higher-but-different wording already at canon rank.
+  if (resolutionRank(text) > canonRank) return text;
+  const word = canonRank >= 4 ? "4K" : "QHD";
+  const pWord = canonRank >= 4 ? "2160p" : "1440p";
+  const grid = canonRank >= 4 ? "3840 x 2160" : "2560 x 1440";
+  return text
+    .replace(/\bFull\s*HD\b/gi, word)
+    .replace(/\bFHD\b/gi, word)
+    .replace(/\b1080p\b/gi, pWord)
+    .replace(/1920\s*[x×]\s*1080/gi, grid);
+}
+
+/** Shared phone SoC map. Longer / more specific patterns first. */
+const CHIPSET_SERIES: Array<{ id: RegExp; chip: string }> = [
+  { id: /\biPhone\s*16\s*Pro\b/i, chip: "Apple A18 Pro" },
+  { id: /\biPhone\s*16\b/i, chip: "Apple A18" },
+  { id: /\biPhone\s*15\s*Pro\b/i, chip: "Apple A17 Pro" },
+  { id: /\biPhone\s*15\b/i, chip: "Apple A16 Bionic" },
+  { id: /\bPixel\s*9\s*Pro\b/i, chip: "Google Tensor G4" },
+  { id: /\bPixel\s*9a\b/i, chip: "Google Tensor G4" },
+  { id: /\bPixel\s*9\b/i, chip: "Google Tensor G4" },
+  { id: /\bPixel\s*8a\b/i, chip: "Google Tensor G3" },
+  { id: /\bPixel\s*8\b/i, chip: "Google Tensor G3" },
+];
+
+export function inferChipset(identity: string): string | null {
+  const text = identity || "";
+  for (const row of CHIPSET_SERIES) {
+    if (row.id.test(text)) return row.chip;
+  }
+  const labeled = text.match(
+    /\b(?:chipset|soc|system\s+on\s+a?\s*chip|processor)\b[^.\n]{0,40}?\b((?:Apple\s+)?A1[4-9](?:\s+Pro)?(?:\s+Bionic)?|Google\s+Tensor(?:\s+G\d)?|Snapdragon\s+\d+(?:\s+Gen\s+\d+)?(?:\s+Elite)?)\b/i
+  );
+  if (labeled?.[1]) return labeled[1].replace(/\s+/g, " ").trim();
+  return null;
+}
+
+/**
+ * Face ID–only Apple phones do not have a fingerprint sensor.
+ * iPhone SE and Touch ID devices are left alone. Generic Android face unlock does not qualify.
+ */
+export function isFaceIdOnlyDevice(identity: string, specs: SpecPair[] = []): boolean {
+  const blob = blobOf([identity, ...specs.map((s) => `${s.label} ${s.value}`)]);
+  if (/\biPhone\s*SE\b/i.test(blob)) return false;
+  if (/\bTouch\s*ID\b/i.test(blob) && !/\bFace\s*ID\b/i.test(blob)) return false;
+  if (/\bFace\s*ID\b/i.test(blob)) return true;
+  // iPhone X / XS / XR / 11 and newer (not SE, handled above).
+  if (/\biPhone\b/i.test(blob) && /\biPhone\s*(?:X\b|XS|XR|1[1-9]|[2-9]\d)/i.test(blob)) return true;
+  return false;
+}
+
+function chipsetLabel(specs: SpecPair[]): SpecPair | undefined {
+  return (
+    findSpec(specs, (l) => l.includes("chipset") || l === "soc" || l.includes("system on")) ||
+    findSpec(specs, (l) => l === "processor" || l.includes("processor"))
+  );
+}
+
+function applyChipset(specs: SpecPair[], identity: string): SpecPair[] {
+  const existing = chipsetLabel(specs);
+  if (existing && !isBlankSpec(existing.value)) return specs;
+  const chip = inferChipset(identity);
+  if (!chip) return specs;
+  const label = existing?.label || "Chipset";
+  return upsertSpec(specs, label, chip);
+}
+
+function sanitizeBiometrics(specs: SpecPair[], identity: string): SpecPair[] {
+  if (!isFaceIdOnlyDevice(identity, specs)) return specs;
+  let next = specs.map((s) => {
+    if (!/fingerprint/i.test(s.label)) return s;
+    if (/^(yes|true|supported|available|enabled)$/i.test(s.value.trim())) return { ...s, value: "No" };
+    return s;
+  });
+  const face = findSpec(next, (l) => l.includes("face id") || l === "face unlock");
+  if (!face) next = upsertSpec(next, "Face ID", "Yes");
+  else if (isBlankSpec(face.value)) next = upsertSpec(next, face.label, "Yes");
+  return next;
+}
+
+function applyResolutionWording(specs: SpecPair[], canonical: string): SpecPair[] {
+  return specs.map((s) => {
+    if (!/display|resolution|screen/i.test(s.label)) return s;
+    return { ...s, value: alignMarketingResolution(s.value, canonical) };
+  });
+}
+
 export function enrichProductSpecs(
   rawSpecs: SpecPair[],
   ctx: { title?: string; model?: string; retailerText?: string; deviceHint?: string }
@@ -120,9 +229,13 @@ export function enrichProductSpecs(
       // Canonicalize to the shared short form so key-diffs tie cleanly across retailers.
       specs = upsertSpec(specs, label, inferred.short);
     }
+    specs = applyResolutionWording(specs, inferred.short);
   }
 
-  // Laptop weight: fill Unknown from OEM map or nearby text.
+  specs = applyChipset(specs, identity);
+  specs = sanitizeBiometrics(specs, identity);
+
+  // Laptop weight: OEM series map wins over a shipping-like free-text kg when the model matches.
   const weightSpec = findSpec(specs, (l) => l === "weight" || l === "product weight");
   const looksLaptop =
     /laptop|notebook|zenbook|vivobook|macbook|ultrabook/i.test(identity) ||
@@ -132,7 +245,7 @@ export function enrichProductSpecs(
   if (looksLaptop && (!weightSpec || isBlankSpec(weightSpec.value))) {
     const fromText = extractWeightKgFromText(ctx.retailerText || "");
     const fromOem = inferLaptopWeightKg(identity);
-    const value = fromText || (fromOem ? fromOem.label : null);
+    const value = (fromOem ? fromOem.label : null) || fromText;
     if (value) {
       specs = upsertSpec(specs, weightSpec?.label || "Weight", value);
     }
@@ -242,6 +355,17 @@ export function normalizeWeightComparisons(result: {
   }
 }
 
+
+function specMatches(rowLabel: string, specLabel: string): boolean {
+  if (normLabel(rowLabel) === normLabel(specLabel)) return true;
+  if (/resolution/i.test(rowLabel) && /resolution/i.test(specLabel)) return true;
+  if (/chipset|processor|soc/i.test(rowLabel) && /chipset|processor|soc/i.test(specLabel)) return true;
+  if (/fingerprint/i.test(rowLabel) && /fingerprint/i.test(specLabel)) return true;
+  if (/face\s*id/i.test(rowLabel) && /face\s*id/i.test(specLabel)) return true;
+  if (/^display$/i.test(rowLabel.trim()) && /^display$/i.test(specLabel.trim())) return true;
+  return false;
+}
+
 export function enrichComparisonSpecs(result: any, productDataList?: Array<{ retailerText?: string; title?: string }>): void {
   if (!result || !Array.isArray(result.products)) return;
 
@@ -255,18 +379,20 @@ export function enrichComparisonSpecs(result: any, productDataList?: Array<{ ret
       retailerText: productDataList?.[i]?.retailerText,
       deviceHint: undefined,
     });
-    return { ...p, rawSpecs: enriched };
+    const res = enriched.find((s) => /resolution/i.test(s.label) && !isBlankSpec(s.value));
+    const name = res ? alignMarketingResolution(String(p.name || ""), res.value) : p.name;
+    return { ...p, name, rawSpecs: enriched };
   });
 
-  // Push enriched resolution/weight into groupedSpecs / keyDifferences by label match.
-  const syncLabels = [/native resolution/i, /^resolution$/i, /display resolution/i, /^weight$/i, /weight \(without stand\)/i];
+  // Push enriched resolution/weight/chipset/biometrics into groupedSpecs / keyDifferences by label match.
+  const syncLabels = [/native resolution/i, /^resolution$/i, /display resolution/i, /^display$/i, /screen size/i, /^weight$/i, /weight \(without stand\)/i, /chipset/i, /^processor$/i, /fingerprint/i, /face id/i];
   if (result.groupedSpecs) {
     for (const specs of Object.values(result.groupedSpecs) as Array<Array<{ label: string; values: string[] }>>) {
       for (const spec of specs) {
         if (!syncLabels.some((re) => re.test(spec.label))) continue;
         spec.values = spec.values.map((v, i) => {
           const raw = result.products[i]?.rawSpecs as SpecPair[] | undefined;
-          const hit = raw?.find((s) => normLabel(s.label) === normLabel(spec.label) || ( /resolution/i.test(spec.label) && /resolution/i.test(s.label)));
+          const hit = raw?.find((s) => specMatches(spec.label, s.label));
           return hit && !isBlankSpec(hit.value) ? hit.value : v;
         });
       }
@@ -277,11 +403,7 @@ export function enrichComparisonSpecs(result: any, productDataList?: Array<{ ret
       if (!syncLabels.some((re) => re.test(diff.label))) continue;
       diff.values = diff.values.map((v: string, i: number) => {
         const raw = result.products[i]?.rawSpecs as SpecPair[] | undefined;
-        const hit = raw?.find(
-          (s) =>
-            normLabel(s.label) === normLabel(diff.label) ||
-            (/resolution/i.test(diff.label) && /resolution/i.test(s.label))
-        );
+        const hit = raw?.find((s) => specMatches(diff.label, s.label));
         return hit && !isBlankSpec(hit.value) ? hit.value : v;
       });
     }

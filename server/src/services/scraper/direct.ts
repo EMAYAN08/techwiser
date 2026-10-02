@@ -1,5 +1,5 @@
 import type { ScrapeResult } from "../../types/scrape";
-import { extractShopifyPriceFromHtml, formatDisplayPrice } from "../../lib/price";
+import { extractRankedPriceFromHtml, extractShopifyPriceFromHtml, formatDisplayPrice, pricesFromOffers } from "../../lib/price";
 
 const BROWSER_UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
@@ -45,15 +45,7 @@ function firstImage(value: unknown): string | null {
 }
 
 function offerPrice(offers: unknown): string | null {
-  const list = Array.isArray(offers) ? offers : offers ? [offers] : [];
-  for (const offer of list) {
-    if (!offer || typeof offer !== "object") continue;
-    const price = (offer as { price?: unknown }).price;
-    if (price == null || price === "") continue;
-    const formatted = formatDisplayPrice(price);
-    if (formatted) return formatted;
-  }
-  return null;
+  return pricesFromOffers(offers);
 }
 
 function parseJsonLdProducts(html: string): any[] {
@@ -133,6 +125,7 @@ export async function scrapeDirectHtml(url: string): Promise<ScrapeResult | null
 
   const priceText =
     offerPrice(product.offers) ||
+    extractRankedPriceFromHtml(html) ||
     formatDisplayPrice(metaContent(html, "product:price:amount")) ||
     formatDisplayPrice(metaContent(html, "og:price:amount")) ||
     extractShopifyPriceFromHtml(html);

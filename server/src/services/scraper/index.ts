@@ -1,5 +1,5 @@
 import type { ScrapedProduct, ScrapeResult } from "../../types/scrape";
-import { extractShopifyPriceFromHtml, formatDisplayPrice } from "../../lib/price";
+import { extractRankedPriceFromHtml, extractShopifyPriceFromHtml, formatDisplayPrice, pricesFromOffers } from "../../lib/price";
 import { scrapeBestBuyApi } from "./bestbuy";
 import { scrapeDirectHtml } from "./direct";
 
@@ -59,8 +59,9 @@ async function extractHtmlExtras(
         const ld = JSON.parse(match[1]);
         const items = Array.isArray(ld) ? ld : [ld];
         for (const item of items) {
-          if (item.offers && item.offers.price) {
-            priceText = "$" + item.offers.price;
+          const priced = pricesFromOffers(item.offers);
+          if (priced) {
+            priceText = priced;
             break;
           }
         }
@@ -77,7 +78,7 @@ async function extractHtmlExtras(
   }
 
   if (!priceText) {
-    priceText = extractShopifyPriceFromHtml(html);
+    priceText = extractRankedPriceFromHtml(html) || extractShopifyPriceFromHtml(html);
   } else {
     priceText = formatDisplayPrice(priceText) || priceText;
   }
