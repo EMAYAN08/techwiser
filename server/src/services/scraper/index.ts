@@ -1,4 +1,5 @@
 import type { ScrapedProduct, ScrapeResult } from "../../types/scrape";
+import { extractShopifyPriceFromHtml, formatDisplayPrice } from "../../lib/price";
 import { scrapeBestBuyApi } from "./bestbuy";
 import { scrapeDirectHtml } from "./direct";
 
@@ -73,6 +74,12 @@ async function extractHtmlExtras(
     if (bbPriceMatch && bbPriceMatch[1]) {
       priceText = "$" + bbPriceMatch[1];
     }
+  }
+
+  if (!priceText) {
+    priceText = extractShopifyPriceFromHtml(html);
+  } else {
+    priceText = formatDisplayPrice(priceText) || priceText;
   }
 
   const ogImageMatch = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i);

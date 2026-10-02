@@ -62,7 +62,7 @@ export async function generateOpenAIComparison(
 
   realignGroupedToInputs(grouped, harvest, productDataList);
   mergeOrphanSpecs(grouped, harvest, productDataList.length);
-  return normalizeComparisonResult(grouped, productDataList.length);
+  return normalizeComparisonResult(grouped, productDataList.length, productDataList);
 }
 
 export async function explainSpecOpenAI(

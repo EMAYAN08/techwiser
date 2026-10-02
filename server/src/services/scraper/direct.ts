@@ -1,4 +1,5 @@
 import type { ScrapeResult } from "../../types/scrape";
+import { extractShopifyPriceFromHtml, formatDisplayPrice } from "../../lib/price";
 
 const BROWSER_UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
@@ -49,10 +50,8 @@ function offerPrice(offers: unknown): string | null {
     if (!offer || typeof offer !== "object") continue;
     const price = (offer as { price?: unknown }).price;
     if (price == null || price === "") continue;
-    const currency = String((offer as { priceCurrency?: string }).priceCurrency || "").toUpperCase();
-    const amount = String(price).replace(/[^0-9.]/g, "");
-    if (!amount) continue;
-    return currency === "CAD" || currency === "USD" || !currency ? `$${amount}` : `${amount} ${currency}`;
+    const formatted = formatDisplayPrice(price);
+    if (formatted) return formatted;
   }
   return null;
 }
@@ -134,8 +133,9 @@ export async function scrapeDirectHtml(url: string): Promise<ScrapeResult | null
 
   const priceText =
     offerPrice(product.offers) ||
-    metaContent(html, "product:price:amount") ||
-    metaContent(html, "og:price:amount");
+    formatDisplayPrice(metaContent(html, "product:price:amount")) ||
+    formatDisplayPrice(metaContent(html, "og:price:amount")) ||
+    extractShopifyPriceFromHtml(html);
 
   const imageUrl = upgradeImage(
     firstImage(product.image) || metaContent(html, "og:image") || metaContent(html, "twitter:image")

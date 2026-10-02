@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { RETAILER_COLORS } from "../config/constants";
-import { extractPriceFromText, formatDisplayPrice, isMissingPrice } from "../lib/price";
+import { extractPriceFromText, formatDisplayPrice, resolveProductPrice } from "../lib/price";
 import { generateAiComparison } from "../services/ai";
 import { partitionScrapeResults, scrapeUrlsSequentially } from "../services/scraper";
 
@@ -35,14 +35,6 @@ function matchScrapedProduct(product: any, scrapedData: any[], index: number) {
   return scrapedData[index];
 }
 
-function isBestBuyCanada(url?: string): boolean {
-  if (!url) return false;
-  try {
-    return new URL(url).hostname.toLowerCase().includes("bestbuy.ca");
-  } catch {
-    return /bestbuy\.ca/i.test(url);
-  }
-}
 
 router.post("/compare", async (req: Request, res: Response) => {
   try {
@@ -129,19 +121,14 @@ router.post("/compare", async (req: Request, res: Response) => {
       const scrapedPrice =
         formatDisplayPrice(matchedData?.priceText) || extractPriceFromText(matchedData?.retailerText || "");
       const llmPrice = formatDisplayPrice(p.price);
-      const preferBestBuyApi =
-        isBestBuyCanada(matchedData?.url || p.url) &&
-        matchedData?.priceSource === "bestbuy-api" &&
-        Boolean(scrapedPrice);
-
-      if (preferBestBuyApi) {
-        console.log(`[Price] Best Buy API ${scrapedPrice} overrides LLM ${p.price || "n/a"} for ${matchedData?.url}`);
-        p.price = scrapedPrice;
-      } else if (isMissingPrice(p.price) && scrapedPrice) {
-        p.price = scrapedPrice;
-      } else {
-        p.price = llmPrice || scrapedPrice || p.price || "N/A";
+      // Prefer scraped/API prices over LLM for all retailers (Costco drift, Shopify cents, BB API).
+      const resolved = resolveProductPrice({ scrapedPrice, llmPrice, preferScraped: true });
+      if (scrapedPrice && llmPrice && scrapedPrice !== llmPrice) {
+        console.log(`[Price] scraped ${scrapedPrice} preferred over LLM ${llmPrice} for ${matchedData?.url || p.url}`);
+      } else if (scrapedPrice && !llmPrice) {
+        console.log(`[Price] scraped ${scrapedPrice} fills missing LLM price for ${matchedData?.url || p.url}`);
       }
+      p.price = resolved;
       return p;
     });
 

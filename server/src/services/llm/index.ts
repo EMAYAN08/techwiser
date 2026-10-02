@@ -62,7 +62,7 @@ export async function generateComparison(
 
   realignGroupedToInputs(grouped, harvest, productDataList);
   mergeOrphanSpecs(grouped, harvest, productDataList.length);
-  return normalizeComparisonResult(grouped, productDataList.length);
+  return normalizeComparisonResult(grouped, productDataList.length, productDataList);
 }
 
 export async function explainSpec(productNames: string[], specLabel: string, specValues: string[]): Promise<any> {

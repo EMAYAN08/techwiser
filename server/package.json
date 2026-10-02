@@ -9,7 +9,7 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:unit": "vitest run src/__tests__/price.test.ts src/__tests__/bestbuy.test.ts src/__tests__/barcode-matching.test.ts src/__tests__/scrape-partition.test.ts src/__tests__/constants.test.ts src/__tests__/stripHtml.test.ts",
+    "test:unit": "vitest run src/__tests__/price.test.ts src/__tests__/bestbuy.test.ts src/__tests__/barcode-matching.test.ts src/__tests__/scrape-partition.test.ts src/__tests__/constants.test.ts src/__tests__/stripHtml.test.ts src/__tests__/specEnrichment.test.ts",
     "test:integration": "vitest run src/__tests__/api.integration.test.ts",
     "test:live": "vitest run src/__tests__/bestbuy.live.test.ts"
   },

@@ -1,3 +1,5 @@
+import { enrichComparisonSpecs } from "../../lib/specEnrichment";
+
 function normLabel(label: string): string {
   return String(label || "")
     .toLowerCase()
@@ -480,7 +482,11 @@ export function normalizeKeyDifferences(raw: unknown, productCount: number): Arr
     .filter((d): d is { label: string; values: string[] } => !!d);
 }
 
-export function normalizeComparisonResult(result: any, productCount: number): any {
+export function normalizeComparisonResult(
+  result: any,
+  productCount: number,
+  productDataList?: Array<{ retailerText?: string; title?: string; url?: string }>
+): any {
   const next = result && typeof result === "object" ? result : {};
   next.aiSummary = typeof next.aiSummary === "string" ? next.aiSummary : "";
   next.products = Array.isArray(next.products) ? next.products : [];
@@ -556,6 +562,8 @@ export function normalizeComparisonResult(result: any, productCount: number): an
     diff.values = diff.values.map((value: string, i: number) => findRawValue(next.products[i], needle) || value);
   }
   applyTieWinners(next.groupedSpecs);
+
+  enrichComparisonSpecs(next, productDataList);
 
   return next;
 }
