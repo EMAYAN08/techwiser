@@ -10,6 +10,7 @@ export const SUPPORTED_DOMAINS = [
   "thesource.ca",
   "costco.ca",
   "walmart.ca",
+  "leons.ca",
 ] as const;
 
 export const SHORTENER_DOMAINS = [
@@ -120,6 +121,7 @@ export function retailerFromHost(host: string): string {
   if (h.includes("thesource")) return "The Source";
   if (h.includes("costco")) return "Costco";
   if (h.includes("walmart")) return "Walmart";
+  if (h.includes("leons")) return "Leon's";
   return host || "Unknown";
 }
 
@@ -220,7 +222,7 @@ export type QrExtract = {
 const DANGEROUS = /^(javascript|data|file|blob|vbscript):/i;
 const URL_RE = /https?:\/\/[^\s<>"'`\\]+/gi;
 const BARE_HOST_RE =
-  /(?:www\.)?(?:bestbuy\.ca|amazon\.ca|amzn\.to|a\.co|canadacomputers\.com|memoryexpress\.com|newegg\.ca|staples\.ca|thesource\.ca|costco\.ca|walmart\.ca)[^\s<>"'`]*/gi;
+  /(?:www\.)?(?:bestbuy\.ca|amazon\.ca|amzn\.to|a\.co|canadacomputers\.com|memoryexpress\.com|newegg\.ca|staples\.ca|thesource\.ca|costco\.ca|walmart\.ca|leons\.ca)[^\s<>"'`]*/gi;
 
 function stripTrailingPunct(s: string): string {
   return s.replace(/[),.;!?]+$/g, "");

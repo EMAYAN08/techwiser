@@ -9,6 +9,7 @@ export const SUPPORTED_DOMAINS = [
   "thesource.ca",
   "costco.ca",
   "walmart.ca",
+  "leons.ca",
 ] as const;
 
 export type UrlValidationState = "idle" | "valid" | "invalid";
@@ -73,7 +74,7 @@ export function looksLikeProductPage(url: string): boolean {
     if (host.includes("canadacomputers.com")) {
       return meaningful.length >= 2;
     }
-    if (host.includes("staples.ca") || host.includes("thesource.ca") || host.includes("costco.ca")) {
+    if (host.includes("staples.ca") || host.includes("thesource.ca") || host.includes("costco.ca") || host.includes("leons.ca")) {
       return /product/i.test(path) || meaningful.length >= 2;
     }
     // Generic: reject bare roots / language-only paths

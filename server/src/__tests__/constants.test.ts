@@ -6,6 +6,7 @@ describe("SUPPORTED_RETAILERS", () => {
     expect(SUPPORTED_RETAILERS).toContain("bestbuy.ca");
     expect(SUPPORTED_RETAILERS).toContain("amazon.ca");
     expect(SUPPORTED_RETAILERS).toContain("walmart.ca");
+    expect(SUPPORTED_RETAILERS).toContain("leons.ca");
     expect(SUPPORTED_RETAILERS.length).toBeGreaterThanOrEqual(7);
   });
 });
@@ -13,5 +14,6 @@ describe("SUPPORTED_RETAILERS", () => {
 describe("RETAILER_COLORS", () => {
   it("maps bestbuy to brand navy", () => {
     expect(RETAILER_COLORS.bestbuy).toBe("#003B64");
+    expect(RETAILER_COLORS.leons).toBe("#EAB308");
   });
 });

@@ -10,6 +10,7 @@ vi.mock("../constants/Colors", () => ({
     staples: "Staples",
     thesource: "The Source",
     costco: "Costco",
+    leons: "Leon's",
     walmart: "Walmart",
   },
 }));

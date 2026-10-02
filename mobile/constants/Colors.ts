@@ -140,6 +140,7 @@ export function getRetailerColor(retailerName?: string, isDark?: boolean) {
   if (normalized.includes("staples")) return isDark ? "#FDA4AF" : "#9F1239";
   if (normalized.includes("costco")) return isDark ? "#F472B6" : "#DB2777";
   if (normalized.includes("amazon")) return isDark ? "#FDBA74" : "#EA580C";
+  if (normalized.includes("leons")) return isDark ? "#FACC15" : "#EAB308";
   return isDark ? "#A8A8A4" : "#484846";
 }
 
@@ -153,6 +154,7 @@ export const RETAILER_NAMES: Record<string, string> = {
   "thesource": "The Source",
   "costco": "Costco",
   "walmart": "Walmart",
+  "leons": "Leon's",
 };
 
 export function formatRetailerName(retailerName?: string): string {

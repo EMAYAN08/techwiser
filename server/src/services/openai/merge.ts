@@ -330,6 +330,7 @@ export function retailerFromUrl(url: string): string {
     if (host.includes("newegg")) return "newegg";
     if (host.includes("memoryexpress")) return "memoryexpress";
     if (host.includes("thesource")) return "thesource";
+    if (host.includes("leons")) return "leons";
   } catch {
     /* ignore */
   }

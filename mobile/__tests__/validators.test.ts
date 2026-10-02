@@ -24,6 +24,11 @@ describe("validateProductUrl", () => {
     ).toBe("valid");
     expect(validateProductUrl("https://www.amazon.ca/dp/B0D1XD1ZV3")).toBe("valid");
     expect(validateProductUrl("https://www.walmart.ca/en/ip/foo/123")).toBe("valid");
+    expect(
+      validateProductUrl(
+        "https://www.leons.ca/products/lg-27-fhd-stanbyme-2-tv-27lx6tygaacc"
+      )
+    ).toBe("valid");
   });
 
   it("rejects unsupported domains, home pages, and garbage", () => {

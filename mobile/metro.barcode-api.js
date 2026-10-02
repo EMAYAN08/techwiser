@@ -11,6 +11,7 @@ const SUPPORTED = [
   "newegg.ca",
   "staples.ca",
   "thesource.ca",
+  "leons.ca",
 ];
 
 const NESTED_PARAMS = [
@@ -64,6 +65,7 @@ function retailerFromHost(host) {
   if (host.includes("newegg")) return "Newegg";
   if (host.includes("staples")) return "Staples";
   if (host.includes("thesource")) return "The Source";
+  if (host.includes("leons")) return "Leon's";
   return host;
 }
 

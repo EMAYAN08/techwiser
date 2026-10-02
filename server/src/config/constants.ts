@@ -11,6 +11,7 @@ export const SUPPORTED_RETAILERS = [
   "newegg.ca",
   "staples.ca",
   "thesource.ca",
+  "leons.ca",
 ] as const;
 
 export const NESTED_URL_PARAMS = [
@@ -39,6 +40,7 @@ export const RETAILER_COLORS: Record<string, string> = {
   thesource: "#E4002B",
   costco: "#005BAA",
   walmart: "#0071CE",
+  leons: "#EAB308",
 };
 
 export const NAME_STOP_WORDS = new Set([

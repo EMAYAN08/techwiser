@@ -19,6 +19,7 @@ export function retailerFromHost(host: string): string {
   if (host.includes("newegg")) return "Newegg";
   if (host.includes("staples")) return "Staples";
   if (host.includes("thesource")) return "The Source";
+  if (host.includes("leons")) return "Leon's";
   return host;
 }
 
