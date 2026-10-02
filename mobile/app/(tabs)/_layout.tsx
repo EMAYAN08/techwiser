@@ -158,19 +158,19 @@ function CustomTabBar({ state, navigation }: any) {
 
   if (hidden) return null;
 
-  const liquidShadow =
+  const dockShadow =
     Platform.OS === "web"
       ? ({
           boxShadow: isDark
-            ? "0 18px 40px rgba(0,0,0,0.48), 0 2px 8px rgba(0,0,0,0.28)"
-            : "0 16px 40px rgba(20,16,10,0.12), 0 2px 8px rgba(20,16,10,0.06)",
+            ? "0 -1px 0 rgba(255,255,255,0.08), 0 -8px 24px rgba(0,0,0,0.28)"
+            : "0 -1px 0 rgba(20,16,10,0.06), 0 -6px 18px rgba(20,16,10,0.06)",
         } as const)
       : {
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: isDark ? 0.4 : 0.14,
-          shadowRadius: isDark ? 22 : 18,
-          elevation: isDark ? 14 : 8,
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: isDark ? 0.35 : 0.08,
+          shadowRadius: isDark ? 10 : 8,
+          elevation: 8,
         };
 
   const glassChrome =
@@ -189,9 +189,10 @@ function CustomTabBar({ state, navigation }: any) {
       pointerEvents="box-none"
       style={[
         styles.wrap,
-        liquidShadow,
+        dockShadow,
         {
-          bottom: Math.max(insets.bottom, 10) + 8,
+          bottom: 0,
+          paddingBottom: Math.max(insets.bottom, 0),
           opacity: Animated.multiply(mountAnim, tabBarAnim),
           transform: [
             {
@@ -202,15 +203,9 @@ function CustomTabBar({ state, navigation }: any) {
                 }),
                 tabBarAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [120, 0], // Slides down 120px completely out of screen
+                  outputRange: [120, 0],
                 })
               ),
-            },
-            {
-              scale: tabBarAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.85, 1], // Smoothly shrinks down like Instagram
-              }),
             },
           ],
         },
@@ -313,17 +308,16 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   wrap: {
     position: "absolute",
-    left: 16,
-    right: 16,
-    height: size.tabBar,
-    borderRadius: radii.pill,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 4,
   },
   glass: {
-    flex: 1,
     height: size.tabBar,
-    borderRadius: radii.pill,
-    borderWidth: 1,
+    borderRadius: 0,
+    borderWidth: 0,
+    borderTopWidth: 1,
     overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
