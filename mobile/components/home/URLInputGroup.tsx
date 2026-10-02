@@ -9,31 +9,12 @@ import { useComparisonStore } from "../../store/useComparisonStore";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { radii, size } from "../../constants/Layout";
-
-const SUPPORTED_DOMAINS = [
-  "bestbuy.ca",
-  "amazon.ca",
-  "canadacomputers.com",
-  "memoryexpress.com",
-  "newegg.ca",
-  "staples.ca",
-  "thesource.ca",
-  "costco.ca",
-  "walmart.ca",
-];
+import { MAX_COMPARE_URLS, validateProductUrl } from "../../utils/validators";
 
 type ValidationState = "idle" | "valid" | "invalid";
 
 function validateUrl(url: string): ValidationState {
-  if (!url.trim()) return "idle";
-  try {
-    const parsed = new URL(url.trim());
-    if (!["http:", "https:"].includes(parsed.protocol)) return "invalid";
-    const host = parsed.hostname.replace(/^www\./, "");
-    return SUPPORTED_DOMAINS.some((d) => host === d || host.endsWith("." + d)) ? "valid" : "invalid";
-  } catch {
-    return "invalid";
-  }
+  return validateProductUrl(url);
 }
 
 const THRESHOLD = 90;
@@ -196,7 +177,7 @@ export function URLInputGroup({
       ...urls.map((_, i) =>
         Animated.timing(animValues[i], { toValue: 1, duration: 380, delay: i * 60, useNativeDriver: true })
       ),
-      ...(urls.length < 3
+      ...(urls.length < MAX_COMPARE_URLS
         ? [Animated.timing(animValues[urls.length], { toValue: 1, duration: 380, delay: urls.length * 60, useNativeDriver: true })]
         : []),
     ];
@@ -260,7 +241,7 @@ export function URLInputGroup({
       ))}
 
       <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-        {urls.length < 3 ? (
+        {urls.length < MAX_COMPARE_URLS ? (
           <Animated.View
             style={{
               flex: 1,
