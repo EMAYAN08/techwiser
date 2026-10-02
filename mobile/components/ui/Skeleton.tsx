@@ -42,7 +42,7 @@ function ShineBand({
         const { width, height } = e.nativeEvent.layout;
         if (width !== box.w || height !== box.h) setBox({ w: width, h: height });
       }}
-      style={StyleSheet.absoluteFillObject}
+      style={StyleSheet.absoluteFill}
     >
       {box.w > 0 && box.h > 0 ? (
         <Animated.View

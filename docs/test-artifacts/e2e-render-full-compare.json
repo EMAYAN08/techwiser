@@ -1,0 +1,48 @@
+{
+  "startedAt": "2026-10-02T13:57:56.007Z",
+  "base": "https://techwiser.onrender.com",
+  "urls": [
+    "https://www.bestbuy.ca/en-ca/product/apple-iphone-16-128gb-black-unlocked/18391154",
+    "https://www.bestbuy.ca/en-ca/product/google-pixel-9a-128gb-obsidian-unlocked/19206094"
+  ],
+  "steps": [
+    {
+      "step": "health",
+      "status": 200
+    },
+    {
+      "step": "bestbuy_official_api",
+      "sku": "18391154",
+      "name": "Apple iPhone 16 128GB - Black - Unlocked",
+      "price": 1149.99,
+      "http": 200
+    },
+    {
+      "step": "bestbuy_official_api",
+      "sku": "19206094",
+      "name": "Google Pixel 9a 128GB - Obsidian - Unlocked",
+      "price": 599.97,
+      "http": 200
+    },
+    {
+      "step": "test_scrape",
+      "status": 200,
+      "productCount": 2,
+      "prices": [
+        "$1149.99",
+        "$599.97"
+      ]
+    },
+    {
+      "step": "full_compare",
+      "status": 200,
+      "productNames": [
+        "Apple iPhone 16 128GB - Black - Unlocked",
+        "Google Pixel 9a 128GB - Obsidian - Unlocked"
+      ],
+      "hasAiSummary": true,
+      "keyDifferences": 5
+    }
+  ],
+  "ok": true
+}

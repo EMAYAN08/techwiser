@@ -50,3 +50,18 @@ Step-by-step approval guide (icons, privacy, review notes, EAS submit):
 **[docs/APP_STORE.md](docs/APP_STORE.md)**
 
 Track progress on the GitHub issue: **[App Store checklist](https://github.com/EMAYAN08/techwiser/issues/2)** (boxes are clickable).
+
+## Testing
+
+Full suite and UAT notes: **[TEST_REPORT.md](TEST_REPORT.md)**
+
+```bash
+# Unit + integration (server) and unit (mobile)
+npm test
+
+# Best Buy Canada E2E (scrape) against a running API
+npm run e2e:bestbuy -- --base http://127.0.0.1:3000
+
+# Full AI comparison E2E (requires LLM keys on the target API)
+npm run e2e:bestbuy:full -- --base https://techwiser.onrender.com
+```

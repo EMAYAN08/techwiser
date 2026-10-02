@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
 import { type } from "../../constants/Typography";
 import { Feather } from "@expo/vector-icons";
-import { InputMode } from "./InputModeTabs";
 import { paletteTokens, useThemeColors } from "../../constants/Colors";
 import { radii } from "../../constants/Layout";
 
@@ -141,7 +140,7 @@ const svgStyles = StyleSheet.create({
   qrCell: { width: 7, height: 7, margin: 0.5, borderRadius: 1 },
 });
 
-export function ComingSoonPanel({ mode }: { mode: Extract<InputMode, "upc" | "qr"> }) {
+export function ComingSoonPanel({ mode }: { mode: "upc" | "qr" }) {
   const { colors, isDark } = useThemeColors();
   const cfg = CONFIG[mode];
   const fadeAnim = useRef(new Animated.Value(0)).current;

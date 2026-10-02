@@ -1,0 +1,11 @@
+{
+  "name": "techwiser",
+  "private": true,
+  "scripts": {
+    "test": "npm --prefix server test && npm --prefix mobile test",
+    "test:server": "npm --prefix server test",
+    "test:mobile": "npm --prefix mobile test",
+    "e2e:bestbuy": "node scripts/e2e-bestbuy-compare.mjs",
+    "e2e:bestbuy:full": "node scripts/e2e-bestbuy-compare.mjs --full-compare"
+  }
+}

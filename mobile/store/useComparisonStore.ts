@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { AlternativesResponse, SpecExplanationResponse } from "../services/api";
+import { MAX_COMPARE_URLS } from "../utils/validators";
 
 export interface Spec {
   label: string;
@@ -91,7 +92,7 @@ const MOCK_IPHONE: Product = {
   retailer: "bestbuy",
   retailerColor: "#003B64",
   price: "$1,449 CAD",
-  url: "https://www.bestbuy.ca/en-ca/product/iphone-15-pro/16802913",
+  url: "https://www.bestbuy.ca/en-ca/product/apple-iphone-16-128gb-black-unlocked/18391154",
   imageUrl: null,
   aiSummary:
     "Best-in-class performance and a deeply integrated ecosystem. Great for users already invested in Apple services and those who prioritize video recording and long-term software support.",
@@ -136,7 +137,7 @@ const MOCK_SAMSUNG: Product = {
   retailer: "bestbuy",
   retailerColor: "#003B64",
   price: "$1,679 CAD",
-  url: "https://www.bestbuy.ca/en-ca/product/galaxy-s24-ultra/16803012",
+  url: "https://www.bestbuy.ca/en-ca/product/google-pixel-9a-128gb-obsidian-unlocked/19206094",
   imageUrl: null,
   aiSummary:
     "The Android flagship to beat. Outstanding telephoto camera, S Pen productivity, and the brightest display in its class. Best for power users and content creators who want a single device for work and play.",
@@ -199,7 +200,7 @@ const MOCK_PIXEL: Product = {
   retailer: "bestbuy",
   retailerColor: "#003B64",
   price: "$1,349 CAD",
-  url: "https://www.bestbuy.ca/en-ca/product/pixel-8-pro/16789012",
+  url: "https://www.bestbuy.ca/en-ca/product/brand-new-google-pixel-9-128gb-obsidian-unlocked/18481469",
   imageUrl: null,
   aiSummary:
     "The cleanest Android experience with the longest software support window in the Pixel lineup, plus genuinely useful AI features that aren't gimmicks. Falls behind on raw performance and telephoto reach, but the most well-rounded of the three for everyday use.",
@@ -333,8 +334,8 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
       title: "iPhone 15 Pro vs Galaxy S24 Ultra",
       date: "2 hours ago",
       urls: [
-        "https://www.bestbuy.ca/en-ca/product/iphone-15-pro/16802913",
-        "https://www.bestbuy.ca/en-ca/product/galaxy-s24-ultra/16803012",
+        "https://www.bestbuy.ca/en-ca/product/apple-iphone-16-128gb-black-unlocked/18391154",
+        "https://www.bestbuy.ca/en-ca/product/google-pixel-9a-128gb-obsidian-unlocked/19206094",
       ],
       result: MOCK_RESULT,
     },
@@ -343,9 +344,9 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
       title: "iPhone 15 Pro vs Galaxy S24 Ultra vs Pixel 8 Pro",
       date: "Yesterday",
       urls: [
-        "https://www.bestbuy.ca/en-ca/product/iphone-15-pro/16802913",
-        "https://www.bestbuy.ca/en-ca/product/galaxy-s24-ultra/16803012",
-        "https://www.bestbuy.ca/en-ca/product/pixel-8-pro/16789012",
+        "https://www.bestbuy.ca/en-ca/product/apple-iphone-16-128gb-black-unlocked/18391154",
+        "https://www.bestbuy.ca/en-ca/product/google-pixel-9a-128gb-obsidian-unlocked/19206094",
+        "https://www.bestbuy.ca/en-ca/product/brand-new-google-pixel-9-128gb-obsidian-unlocked/18481469",
       ],
       result: MOCK_RESULT_3_PRODUCT,
     },
@@ -400,7 +401,7 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
     }),
   addUrl: () =>
     set((state) =>
-      state.urls.length < 3 ? { urls: [...state.urls, ""] } : state
+      state.urls.length < MAX_COMPARE_URLS ? { urls: [...state.urls, ""] } : state
     ),
   removeUrl: (index) =>
     set((state) => {

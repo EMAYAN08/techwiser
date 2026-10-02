@@ -42,7 +42,7 @@ function AltImage({ uri, loadRemote }: { uri?: string; loadRemote: boolean }) {
       {showRemote ? (
         <Image
           source={{ uri }}
-          style={[styles.image, StyleSheet.absoluteFillObject]}
+          style={[styles.image, StyleSheet.absoluteFill]}
           resizeMode="contain"
           fadeDuration={0}
           onError={() => setFailed(true)}

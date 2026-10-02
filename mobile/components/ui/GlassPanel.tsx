@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   edge: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     borderWidth: StyleSheet.hairlineWidth,
   },
   content: {},
