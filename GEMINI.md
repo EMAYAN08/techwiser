@@ -1,7 +1,7 @@
-# SpecMatch - Agent Rules
+# TechVisor - Agent Rules
 
 ## Project Context
-SpecMatch is a React Native (Expo SDK 52, TypeScript strict) mobile app for
+TechVisor is a React Native (Expo SDK 52, TypeScript strict) mobile app for
 Canadian retail tech advisors to compare products and find price matches.
 Canada-only. Dark mode first. Internal tool in Phase 1.
 

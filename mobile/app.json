@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
-    "scheme": "specmatch",
+    "name": "TechVisor",
+    "slug": "techvisor",
+    "scheme": "techvisor",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,8 +11,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Compare uses the camera to scan product barcodes and QR codes from boxes, shelf tags, and retailer pages.",
-        "NSPhotoLibraryUsageDescription": "Compare reads a photo so you can scan a product barcode or QR code from your camera roll."
-      }
+        "NSPhotoLibraryUsageDescription": "Compare reads a photo so you can scan a product barcode or QR code from your camera roll.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "ca.techvisor.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,10 +25,12 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "READ_MEDIA_IMAGES"
-      ]
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "ca.techvisor.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -63,6 +67,13 @@
       "expo-sharing",
       "expo-status-bar",
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "aa04c275-a2ea-45aa-8fbf-250f88865b3f"
+      }
+    },
+    "owner": "emayan"
   }
 }

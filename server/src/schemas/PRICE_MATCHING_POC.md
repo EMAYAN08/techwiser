@@ -1,4 +1,4 @@
-# SpecMatch — Price Matching POC
+# TechVisor — Price Matching POC
 **Feature:** Real-time Canadian retailer price fetching  
 **Status:** POC / Research  
 **Verdict:** Feasible with a hybrid approach. No single free solution covers all Canadian retailers.

@@ -1,4 +1,4 @@
-<title>SpecMatch — Compare Screen Design Spec v2</title>
+<title>TechVisor — Compare Screen Design Spec v2</title>
 
 <style>
   :root {
@@ -736,7 +736,7 @@
 
 <main class="page">
   <header class="hero">
-    <div class="eyebrow">SpecMatch · Mobile Design Spec · v2</div>
+    <div class="eyebrow">TechVisor · Mobile Design Spec · v2</div>
     <h1 class="title">The compare screen <em>that helps the advisor decide</em>, not just read.</h1>
     <p class="lede">
       A decision-first comparison flow for Canadian retail tech advisors. The current screen
@@ -1363,10 +1363,10 @@
       buttons.forEach(b => {
         b.setAttribute('aria-pressed', b.getAttribute('data-theme-target') === target ? 'true' : 'false');
       });
-      try { localStorage.setItem('specmatch-theme', target); } catch (e) {}
+      try { localStorage.setItem('techvisor-theme', target); } catch (e) {}
     }
     let saved = 'system';
-    try { saved = localStorage.getItem('specmatch-theme') || 'system'; } catch (e) {}
+    try { saved = localStorage.getItem('techvisor-theme') || 'system'; } catch (e) {}
     setTheme(saved);
     buttons.forEach(b => {
       b.addEventListener('click', () => setTheme(b.getAttribute('data-theme-target')));

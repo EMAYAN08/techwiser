@@ -277,7 +277,7 @@ export async function exportComparisonToPDF(comparison: any, isDark: boolean = t
         </style>
       </head>
       <body>
-        <div class="title">SpecMatch Comparison Report</div>
+        <div class="title">TechVisor Comparison Report</div>
         
         ${headerHtml}
         ${overviewHtml}

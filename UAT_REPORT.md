@@ -1,4 +1,4 @@
-# SpecMatch / TechVisor — UAT & Edge-Case Report
+# TechVisor / TechVisor — UAT & Edge-Case Report
 
 **Repo:** [EMAYAN08/techwiser](https://github.com/EMAYAN08/techwiser)  
 **Branch:** `uat-edge-case-fixes`  

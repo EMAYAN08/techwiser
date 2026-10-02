@@ -1,8 +1,8 @@
-# SpecMatch — Product Requirements Document (PRD)
+# TechVisor — Product Requirements Document (PRD)
 **Version:** 1.0  
 **Last Updated:** 2026-08-25  
 **Status:** Active  
-**Owner:** SpecMatch (Solo)  
+**Owner:** TechVisor (Solo)  
 **Target Platform:** iOS + Android (Canada-first)
 
 ---
@@ -24,7 +24,7 @@
 
 ## 1. Executive Summary
 
-SpecMatch is a mobile application that allows retail tech advisors and consumers to instantly compare two or more products side-by-side — extracting key specifications via AI from any product URL — and to surface pricing for the same product across Canadian online retailers. The product eliminates a high-friction, manual workflow that retail advisors currently perform dozens of times per shift.
+TechVisor is a mobile application that allows retail tech advisors and consumers to instantly compare two or more products side-by-side — extracting key specifications via AI from any product URL — and to surface pricing for the same product across Canadian online retailers. The product eliminates a high-friction, manual workflow that retail advisors currently perform dozens of times per shift.
 
 The initial release is a **Canadian market, internal advisor tool**. Future releases expand to a consumer-facing product with affiliate revenue and a B2B SaaS offering for retail chains.
 

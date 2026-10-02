@@ -6,14 +6,14 @@ from bs4 import BeautifulSoup
 import json
 import re
 
-app = FastAPI(title="SpecMatch Scraper API")
+app = FastAPI(title="TechVisor Scraper API")
 
 class ScrapeRequest(BaseModel):
     url: str
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "ok", "service": "SpecMatch Scraper API"}
+    return {"status": "ok", "service": "TechVisor Scraper API"}
 
 def extract_json_ld(soup):
     for script in soup.find_all("script", type="application/ld+json"):

@@ -1,4 +1,4 @@
-# SpecMatch — Design Specifications
+# TechVisor — Design Specifications
 
 ## 1. Design Philosophy
 - **Aesthetic:** Strict, Elite Minimalism (inspired by Notion and Linear).

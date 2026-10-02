@@ -1,4 +1,4 @@
-# SpecMatch / TechVisor — Test Report
+# TechVisor / TechVisor — Test Report
 
 **Repo:** [EMAYAN08/techwiser](https://github.com/EMAYAN08/techwiser)  
 **Branch:** `test-suite-and-fixes`  

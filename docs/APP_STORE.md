@@ -1,4 +1,4 @@
-# SpecMatch — App Store approval guide
+# TechVisor — App Store approval guide
 
 How to get the iOS app approved. Use this with the [App Store checklist issue](https://github.com/EMAYAN08/techwiser/issues/2) — check items off there as you finish them.
 
@@ -19,8 +19,8 @@ These will get a first-time binary rejected if you ship today:
 
 | Gap | Where | What to do |
 | --- | --- | --- |
-| Display name is `"mobile"` | `mobile/app.json` | Set `"name": "SpecMatch"` (or the final store name) |
-| No iOS bundle identifier | `mobile/app.json` → `ios.bundleIdentifier` | Add something like `ca.specmatch.app` |
+| Display name is `"mobile"` | `mobile/app.json` | Set `"name": "TechVisor"` (or the final store name) |
+| No iOS bundle identifier | `mobile/app.json` → `ios.bundleIdentifier` | Add something like `ca.techvisor.app` |
 | No EAS project | `mobile/` | Run `npx eas init` and commit `eas.json` |
 | Privacy / terms / support URLs | Public site | Live at [emayan08.github.io/techwiser](https://emayan08.github.io/techwiser/) — paste these into App Store Connect |
 | No `PrivacyInfo.xcprivacy` | iOS build | Add a privacy manifest (Expo generates one if you configure it) |
@@ -39,7 +39,7 @@ These will get a first-time binary rejected if you ship today:
    - Name: the store listing name (30 characters max)
    - Primary language: English (Canada) if available, else English (US)
    - Bundle ID: must match `ios.bundleIdentifier` exactly
-   - SKU: internal, e.g. `specmatch-ios`
+   - SKU: internal, e.g. `techvisor-ios`
    - User access: Full Access for you
 
 Done when the app appears in App Store Connect with status **Prepare for Submission**.
@@ -53,12 +53,12 @@ Done when the app appears in App Store Connect with status **Prepare for Submiss
 ```json
 {
   "expo": {
-    "name": "SpecMatch",
-    "slug": "specmatch",
-    "scheme": "specmatch",
+    "name": "TechVisor",
+    "slug": "techvisor",
+    "scheme": "techvisor",
     "version": "1.0.0",
     "ios": {
-      "bundleIdentifier": "ca.specmatch.app",
+      "bundleIdentifier": "ca.techvisor.app",
       "buildNumber": "1",
       "supportsTablet": true
     }
@@ -131,7 +131,7 @@ Done when a reviewer can tap Settings → Privacy Policy and read a real policy 
 
 In App Store Connect → App Privacy, declare **exactly** what the binary does.
 
-Recommended answers for SpecMatch today:
+Recommended answers for TechVisor today:
 
 | Data type | Collected? | Linked to identity? | Used for tracking? | Notes |
 | --- | --- | --- | --- | --- |
@@ -218,7 +218,7 @@ In App Store Connect → Review Information:
 2. Notes template:
 
 ```
-SpecMatch compares 2–3 Canadian retailer product pages.
+TechVisor compares 2–3 Canadian retailer product pages.
 
 No account. No IAP. No tracking.
 
@@ -246,7 +246,7 @@ Done when notes include working URLs you tested the same week you submit.
 
 | Field | Limit | Suggestion |
 | --- | --- | --- |
-| Name | 30 | SpecMatch |
+| Name | 30 | TechVisor |
 | Subtitle | 30 | Compare tech. Instantly. |
 | Description | 4000 | What it does, Canada retailers, no account, AI summaries. Do not mention Expo or competitors as the headline. |
 | Keywords | 100 chars | compare,specs,best buy,electronics,price |
@@ -293,13 +293,13 @@ Done after at least one external tester (or you on a clean device) finishes the 
 3. AI summaries must not claim to be the retailer or a certified expert. Your empty/error copy is already cautious — keep it.
 4. Export PDF should not include a fake “official” retailer letterhead.
 
-Done when listing and PDF clearly present SpecMatch as an independent comparison tool.
+Done when listing and PDF clearly present TechVisor as an independent comparison tool.
 
 ---
 
 ## 15. Kids, accounts, IAP, tracking (N/A — still answer)
 
-| Topic | SpecMatch | Action |
+| Topic | TechVisor | Action |
 | --- | --- | --- |
 | Kids Category | No | Don’t check Kids. |
 | Sign in / Sign in with Apple | No accounts | Don’t add a fake login. |

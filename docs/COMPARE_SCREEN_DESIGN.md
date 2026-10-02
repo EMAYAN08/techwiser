@@ -2,7 +2,7 @@
 
 **Version:** 2.0
 **Status:** Active
-**Owner:** SpecMatch
+**Owner:** TechVisor
 **Last Updated:** 2026-08-27
 **Target:** React Native (Expo SDK 52, iOS 16+ / Android 10+)
 **Reference width:** 390pt · Portrait only
@@ -115,7 +115,7 @@ adds two **specific** motions — do not introduce a new animation library.
 
 ### 1.6 Elevation
 
-**No drop shadows.** SpecMatch is flat; hierarchy comes from 1px
+**No drop shadows.** TechVisor is flat; hierarchy comes from 1px
 `colors.border` hairlines and surface tone shifts. Sticky elements
 (distinct from non-sticky) earn a `borderBottomWidth: 1, borderBottomColor: colors.border` —
 never a shadow.

@@ -1,6 +1,13 @@
-# SpecMatch
+# TechVisor
 
 Mobile app that compares tech products from Canadian retailer URLs — specs, AI summary, and side-by-side trade-offs.
+
+## TestFlight / iOS install
+
+To put **TechVisor** on your iPhone via TestFlight (EAS build + App Store Connect), follow the step-by-step guide:
+
+→ [docs/TESTFLIGHT.md](docs/TESTFLIGHT.md)
+
 
 ## Structure
 
