@@ -344,7 +344,7 @@ export function URLInputHeader() {
 
   return (
     <View style={[{ backgroundColor: colors.bg, paddingBottom: 12, paddingTop: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-      <Text style={[{ color: colors.stone, ...type.eyebrow }]}>PRODUCT URLS</Text>
+      <Text style={[{ color: colors.body, ...type.eyebrow }]}>PRODUCT URLS</Text>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         {urls.length > 2 ? (
           <Text style={[{ color: colors.stone, ...type.caption, fontSize: 11, marginRight: 8, opacity: 0.6 }]}>Swipe left to remove</Text>

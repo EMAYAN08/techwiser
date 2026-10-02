@@ -41,15 +41,29 @@ export function Input({ onPaste, onClear, style, validationState = "idle", ...pr
 
   const borderColor = borderAnim.interpolate({
     inputRange: [0, 1, 2, 3],
-    outputRange: [colors.line, colors.ink, colors.spotify, colors.error],
+    outputRange: [colors.fieldBorder, colors.ink, colors.spotify, colors.error],
   });
 
   return (
     <View style={styles.wrapper}>
-      <Animated.View style={[styles.container, { backgroundColor: colors.surface, borderColor }]}>
+      <Animated.View
+        style={[
+          styles.container,
+          {
+            backgroundColor: colors.surface,
+            borderColor,
+            // Soft lift so white fields separate from paper bg (web + iOS)
+            shadowColor: "#0A0A0A",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.06,
+            shadowRadius: 2,
+            elevation: 1,
+          },
+        ]}
+      >
         <TextInput
           style={[styles.input, { color: colors.ink }, style]}
-          placeholderTextColor={colors.stone}
+          placeholderTextColor={colors.placeholder}
           onFocus={(e) => {
             setIsFocused(true);
             props.onFocus?.(e);
@@ -75,7 +89,7 @@ export function Input({ onPaste, onClear, style, validationState = "idle", ...pr
               hitSlop={10}
               style={styles.iconBtn}
             >
-              <X size={14} color={colors.stone} strokeWidth={2.25} />
+              <X size={14} color={colors.placeholder} strokeWidth={2.25} />
             </Pressable>
           ) : null}
           {validationState !== "idle" ? (
@@ -96,7 +110,7 @@ export function Input({ onPaste, onClear, style, validationState = "idle", ...pr
               hitSlop={10}
               style={styles.iconBtn}
             >
-              <Clipboard size={16} color={colors.stone} strokeWidth={2.25} />
+              <Clipboard size={16} color={colors.placeholder} strokeWidth={2.25} />
             </Pressable>
           ) : null}
         </View>
@@ -110,7 +124,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderRadius: radii.field,
     minHeight: size.field,
     paddingHorizontal: 16,

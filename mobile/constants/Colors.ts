@@ -9,8 +9,8 @@ export const paletteTokens = {
   ink: "#0A0A0A",
   fog: "#EFEFEA",
   stone: "#8C8C86",
-  lineLight: "#E8E8E4",
-  bodyLight: "#5A5A58",
+  lineLight: "#D5D5CF",
+  bodyLight: "#484846",
   surfaceLight: "#FFFFFF",
   surfaceDark: "#161616",
   fogDark: "#1C1C1C",
@@ -18,20 +18,20 @@ export const paletteTokens = {
   tabBarLight: "#FFFFFF",
   tabBarDark: "#141414",
   scannerAmber: "#C9B896",
-  modeWellLight: "#EBE6DC",
+  modeWellLight: "#E4DFD4",
   modeWellDark: "#2C2C2C",
 } as const;
 
 export const palette = {
   light: {
-    background: paletteTokens.paper,
+    background: "#F2F2EF",
     surface: paletteTokens.surfaceLight,
-    surfaceHighlight: paletteTokens.fog,
-    surfaceHover: paletteTokens.fog,
+    surfaceHighlight: "#E8E8E2",
+    surfaceHover: "#E8E8E2",
     border: paletteTokens.lineLight,
     text: paletteTokens.ink,
     textSecondary: paletteTokens.bodyLight,
-    textTertiary: paletteTokens.stone,
+    textTertiary: "#6E6E68",
     primary: paletteTokens.ink,
     primaryMuted: paletteTokens.lineLight,
     success: paletteTokens.spotify,
@@ -39,32 +39,36 @@ export const palette = {
     error: "#EB5757",
     errorMuted: "rgba(235, 87, 87, 0.1)",
     ai: paletteTokens.spotify,
-    aiMuted: paletteTokens.fog,
+    aiMuted: "#E8E8E2",
     // Exact theme.ts match
-    bg: paletteTokens.paper,
+    bg: "#F2F2EF",
     ink: paletteTokens.ink,
     body: paletteTokens.bodyLight,
-    stone: paletteTokens.stone,
-    fog: paletteTokens.fog,
+    stone: "#6E6E68",
+    fog: "#E8E8E2",
     line: paletteTokens.lineLight,
     spotify: paletteTokens.spotify,
     spotifyInk: paletteTokens.spotifyInk,
     spotifyWash: paletteTokens.spotifyWashLight,
     primaryBtn: paletteTokens.ink,
     primaryBtnFg: "#FFFFFF",
-    tabBar: "rgba(246,246,244,0.94)",
-    tabBarBorder: "rgba(10,10,10,0.08)",
-    tabPill: "rgba(255,255,255,0.92)",
+    tabBar: "rgba(242,242,239,0.96)",
+    tabBarBorder: "rgba(10,10,10,0.12)",
+    tabPill: "rgba(255,255,255,0.96)",
     tabSelectedIcon: paletteTokens.ink,
     tabSelectedLabel: paletteTokens.ink,
-    tabUnselected: "rgba(10,10,10,0.46)",
+    tabUnselected: "rgba(10,10,10,0.56)",
     segmentSelectedBg: paletteTokens.ink,
     segmentSelectedFg: "#FFFFFF",
     verdictBg: paletteTokens.ink,
     verdictFg: "#FFFFFF",
-    overlay: "rgba(10,10,10,0.08)",
+    overlay: "rgba(10,10,10,0.10)",
     scannerAmber: paletteTokens.scannerAmber,
     modeWell: paletteTokens.modeWellLight,
+    /** Idle input / control chrome — stronger than `line` so fields read on paper bg */
+    fieldBorder: "#B4B4AC",
+    /** Placeholder text — readable but clearly softer than filled `ink` */
+    placeholder: "#5A5A54",
   },
   dark: {
     background: paletteTokens.ink,
@@ -108,6 +112,8 @@ export const palette = {
     overlay: "rgba(255,255,255,0.06)",
     scannerAmber: paletteTokens.scannerAmber,
     modeWell: paletteTokens.modeWellDark,
+    fieldBorder: "rgba(255,255,255,0.16)",
+    placeholder: paletteTokens.stone,
   },
 };
 
@@ -126,7 +132,7 @@ export function useThemeColors() {
 }
 
 export function getRetailerColor(retailerName?: string, isDark?: boolean) {
-  if (!retailerName) return isDark ? "#A8A8A4" : "#5A5A58";
+  if (!retailerName) return isDark ? "#A8A8A4" : "#484846";
   const normalized = retailerName.toLowerCase().replace(/[^a-z]/g, "");
   if (normalized.includes("bestbuy")) return isDark ? "#60A5FA" : "#0046BE";
   if (normalized.includes("walmart")) return isDark ? "#FDE047" : "#D97706";
@@ -134,7 +140,7 @@ export function getRetailerColor(retailerName?: string, isDark?: boolean) {
   if (normalized.includes("staples")) return isDark ? "#FDA4AF" : "#9F1239";
   if (normalized.includes("costco")) return isDark ? "#F472B6" : "#DB2777";
   if (normalized.includes("amazon")) return isDark ? "#FDBA74" : "#EA580C";
-  return isDark ? "#A8A8A4" : "#5A5A58";
+  return isDark ? "#A8A8A4" : "#484846";
 }
 
 export const RETAILER_NAMES: Record<string, string> = {

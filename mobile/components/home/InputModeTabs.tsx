@@ -142,7 +142,7 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
               {
                 backgroundColor: wellBg,
                 borderWidth: isActive ? 2 : 1,
-                borderColor: isActive ? colors.primary : colors.line,
+                borderColor: isActive ? colors.primary : colors.fieldBorder,
               },
             ]}
           >
