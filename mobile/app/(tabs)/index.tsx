@@ -14,6 +14,7 @@ import { useThemeColors } from "../../constants/Colors";
 import { space } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getApiBase } from "../../utils/apiBase";
+import { isSupportedProductUrl, MIN_COMPARE_URLS } from "../../utils/validators";
 
 export default function Home() {
   const router = useRouter();
@@ -56,8 +57,8 @@ export default function Home() {
     });
   };
 
-  const validUrls = urls.filter((url: string) => url.trim().length > 0);
-  const canCompare = validUrls.length >= 2 && inputMode === "url";
+  const validUrls = urls.filter((url: string) => isSupportedProductUrl(url));
+  const canCompare = validUrls.length >= MIN_COMPARE_URLS && inputMode === "url";
 
   const goToCompare = useCallback(() => {
     if (navigatedRef.current) return;
@@ -99,8 +100,8 @@ export default function Home() {
 
   const handleCompare = async (overrideUrls?: string[] | unknown) => {
     const source = Array.isArray(overrideUrls) ? overrideUrls : urls;
-    const compareUrls = source.filter((url: string) => typeof url === "string" && url.trim().length > 0);
-    if (compareUrls.length < 2 || isLoading) return;
+    const compareUrls = source.filter((url: string) => typeof url === "string" && isSupportedProductUrl(url));
+    if (compareUrls.length < MIN_COMPARE_URLS || isLoading) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     cancelledRef.current = false;
     navigatedRef.current = false;
