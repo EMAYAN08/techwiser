@@ -4,7 +4,6 @@ import Svg, { Rect, Ellipse } from "react-native-svg";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { fonts } from "../../constants/Typography";
-import { size } from "../../constants/Layout";
 
 export type InputMode = "url" | "qr";
 
@@ -32,7 +31,7 @@ const TABS: Tab[] = [
 
 function GlyphUrl({ color, accent }: { color: string; accent: string }) {
   return (
-    <Svg width={34} height={34} viewBox="0 0 34 34" fill="none">
+    <Svg width={28} height={28} viewBox="0 0 34 34" fill="none">
       <Ellipse
         cx="12.2"
         cy="17"
@@ -62,7 +61,7 @@ function GlyphQr({ color, accent, hole }: { color: string; accent: string; hole:
     { x: 4, y: 20 },
   ];
   return (
-    <Svg width={34} height={34} viewBox="0 0 34 34" fill="none">
+    <Svg width={28} height={28} viewBox="0 0 34 34" fill="none">
       {rings.flatMap((f, i) => [
         <Rect key={`o${i}`} x={f.x} y={f.y} width={10} height={10} rx={1.6} fill={color} />,
         <Rect key={`m${i}`} x={f.x + 2.2} y={f.y + 2.2} width={5.6} height={5.6} rx={0.8} fill={hole} />,
@@ -138,34 +137,30 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
             accessibilityRole="tab"
             accessibilityLabel={tab.label}
             accessibilityState={{ selected: isActive }}
-            style={styles.item}
+            style={[
+              styles.pill,
+              {
+                backgroundColor: wellBg,
+                borderWidth: isActive ? 2 : 1,
+                borderColor: isActive ? colors.primary : colors.line,
+              },
+            ]}
           >
-            <View 
-              style={[
-                styles.well, 
-                { 
-                  backgroundColor: wellBg,
-                  borderWidth: isActive ? 2 : 0,
-                  borderColor: isActive ? colors.primary : "transparent"
-                }
-              ]}
+            <Animated.View
+              style={{
+                transform: [
+                  { scale: scales[index] },
+                  {
+                    rotate: wobbles[index].interpolate({
+                      inputRange: [-1, 1],
+                      outputRange: ["-8deg", "8deg"],
+                    }),
+                  },
+                ],
+              }}
             >
-              <Animated.View
-                style={{
-                  transform: [
-                    { scale: scales[index] },
-                    {
-                      rotate: wobbles[index].interpolate({
-                        inputRange: [-1, 1],
-                        outputRange: ["-8deg", "8deg"],
-                      }),
-                    },
-                  ],
-                }}
-              >
-                <ModeGlyph id={tab.id} color={tint.icon} accent={tint.accent} hole={wellBg} />
-              </Animated.View>
-            </View>
+              <ModeGlyph id={tab.id} color={tint.icon} accent={tint.accent} hole={wellBg} />
+            </Animated.View>
             <Text
               style={[
                 styles.label,
@@ -188,26 +183,27 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "center",
-    gap: 36,
-  },
-  item: {
-    width: 88,
     alignItems: "center",
-    gap: 8,
+    alignSelf: "stretch",
+    width: "100%",
+    gap: 12,
   },
-  well: {
-    width: size.modeWell,
-    height: size.modeWell,
-    borderRadius: size.modeWell / 2,
+  pill: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 10,
+    minHeight: 52,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   label: {
-    fontSize: 13,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 18,
     letterSpacing: -0.1,
-    textAlign: "center",
   },
 });
