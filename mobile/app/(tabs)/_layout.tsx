@@ -140,7 +140,8 @@ function CustomTabBar({ state, navigation }: any) {
   const path = useActivePath();
   const hidden = !isTabPath(path);
 
-  const mountAnim = useRef(new Animated.Value(0)).current;
+  // Web: start visible to avoid FOUC; native keeps a short mount fade.
+  const mountAnim = useRef(new Animated.Value(Platform.OS === "web" ? 1 : 0)).current;
   useEffect(() => {
     let cancelled = false;
     AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
@@ -158,19 +159,20 @@ function CustomTabBar({ state, navigation }: any) {
 
   if (hidden) return null;
 
+  const safeBottom = Math.max(insets.bottom, 0);
   const dockShadow =
     Platform.OS === "web"
       ? ({
           boxShadow: isDark
-            ? "0 -1px 0 rgba(255,255,255,0.08), 0 -8px 24px rgba(0,0,0,0.28)"
-            : "0 -1px 0 rgba(20,16,10,0.06), 0 -6px 18px rgba(20,16,10,0.06)",
+            ? "0 -0.5px 0 rgba(255,255,255,0.10), 0 -4px 16px rgba(0,0,0,0.22)"
+            : "0 -0.5px 0 rgba(20,16,10,0.06), 0 -4px 14px rgba(20,16,10,0.05)",
         } as const)
       : {
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: isDark ? 0.35 : 0.08,
-          shadowRadius: isDark ? 10 : 8,
-          elevation: 8,
+          shadowOffset: { width: 0, height: -1 },
+          shadowOpacity: isDark ? 0.28 : 0.06,
+          shadowRadius: isDark ? 8 : 6,
+          elevation: 6,
         };
 
   const glassChrome =
@@ -186,13 +188,13 @@ function CustomTabBar({ state, navigation }: any) {
 
   return (
     <Animated.View
-      pointerEvents="box-none"
       style={[
         styles.wrap,
         dockShadow,
         {
           bottom: 0,
-          paddingBottom: Math.max(insets.bottom, 0),
+          paddingBottom: safeBottom,
+          backgroundColor: colors.bg,
           opacity: Animated.multiply(mountAnim, tabBarAnim),
           transform: [
             {
@@ -203,7 +205,7 @@ function CustomTabBar({ state, navigation }: any) {
                 }),
                 tabBarAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [120, 0],
+                  outputRange: [size.tabBar + safeBottom + 40, 0],
                 })
               ),
             },
@@ -315,16 +317,17 @@ const styles = StyleSheet.create({
   },
   glass: {
     height: size.tabBar,
+    width: "100%",
     borderRadius: 0,
     borderWidth: 0,
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: 6,
-    gap: 2,
+    gap: 4,
   },
   shine: {
     position: "absolute",
@@ -336,7 +339,10 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
+    flexBasis: 0,
+    minWidth: 0,
     height: 52,
+    minHeight: size.hit,
     borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",

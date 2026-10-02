@@ -8,7 +8,7 @@ import { CircularWells } from "../../components/ui/CircularWells";
 import { NavCircle } from "../../components/ui/NavCircle";
 import { useThemeColors } from "../../constants/Colors";
 import { Typography, fonts } from "../../constants/Typography";
-import { radii, space } from "../../constants/Layout";
+import { radii, space, tabBarScrollPadding } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "../../utils/haptics";
 import { ALL_WELL, TYPE_WELLS, RETAIL_WELLS, RETAIL_ORDER, type WellDef } from "../../constants/wellCatalog";
@@ -260,7 +260,7 @@ export default function LibraryScreen() {
         onScroll={onScroll}
         onScrollBeginDrag={() => { if (menuOpen) setMenuOpen(false); }}
         scrollEventThrottle={16}
-        contentContainerStyle={[styles.scroll, { paddingTop: HEADER_HEIGHT, paddingBottom: 120 }]}
+        contentContainerStyle={[styles.scroll, { paddingTop: HEADER_HEIGHT, paddingBottom: tabBarScrollPadding(insets.bottom) }]}
         showsVerticalScrollIndicator={false}
       >
           {filtered.length === 0 ? (

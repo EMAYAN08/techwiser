@@ -11,7 +11,7 @@ import { QRInputGroup } from "../../components/home/QRInputGroup";
 import { useComparisonStore } from "../../store/useComparisonStore";
 import { registerLoadingOverlayHandlers } from "../../store/loadingOverlayBridge";
 import { useThemeColors } from "../../constants/Colors";
-import { space } from "../../constants/Layout";
+import { space, tabBarScrollPadding } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getApiBase } from "../../utils/apiBase";
 import { isSupportedProductUrl, MIN_COMPARE_URLS, uniqueSupportedProductUrls } from "../../utils/validators";
@@ -218,7 +218,7 @@ export default function Home() {
         style={[styles.container, { marginTop: TITLE_HEIGHT }]}
         stickyHeaderIndices={[1, 3]}
         contentContainerStyle={{
-          paddingBottom: 120,
+          paddingBottom: tabBarScrollPadding(insets.bottom),
         }}
         keyboardShouldPersistTaps="handled"
         scrollEnabled={scrollEnabled}

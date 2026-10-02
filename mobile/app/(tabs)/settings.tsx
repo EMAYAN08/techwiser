@@ -7,7 +7,7 @@ import { useThemeStore, ThemePreference } from "../../store/useThemeStore";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { useComparisonStore } from "../../store/useComparisonStore";
 import { useThemeColors } from "../../constants/Colors";
-import { radii, space } from "../../constants/Layout";
+import { radii, space, tabBarScrollPadding } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 
@@ -93,7 +93,7 @@ export default function SettingsScreen() {
         <Text style={[styles.headerTitle, { color: colors.ink }]}>Settings</Text>
       </View>
 
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: tabBarScrollPadding(insets.bottom) }]} showsVerticalScrollIndicator={false}>
         <Text style={[styles.sectionTitle, { color: colors.stone }]}>Preferences</Text>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
           <View style={styles.appearanceRow}>

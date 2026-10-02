@@ -31,3 +31,8 @@ export const size = {
   hit: 44,
   modeWell: 72,
 } as const;
+
+/** Bottom scroll padding so content clears the fixed tab bar + home indicator. */
+export function tabBarScrollPadding(bottomInset: number, extra: number = 24): number {
+  return size.tabBar + Math.max(bottomInset, 0) + extra;
+}
