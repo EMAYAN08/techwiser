@@ -114,12 +114,6 @@ export default function SettingsScreen() {
               ios_backgroundColor={colors.line}
             />
           </View>
-          <View style={[styles.divider, { backgroundColor: colors.line }]} />
-          <Row
-            label="Currency"
-            icon="dollar-sign"
-            trailing={<Text style={[styles.trailing, { color: colors.stone }]}>CAD</Text>}
-          />
         </View>
 
         <Text style={[styles.sectionTitle, { color: colors.stone }]}>Data</Text>

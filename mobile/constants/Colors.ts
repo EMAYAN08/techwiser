@@ -55,6 +55,8 @@ export const palette = {
     // Same paper as the screen — hairline only, no grey slab.
     tabBar: "#F2F2EF",
     tabBarBorder: "rgba(10,10,10,0.08)",
+    dock: "#FFFFFF",
+    dockBorder: "rgba(10,10,10,0.06)",
     // Subtle Spotify wash (not a white/grey competing pill).
     tabPill: "rgba(29,185,84,0.14)",
     tabSelectedIcon: paletteTokens.ink,
@@ -104,6 +106,8 @@ export const palette = {
     // Same ink as the screen — no lifted grey band.
     tabBar: paletteTokens.ink,
     tabBarBorder: "rgba(255,255,255,0.08)",
+    dock: "#1C1C1C",
+    dockBorder: "rgba(255,255,255,0.10)",
     // Subtle Spotify wash (not a third grey).
     tabPill: "rgba(29,185,84,0.18)",
     tabSelectedIcon: "#FFFFFF",

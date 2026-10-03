@@ -32,7 +32,23 @@ export const size = {
   modeWell: 72,
 } as const;
 
-/** Bottom scroll padding so content clears the fixed tab bar + home indicator. */
-export function tabBarScrollPadding(bottomInset: number, extra: number = 24): number {
-  return size.tabBar + Math.max(bottomInset, 0) + extra;
+/** Floating bottom dock. Content padding must include the lift, not just the pill height. */
+export const dock = {
+  height: size.tabBar,
+  /** Inset from the left and right screen edges. */
+  side: 14,
+  /** Gap between the pill and the home indicator (or the screen edge). */
+  lift: 12,
+} as const;
+
+/** Distance from the bottom of the screen to the floating dock. */
+export function dockBottomOffset(bottomInset: number): number {
+  const inset = Math.max(bottomInset, 0);
+  // When there is no home indicator, still float off the edge.
+  return (inset > 0 ? inset : 8) + dock.lift;
+}
+
+/** Bottom scroll padding so lists clear the floating dock + home indicator. */
+export function tabBarScrollPadding(bottomInset: number, extra: number = 28): number {
+  return dock.height + dockBottomOffset(bottomInset) + extra;
 }

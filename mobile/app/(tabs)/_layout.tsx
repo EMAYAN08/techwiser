@@ -12,10 +12,12 @@ import {
 import { usePathname, Tabs } from "expo-router";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { Zap, BookOpen, Settings as SettingsIcon, LucideIcon } from "lucide-react-native";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
-import { radii, size } from "../../constants/Layout";
+import { dock, dockBottomOffset, radii } from "../../constants/Layout";
 import { tabBarAnim } from "../../store/uiStore";
 
 interface TabDef {
@@ -23,6 +25,9 @@ interface TabDef {
   label: string;
   Icon: LucideIcon;
 }
+
+/** How far the frosted wash reaches above the pill. */
+const FADE_LEAD = 112;
 
 const TABS: TabDef[] = [
   { name: "index", label: "Home", Icon: Zap },
@@ -135,7 +140,7 @@ function TabItem({
 
 function CustomTabBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { colors } = useThemeColors();
+  const { colors, isDark } = useThemeColors();
   const path = useActivePath();
   const hidden = !isTabPath(path);
 
@@ -158,40 +163,108 @@ function CustomTabBar({ state, navigation }: any) {
 
   if (hidden) return null;
 
-  const safeBottom = Math.max(insets.bottom, 0);
+  const floatBottom = dockBottomOffset(insets.bottom);
+  const scrimHeight = FADE_LEAD + dock.height + floatBottom;
+  const webChrome =
+    Platform.OS === "web"
+      ? ({
+          backdropFilter: isDark ? "blur(22px) saturate(160%)" : "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: isDark ? "blur(22px) saturate(160%)" : "blur(20px) saturate(180%)",
+          boxShadow: isDark
+            ? "0 12px 32px rgba(0,0,0,0.48), 0 2px 8px rgba(0,0,0,0.28)"
+            : "0 12px 28px rgba(10,10,10,0.14), 0 2px 6px rgba(10,10,10,0.06)",
+        } as object)
+      : null;
+
+  const shellMotion = {
+    opacity: Animated.multiply(mountAnim, tabBarAnim),
+    transform: [
+      {
+        translateY: Animated.add(
+          mountAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [16, 0],
+          }),
+          tabBarAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [scrimHeight + 24, 0],
+          })
+        ),
+      },
+    ],
+  };
+
+  const webBlur =
+    Platform.OS === "web"
+      ? ({
+          backdropFilter: isDark ? "blur(18px) saturate(150%)" : "blur(16px) saturate(160%)",
+          WebkitBackdropFilter: isDark ? "blur(18px) saturate(150%)" : "blur(16px) saturate(160%)",
+          maskImage:
+            "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 28%, rgba(0,0,0,0.75) 55%, black 78%, black 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 28%, rgba(0,0,0,0.75) 55%, black 78%, black 100%)",
+        } as object)
+      : null;
 
   return (
+    <Animated.View pointerEvents="box-none" style={[styles.shell, { height: scrimHeight }, shellMotion]}>
+      <View pointerEvents="none" style={styles.scrim}>
+        <View style={[styles.scrimBlur, webBlur]} />
+        {Platform.OS !== "web" ? (
+          <BlurView
+            intensity={isDark ? 36 : 48}
+            tint={isDark ? "dark" : "light"}
+            blurMethod="dimezisBlurView"
+            style={styles.scrimBlur}
+          />
+        ) : null}
+        <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} preserveAspectRatio="none">
+          <Defs>
+            <LinearGradient id="dockScrim" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={colors.bg} stopOpacity="0" />
+              <Stop offset="0.16" stopColor={colors.bg} stopOpacity="0.05" />
+              <Stop offset="0.34" stopColor={colors.bg} stopOpacity="0.16" />
+              <Stop offset="0.5" stopColor={colors.bg} stopOpacity="0.42" />
+              <Stop offset="0.68" stopColor={colors.bg} stopOpacity="0.78" />
+              <Stop offset="0.86" stopColor={colors.bg} stopOpacity="0.94" />
+              <Stop offset="1" stopColor={colors.bg} stopOpacity="1" />
+            </LinearGradient>
+          </Defs>
+          <Rect width="100%" height="100%" fill="url(#dockScrim)" />
+        </Svg>
+      </View>
     <Animated.View
+      pointerEvents="box-none"
       style={[
-        styles.wrap,
+        styles.host,
         {
-          bottom: 0,
-          // Whole dock, including the home-indicator strip, is the nav color.
-          backgroundColor: colors.tabBar,
-          opacity: Animated.multiply(mountAnim, tabBarAnim),
-          transform: [
-            {
-              translateY: Animated.add(
-                mountAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [16, 0],
-                }),
-                tabBarAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [size.tabBar + safeBottom + 40, 0],
-                })
-              ),
-            },
-          ],
+          left: dock.side,
+          right: dock.side,
+          bottom: floatBottom,
+          shadowOpacity: isDark ? 0.45 : 0.16,
+          backgroundColor: isDark ? "rgba(28,28,28,0.88)" : "rgba(255,255,255,0.92)",
         },
       ]}
     >
       <View
         style={[
-          styles.glass,
-          { borderColor: colors.tabBarBorder, backgroundColor: colors.tabBar },
+          styles.wrap,
+          webChrome,
+          {
+            backgroundColor: isDark ? "rgba(28,28,28,0.88)" : "rgba(255,255,255,0.92)",
+            borderColor: colors.dockBorder,
+          },
         ]}
       >
+      {Platform.OS !== "web" ? (
+        <BlurView
+          intensity={isDark ? 42 : 56}
+          tint={isDark ? "dark" : "light"}
+          blurMethod="dimezisBlurView"
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
+      <View style={styles.glass}>
         {state?.routes?.map((route: any, index: number) => {
           const def = TABS.find((t) => t.name === route.name);
           if (!def) return null;
@@ -222,11 +295,8 @@ function CustomTabBar({ state, navigation }: any) {
           );
         })}
       </View>
-      {/* Safe-area / home-indicator fill — same color as the bar, not the screen. */}
-      <View
-        pointerEvents="none"
-        style={{ height: safeBottom, backgroundColor: colors.tabBar }}
-      />
+      </View>
+    </Animated.View>
     </Animated.View>
   );
 }
@@ -266,24 +336,48 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  wrap: {
+  shell: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
     zIndex: 4,
   },
-  glass: {
-    height: size.tabBar,
-    width: "100%",
-    borderRadius: 0,
-    borderWidth: 0,
-    borderTopWidth: StyleSheet.hairlineWidth,
+  scrim: {
+    ...StyleSheet.absoluteFill,
+  },
+  // Blur starts below the transparent top so the frost fades in instead of clipping.
+  scrimBlur: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    top: "22%",
+  },
+  // Shadow lives here so overflow:hidden on the pill does not clip it.
+  host: {
+    position: "absolute",
+    zIndex: 2,
+    height: dock.height,
+    borderRadius: radii.pill,
+    // Shadow on the host (overflow visible) so the pill lift is not clipped.
+    shadowColor: "#000",
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 14,
+  },
+  wrap: {
+    flex: 1,
+    borderRadius: radii.pill,
+    borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
+  },
+  glass: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 6,
     gap: 4,
   },
@@ -292,7 +386,7 @@ const styles = StyleSheet.create({
     flexBasis: 0,
     minWidth: 0,
     height: 52,
-    minHeight: size.hit,
+    minHeight: 44,
     borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
