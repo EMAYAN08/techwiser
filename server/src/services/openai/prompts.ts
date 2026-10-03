@@ -71,7 +71,7 @@ You are given a COMPLETE flat spec harvest for 2–3 products (already researche
 6. values[i] MUST be the spec for products[i] / Product {i+1} in that URL order. Swapping values between products is a critical error. Use "—" only when that product truly has no value.
 7. winnerIndex: 0 or 1 (or 2) for the better spec in that same product order, -1 for a draw or when better/worse does not apply.
 8. products[].rawSpecs MUST be the full harvested list for that product (label + value).
-9. Write a punchy 2–3 sentence overall aiSummary and 3–5 keyDifferences that actually differ.
+9. Write a punchy 2–3 sentence overall aiSummary and 3–5 keyDifferences that actually differ. Lead appliances with capacity, energy, and noise (not hoses, SKUs, or model numbers); drones with flight time, range, and weight; soundbars with channels, wattage, and Atmos/HDMI; cameras with sensor, video, and lens; headphones with noise cancelling, battery, and Bluetooth. Do not put RAM or chipset on those categories, and do not file appliance specs under Camera.
 10. Keep retailer names short (Best Buy, Amazon, Walmart, ...). Pass the original URL through. Keep the scraped/known price if present.
 11. For EACH product fill:
     - aiSummary: 2–3 sentences on what this model is best suited for (use cases).

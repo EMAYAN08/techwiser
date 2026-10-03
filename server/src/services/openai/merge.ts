@@ -1,3 +1,4 @@
+import { applyCategoryTemplates, classifyTitles, groupForLabel } from "../../lib/categoryTemplates";
 import { enrichComparisonSpecs } from "../../lib/specEnrichment";
 import { guardThinScrapes } from "../../lib/thinScrape";
 
@@ -310,30 +311,8 @@ export function applyGroupedSpecsList(result: any): void {
   delete result.groupedSpecsList;
 }
 
-const GROUP_RULES: Array<{ group: string; icon: string; pattern: RegExp }> = [
-  { group: "Display", icon: "display", pattern: /display|screen|panel|resolution|refresh|hdr|nit|oled|qled|mini.?led|brightness|contrast|picture/i },
-  { group: "Sound", icon: "audio", pattern: /audio|sound|speaker|dolby|atmos|dts|watt|channel|acoustic/i },
-  { group: "Performance", icon: "cpu", pattern: /processor|cpu|chip|soc|gpu|graphics|ram|memory|core|speed|benchmark/i },
-  { group: "Storage", icon: "storage", pattern: /storage|ssd|hdd|capacity gb|internal storage/i },
-  { group: "Battery", icon: "battery", pattern: /battery|charge|charging|runtime|endurance|power supply/i },
-  { group: "Camera", icon: "camera", pattern: /camera|lens|megapixel|photo|video|optical|sensor|iso/i },
-  { group: "Connectivity", icon: "wifi", pattern: /wifi|wi-fi|bluetooth|wireless|cellular|5g|lte|ethernet|cast|airplay/i },
-  { group: "Ports", icon: "ports", pattern: /hdmi|usb|port|thunderbolt|input|output|optical out/i },
-  { group: "Smart Features", icon: "smart", pattern: /os|operating|tizen|roku|fire tv|google tv|app|alexa|assistant|smart/i },
-  { group: "Design", icon: "design", pattern: /weight|dimension|size|stand|vesa|material|color|finish|build/i },
-];
-
 export function inferDeviceType(titles: string[]): string {
-  const t = titles.join(" ").toLowerCase();
-  if (/\btv\b|television|qled|oled|mini.?led/.test(t)) return "television";
-  if (/laptop|macbook|notebook/.test(t)) return "laptop";
-  if (/iphone|galaxy s|pixel|smartphone|phone/.test(t)) return "smartphone";
-  if (/ipad|tablet/.test(t)) return "tablet";
-  if (/watch|garmin|fitbit/.test(t)) return "smartwatch";
-  if (/headphone|earbuds|airpods/.test(t)) return "headphones";
-  if (/router|mesh/.test(t)) return "router";
-  if (/stick|streaming|fire tv|chromecast|apple tv/.test(t)) return "streaming";
-  return "other";
+  return classifyTitles(titles).deviceType;
 }
 
 export function retailerFromUrl(url: string): string {
@@ -355,11 +334,8 @@ export function retailerFromUrl(url: string): string {
   return "other";
 }
 
-function assignGroup(label: string): { group: string; icon: string } {
-  for (const rule of GROUP_RULES) {
-    if (rule.pattern.test(label)) return { group: rule.group, icon: rule.icon };
-  }
-  return { group: "Other Features", icon: "other" };
+function assignGroup(label: string, deviceType = "other"): { group: string; icon: string } {
+  return groupForLabel(label, deviceType);
 }
 
 function stringList(value: unknown, max = 8): string[] {
@@ -388,6 +364,10 @@ export function fallbackGroupFromHarvest(
 ): any {
   const harvestProducts = harvest.products || [];
   const productCount = Math.max(harvestProducts.length, productDataList.length, 2);
+  const deviceType = inferDeviceType([
+    ...productDataList.map((d) => d.title),
+    ...harvestProducts.map((p) => p.name || ""),
+  ]);
   const groupedSpecs: Record<string, GroupedSpec[]> = {};
   const groupIcons: Record<string, string> = {};
   const seen = new Set<string>();
@@ -402,7 +382,7 @@ export function fallbackGroupFromHarvest(
         return v && v.trim() ? v : "—";
       });
       if (values.every((v) => v === "—")) continue;
-      const { group, icon } = assignGroup(spec.label);
+      const { group, icon } = assignGroup(spec.label, deviceType);
       if (!groupedSpecs[group]) groupedSpecs[group] = [];
       groupedSpecs[group].push({ label: spec.label, values, winnerIndex: -1 });
       groupIcons[group] = icon;
@@ -581,6 +561,7 @@ export function normalizeComparisonResult(
 
   enrichComparisonSpecs(next, productDataList);
   guardThinScrapes(next, productDataList);
+  applyCategoryTemplates(next);
 
   return next;
 }

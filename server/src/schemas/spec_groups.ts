@@ -51,6 +51,7 @@ export const PREFERRED_SPEC_GROUPS: Record<string, string[]> = {
   console: ["Performance", "Storage", "Graphics", "Controllers", "Software"],
   router: ["Performance", "Connectivity", "Coverage", "Ports", "Software"],
   appliance: ["Capacity", "Performance", "Energy", "Smart Features", "Design"],
+  drone: ["Flight", "Camera", "Battery", "Design", "Connectivity"],
   streaming: ["Video", "Audio", "Connectivity", "Software", "Design"],
   other: ["Performance", "Design", "Connectivity", "Power", "Other Features"],
 };

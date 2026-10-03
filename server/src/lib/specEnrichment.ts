@@ -1,3 +1,5 @@
+import { applyTitleEnrichment } from "./titleEnrich";
+
 /**
  * Post-LLM / post-harvest enrichment for sparse or contradictory retailer specs.
  * Pattern-based + small series maps — avoid one-off SKU hardcodes where possible.
@@ -411,6 +413,8 @@ export function enrichProductSpecs(
     return s;
   });
 
+  specs = applyTitleEnrichment(specs, ctx.title || "");
+
   return specs;
 }
 
@@ -524,6 +528,9 @@ function specMatches(rowLabel: string, specLabel: string): boolean {
   if (/fingerprint/i.test(rowLabel) && /fingerprint/i.test(specLabel)) return true;
   if (/face\s*id/i.test(rowLabel) && /face\s*id/i.test(specLabel)) return true;
   if (/^display$/i.test(rowLabel.trim()) && /^display$/i.test(specLabel.trim())) return true;
+  if (/noise cancell|active noise|\banc\b/i.test(rowLabel) && /noise cancell|active noise|\banc\b/i.test(specLabel)) return true;
+  if (/bluetooth/i.test(rowLabel) && /bluetooth/i.test(specLabel)) return true;
+  if (/form factor|wearing style|ear style/i.test(rowLabel) && /form factor|wearing style|ear style/i.test(specLabel)) return true;
   return false;
 }
 
@@ -546,7 +553,7 @@ export function enrichComparisonSpecs(result: any, productDataList?: Array<{ ret
   });
 
   // Push enriched resolution/weight/chipset/biometrics into groupedSpecs / keyDifferences by label match.
-  const syncLabels = [/native resolution/i, /^resolution$/i, /display resolution/i, /resolution \(pixels\)/i, /^display$/i, /screen size/i, /^weight$/i, /weight \(without stand\)/i, /chipset/i, /^processor$/i, /fingerprint/i, /face id/i, /refresh/i];
+  const syncLabels = [/native resolution/i, /^resolution$/i, /display resolution/i, /resolution \(pixels\)/i, /^display$/i, /screen size/i, /^weight$/i, /weight \(without stand\)/i, /chipset/i, /^processor$/i, /fingerprint/i, /face id/i, /refresh/i, /noise cancell/i, /\banc\b/i, /bluetooth/i, /form factor/i, /wearing style/i];
   if (result.groupedSpecs) {
     for (const specs of Object.values(result.groupedSpecs) as Array<Array<{ label: string; values: string[] }>>) {
       for (const spec of specs) {
