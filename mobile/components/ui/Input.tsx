@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { TextInput, StyleSheet, TextInputProps, View, Pressable, Animated } from "react-native";
-import { Clipboard, X, CheckCircle2, XCircle } from "lucide-react-native";
+import { Clipboard as ClipboardIcon, X, CheckCircle2, XCircle } from "lucide-react-native";
+import * as ExpoClipboard from "expo-clipboard";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { fonts } from "../../constants/Typography";
@@ -9,7 +10,8 @@ import { radii, size } from "../../constants/Layout";
 type ValidationState = "idle" | "valid" | "invalid";
 
 interface InputProps extends TextInputProps {
-  onPaste?: () => void;
+  /** Called with clipboard text when the user taps paste. */
+  onPaste?: (text: string) => void;
   onClear?: () => void;
   validationState?: ValidationState;
 }
@@ -43,6 +45,50 @@ export function Input({ onPaste, onClear, style, validationState = "idle", ...pr
     inputRange: [0, 1, 2, 3],
     outputRange: [colors.fieldBorder, colors.ink, colors.spotify, colors.error],
   });
+
+  const handleFallbackPaste = async () => {
+    try {
+      const text = await ExpoClipboard.getStringAsync();
+      const trimmed = text?.trim() ?? "";
+      if (trimmed) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      onPaste?.(trimmed);
+    } catch {
+      onPaste?.("");
+    }
+  };
+
+  const renderPasteControl = () => {
+    if (!onPaste) return null;
+
+    if (ExpoClipboard.isPasteButtonAvailable) {
+      return (
+        <ExpoClipboard.ClipboardPasteButton
+          displayMode="iconOnly"
+          acceptedContentTypes={["plain-text", "url"]}
+          backgroundColor={colors.fog}
+          foregroundColor={colors.placeholder}
+          cornerStyle="small"
+          style={styles.pasteBtn}
+          onPress={(data) => {
+            if (data.type === "text" && data.text?.trim()) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onPaste(data.text.trim());
+            } else {
+              onPaste("");
+            }
+          }}
+        />
+      );
+    }
+
+    return (
+      <Pressable onPress={handleFallbackPaste} hitSlop={10} style={styles.iconBtn}>
+        <ClipboardIcon size={16} color={colors.placeholder} strokeWidth={2.25} />
+      </Pressable>
+    );
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -101,18 +147,7 @@ export function Input({ onPaste, onClear, style, validationState = "idle", ...pr
               )}
             </Animated.View>
           ) : null}
-          {onPaste ? (
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                onPaste?.();
-              }}
-              hitSlop={10}
-              style={styles.iconBtn}
-            >
-              <Clipboard size={16} color={colors.placeholder} strokeWidth={2.25} />
-            </Pressable>
-          ) : null}
+          {renderPasteControl()}
         </View>
       </Animated.View>
     </View>
@@ -137,4 +172,5 @@ const styles = StyleSheet.create({
   },
   icons: { flexDirection: "row", alignItems: "center", gap: 8 },
   iconBtn: { padding: 4 },
+  pasteBtn: { width: 28, height: 28 },
 });

@@ -1,7 +1,6 @@
 import { type } from "../../constants/Typography";
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated, PanResponder, Pressable } from "react-native";
-import * as Clipboard from "expo-clipboard";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { Feather } from "@expo/vector-icons";
@@ -24,7 +23,7 @@ interface SwipeableRowProps {
   index: number;
   url: string;
   canDelete: boolean;
-  onPaste: () => void;
+  onPaste: (text: string) => void;
   onUpdate: (text: string) => void;
   onDelete: () => void;
   onSwipeStart: () => void;
@@ -184,17 +183,12 @@ export function URLInputGroup({
     Animated.parallel(anims).start();
   }, [urls.length, animValues]);
 
-  const handlePaste = async (index: number) => {
-    try {
-      const text = await Clipboard.getStringAsync();
-      if (text?.trim()) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        updateUrl(index, text.trim());
-      } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      }
-    } catch {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  const handlePaste = (index: number, text: string) => {
+    if (text?.trim()) {
+      // Light haptic already fired in Input on successful paste
+      updateUrl(index, text.trim());
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     }
   };
 
@@ -230,7 +224,7 @@ export function URLInputGroup({
             index={index}
             url={url}
             canDelete={true}
-            onPaste={() => handlePaste(index)}
+            onPaste={(text) => handlePaste(index, text)}
             onUpdate={(text) => updateUrl(index, text)}
             onDelete={() => removeUrl(index)}
             onSwipeStart={onSwipeStart}
