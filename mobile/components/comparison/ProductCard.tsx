@@ -42,7 +42,7 @@ export const ProductCard = memo(function ProductCard({ product, index, onDelete 
     >
       <Pressable
         onPress={() => router.push(`/product/${product.id}`)}
-        style={({ pressed }) => ({ opacity: pressed ? 0.72 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}
+        style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.72 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }]}
       >
         <Card borderRadius={radii.library} style={styles.productCard}>
           <View style={[styles.imageWell, { backgroundColor: colors.fog }]}>
@@ -74,10 +74,14 @@ export const ProductCard = memo(function ProductCard({ product, index, onDelete 
           <Text style={[styles.productName, { color: colors.ink }]} numberOfLines={2}>
             {product.name}
           </Text>
-          {product.price ? (
-            <Text style={[styles.productPrice, { color: colors.ink }]}>{product.price}</Text>
-          ) : null}
+          <Text
+            style={[styles.productPrice, { color: colors.ink }, !product.price && styles.pricePlaceholder]}
+            numberOfLines={1}
+          >
+            {product.price || " "}
+          </Text>
 
+          {/* Fixed tag well so missing badges don't shrink the card. */}
           <View style={styles.badgesContainer}>
             {badges.slice(0, 2).map((b) => (
               <Chip key={b} label={b} variant="tag" style={styles.chip} />
@@ -90,8 +94,15 @@ export const ProductCard = memo(function ProductCard({ product, index, onDelete 
   );
 });
 
+/** Chip style below is 26px; library badges wrap to a second row on half-width cards. */
+const CHIP_ROW = 26;
+const TAG_ROWS = 2;
+const TAG_GAP = 6;
+const TAG_BLOCK = CHIP_ROW * TAG_ROWS + TAG_GAP;
+const NAME_LINE = 20;
+
 const styles = StyleSheet.create({
-  productCard: { padding: 12, minHeight: 260, gap: 8 },
+  productCard: { padding: 12, gap: 8, flex: 1 },
   imageWell: {
     width: "100%",
     aspectRatio: 4 / 5,
@@ -107,10 +118,19 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1.5,
   },
-  productName: { ...type.productName, fontSize: 14 },
-  productPrice: { ...type.price },
-  badgesContainer: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: "auto" },
-  chip: { height: 26, paddingHorizontal: 8 },
+  productName: { ...type.productName, fontSize: 14, lineHeight: NAME_LINE, height: NAME_LINE * 2 },
+  productPrice: { ...type.price, lineHeight: 20, height: 20 },
+  pricePlaceholder: { opacity: 0 },
+  badgesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignContent: "flex-start",
+    gap: TAG_GAP,
+    marginTop: "auto",
+    height: TAG_BLOCK,
+    overflow: "hidden",
+  },
+  chip: { height: CHIP_ROW, paddingHorizontal: 8 },
   deleteBtn: {
     position: "absolute",
     top: 8,
