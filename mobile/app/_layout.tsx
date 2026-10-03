@@ -14,6 +14,7 @@ export default function Layout() {
   const { colors, isDark } = useThemeColors();
   const isLoading = useComparisonStore((s) => s.isLoading);
   const loadPhase = useComparisonStore((s) => s.loadPhase);
+  const loadingMessage = useComparisonStore((s) => s.loadingMessage);
   const [loaded] = useFonts({
     "ClashDisplay-Medium": require("../assets/fonts/ClashDisplay-Medium.ttf"),
     "ClashDisplay-Semibold": require("../assets/fonts/ClashDisplay-Semibold.ttf"),
@@ -49,6 +50,7 @@ export default function Layout() {
       <LoadingOverlay
         visible={isLoading}
         phase={loadPhase}
+        message={loadingMessage}
         onCancel={runLoadingOverlayCancel}
         onCelebrateEnd={runLoadingOverlayCelebrateEnd}
       />

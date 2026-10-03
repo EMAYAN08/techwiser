@@ -1,12 +1,46 @@
 import { preferredGroupsJson } from "../../schemas/spec_groups";
 
-const MAX_RETAILER_CHARS = 40_000;
+const MAX_RETAILER_CHARS = 12_000;
+
+const NOISE_LINE = /^(cookie|accept all|sign in|log in|newsletter|privacy policy|terms of use|skip to|add to cart|buy now|related products|customers also|breadcrumb|javascript must)/i;
+const SPEC_TOKEN = /\b(hz|gb|tb|hdmi|usb|oled|qled|mah|wifi|bluetooth|4k|8k|inch|nits|watt|ghz|mpix|megapixel)\b/i;
+
+export function trimRetailerText(text: string, max = MAX_RETAILER_CHARS): string {
+  if (!text) return "";
+  const kept: string[] = [];
+  let size = 0;
+  const push = (line: string) => {
+    const clipped = line.trim().slice(0, 360);
+    if (!clipped || size + clipped.length + 1 > max) return;
+    kept.push(clipped);
+    size += clipped.length + 1;
+  };
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || NOISE_LINE.test(line)) continue;
+    if (line.length > 500) {
+      const pairs = line.match(/[A-Za-z][^:\n]{1,48}:\s+\S[^.]{0,100}/g);
+      if (pairs && pairs.length >= 3) {
+        for (const pair of pairs.slice(0, 80)) push(pair);
+        continue;
+      }
+      if (SPEC_TOKEN.test(line)) push(line.slice(0, 500));
+      continue;
+    }
+    push(line);
+    if (size >= max) break;
+  }
+  const trimmed = kept.join("\n").trim();
+  if (trimmed.length >= 80) return trimmed.slice(0, max);
+  const head = Math.min(4_000, Math.floor(max * 0.45));
+  const tail = Math.max(0, max - head - 80);
+  return `${text.slice(0, head)}\n\n[...truncated middle of page...]\n\n${text.slice(-tail)}`.slice(0, max);
+}
 
 export function clipRetailerText(text: string, max = MAX_RETAILER_CHARS): string {
-  if (!text || text.length <= max) return text || "";
-  const head = 8_000;
-  const tail = max - head - 80;
-  return `${text.slice(0, head)}\n\n[...truncated middle of page...]\n\n${text.slice(-tail)}`;
+  if (!text) return "";
+  if (text.length <= max && text.split("\n").length > 1 && text.length <= 6_000) return text;
+  return trimRetailerText(text, max);
 }
 
 export function buildHarvestPrompt(
@@ -90,6 +124,47 @@ ${urlBlock}
 
 --- HARVESTED SPECS (source of truth — do not drop any row) ---
 ${harvestJson}
+`.trim();
+}
+
+export function buildMergedComparePrompt(
+  productDataList: { url: string; retailerText: string; title: string }[]
+): string {
+  const dataString = productDataList
+    .map(
+      (d, i) => `
+--- PRODUCT ${i + 1} ---
+URL: ${d.url}
+Title: ${d.title}
+RETAILER SOURCE TEXT:
+${clipRetailerText(d.retailerText)}
+------------------------
+`
+    )
+    .join("\n\n");
+
+  return `
+You are an elite consumer electronics reviewer doing ONE pass: extract specs and structure the comparison.
+
+TASK
+1. Read each retailer source. Extract every technical spec that is actually present (hardware, display, ports, battery, dimensions, box contents, warranty).
+2. Fill obvious gaps only from knowledge of that exact model. Never invent refresh rates, resolutions, capacities, or model numbers. Use "Unknown" when you cannot verify a value.
+3. Align labels across products. values[i] is Product i in URL order. Swapping products is a critical error.
+4. Put EVERY kept spec into groupedSpecsList and into that product's rawSpecs. Do not drop rows to save space.
+5. deviceType is a guideline key (smartphone, laptop, television, ...) or "other".
+6. iconKey must be one of: cpu, battery, display, camera, wifi, speaker, ports, design, software, health, storage, memory, graphics, keyboard, smart, audio, other.
+7. winnerIndex is 0, 1, or 2 for the better value in URL order, or -1 for a tie / not comparable.
+8. Write a punchy 2–3 sentence overall aiSummary and 3–5 keyDifferences that actually differ.
+9. Lead appliances with capacity, energy, and noise; drones with flight time, range, and weight; soundbars with channels, wattage, and Atmos/HDMI; cameras with sensor, video, and lens; headphones with noise cancelling, battery, and Bluetooth. Do not put RAM or chipset on those categories.
+10. Keep retailer names short. Pass the original URL through. Keep the scraped price if present.
+11. For each product fill aiSummary (2–3 sentences), badges (3–6 short tags), userInsights (2–4 sentences), userPros (3–5), userCons (2–4).
+
+Preferred group names are a guideline, not a whitelist. Create a group or use "Other Features" instead of dropping a spec.
+
+--- PREFERRED GROUPS BY DEVICE TYPE ---
+${preferredGroupsJson()}
+
+${dataString}
 `.trim();
 }
 

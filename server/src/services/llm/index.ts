@@ -1,68 +1,25 @@
-import {
-  alignHarvestToInputs,
-  applyGroupedSpecsList,
-  fallbackGroupFromHarvest,
-  mergeOrphanSpecs,
-  normalizeAlternativesResult,
-  normalizeComparisonResult,
-  realignGroupedToInputs,
-} from "../openai/merge";
+import { runStructuredCompare } from "../comparePipeline";
 import { generateGeminiJson } from "./client";
-import { buildAlternativesPrompt, buildExplainSpecPrompt, buildGroupPrompt, buildHarvestPrompt } from "./prompts";
+import { buildAlternativesPrompt, buildExplainSpecPrompt } from "./prompts";
 import { alternativesResponseSchema, explainSpecResponseSchema, groupResponseSchema, harvestResponseSchema } from "./schemas";
+import { normalizeAlternativesResult } from "../openai/merge";
 
 const MODEL_NAME = "gemini-3.1-flash-lite";
 
 export async function generateComparison(
   productDataList: { url: string; retailerText: string; title: string }[]
 ): Promise<any> {
-  console.log(`[Gemini] Harvesting specs for ${productDataList.length} products...`);
-  const harvest = await generateGeminiJson({
-    operation: "harvestSpecs",
-    modelName: MODEL_NAME,
-    contents: buildHarvestPrompt(productDataList),
-    responseSchema: harvestResponseSchema,
-  });
-  alignHarvestToInputs(harvest, productDataList);
-
-  const harvestedCount = (harvest.products || []).reduce(
-    (n: number, p: { specs?: unknown[] }) => n + (p.specs?.length || 0),
-    0
+  return runStructuredCompare(
+    productDataList,
+    (options) =>
+      generateGeminiJson({
+        operation: options.operation,
+        modelName: MODEL_NAME,
+        contents: options.prompt,
+        responseSchema: options.schema as never,
+      }),
+    { harvest: harvestResponseSchema as never, group: groupResponseSchema as never }
   );
-  console.log(`[Gemini] Harvest complete: ${harvestedCount} spec row(s). Grouping...`);
-
-  let grouped: any;
-  try {
-    try {
-      grouped = await generateGeminiJson({
-        operation: "groupSpecs",
-        modelName: MODEL_NAME,
-        contents: buildGroupPrompt(harvest, productDataList),
-        responseSchema: groupResponseSchema,
-      });
-    } catch (schemaErr: unknown) {
-      const message = schemaErr instanceof Error ? schemaErr.message : String(schemaErr);
-      console.warn(`[Gemini] groupSpecs schema failed (${message}). Retrying without schema.`);
-      grouped = await generateGeminiJson({
-        operation: "groupSpecs",
-        modelName: MODEL_NAME,
-        contents: buildGroupPrompt(harvest, productDataList),
-      });
-    }
-    applyGroupedSpecsList(grouped);
-    if (!grouped.groupedSpecs || Object.keys(grouped.groupedSpecs).length === 0) {
-      throw new Error("Grouping returned no spec groups");
-    }
-    console.log(`[Gemini] Grouping complete: ${Object.keys(grouped.groupedSpecs).length} groups`);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(`[Gemini] groupSpecs failed (${message}). Using local grouping fallback.`);
-    grouped = fallbackGroupFromHarvest(harvest, productDataList);
-  }
-
-  realignGroupedToInputs(grouped, harvest, productDataList);
-  mergeOrphanSpecs(grouped, harvest, productDataList.length);
-  return normalizeComparisonResult(grouped, productDataList.length, productDataList);
 }
 
 export async function explainSpec(productNames: string[], specLabel: string, specValues: string[]): Promise<any> {

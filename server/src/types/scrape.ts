@@ -3,7 +3,7 @@ export type ScrapeResult = {
   imageUrl: string | null;
   title: string;
   priceText?: string | null;
-  priceSource?: "bestbuy-api" | "scrape";
+  priceSource?: "bestbuy-api" | "scrape" | "shopify-json" | "json-ld" | "retailer-html";
 };
 
 export type ScrapedProduct = {
@@ -12,5 +12,5 @@ export type ScrapedProduct = {
   imageUrl: string | null;
   title: string;
   priceText?: string | null;
-  priceSource?: "bestbuy-api" | "scrape";
+  priceSource?: "bestbuy-api" | "scrape" | "shopify-json" | "json-ld" | "retailer-html";
 };

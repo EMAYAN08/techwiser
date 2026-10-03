@@ -3,11 +3,18 @@ import { RETAILER_COLORS } from "../config/constants";
 import { extractPriceFromText, formatDisplayPrice, resolveProductPrice } from "../lib/price";
 import { retailerTextForCompare } from "../lib/thinScrape";
 import { generateAiComparison } from "../services/ai";
+import { getCompareProgress, sanitizeCompareId, setCompareProgress } from "../services/compareProgress";
 import { partitionScrapeResults, scrapeUrlsSequentially } from "../services/scraper";
 
 const MAX_COMPARE_URLS = 3;
 
 const router = Router();
+
+router.get("/compare/progress/:id", (req: Request, res: Response) => {
+  res.setHeader("Cache-Control", "no-store");
+  const id = sanitizeCompareId(req.params.id);
+  res.json(getCompareProgress(id));
+});
 
 function urlsMatch(a?: string, b?: string): boolean {
   if (!a || !b) return false;
@@ -84,17 +91,44 @@ router.post("/compare", async (req: Request, res: Response) => {
     }
 
     console.log(`Starting comparison for ${uniqueUrls.length} URLs...`);
+    const progressId = sanitizeCompareId(req.header("x-compare-id"));
+    const wantStream = String(req.headers.accept || "").includes("text/event-stream");
+    if (wantStream) {
+      res.status(200);
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      if (typeof res.flushHeaders === "function") res.flushHeaders();
+    }
+    const note = (stage: string, message: string) => {
+      setCompareProgress(progressId, stage, message);
+      if (wantStream) {
+        res.write(`event: progress\ndata: ${JSON.stringify({ stage, message })}\n\n`);
+      }
+    };
+    const sendJson = (status: number, body: unknown) => {
+      if (wantStream) {
+        const event = status >= 400 ? "error" : "result";
+        res.write(`event: ${event}\ndata: ${JSON.stringify(body)}\n\n`);
+        res.end();
+        return;
+      }
+      res.status(status).json(body);
+    };
 
-    // Scrape retailer URLs sequentially to avoid triggering strict anti-bot rate limits
+    note("scraping", `Fetching ${uniqueUrls.length} product pages...`);
     const scrapeResults = await scrapeUrlsSequentially(uniqueUrls);
     const { scrapedData, failedUrls } = partitionScrapeResults(uniqueUrls, scrapeResults);
 
     if (scrapedData.length < 2) {
-      res.status(502).json({ error: "Failed to scrape enough URLs for a comparison.", failedUrls });
+      note("error", "Could not read enough product pages");
+      sendJson(502, { error: "Failed to scrape enough URLs for a comparison.", failedUrls });
       return;
     }
 
-    console.log(`Sending ${scrapedData.length} multi-source payloads to the LLM...`);
+    note("comparing", "Comparing specifications...");
+    console.log(`Sending ${scrapedData.length} trimmed payloads to the LLM...`);
     let comparisonResult: any;
     try {
       comparisonResult = await generateAiComparison(
@@ -106,7 +140,8 @@ router.post("/compare", async (req: Request, res: Response) => {
       );
     } catch (llmError: unknown) {
       console.error("LLM extraction error:", llmError);
-      res.status(500).json({ error: "Failed to parse specifications and compare products via AI." });
+      note("error", "Comparison failed");
+      sendJson(500, { error: "Failed to parse specifications and compare products via AI." });
       return;
     }
 
@@ -133,7 +168,8 @@ router.post("/compare", async (req: Request, res: Response) => {
       return p;
     });
 
-    res.json({ data: comparisonResult, failedUrls });
+    note("done", "Comparison ready");
+    sendJson(200, { data: comparisonResult, failedUrls });
   } catch (error: unknown) {
     console.error("Unexpected error in /api/compare:", error);
     res.status(500).json({ error: "An unexpected error occurred." });

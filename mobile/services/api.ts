@@ -267,3 +267,51 @@ export async function resolveProductNames(names: string[]): Promise<string[]> {
   const json = await response.json();
   return json.urls || [];
 }
+
+export type CompareProgress = { stage?: string; message?: string };
+
+function compareClientId() {
+  return `cmp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export async function compareProducts(
+  urls: string[],
+  options?: { signal?: AbortSignal; onProgress?: (message: string) => void }
+): Promise<{ data: any; failedUrls?: string[]; error?: string }> {
+  const apiUrl = getApiBase();
+  const progressId = compareClientId();
+  options?.onProgress?.("Fetching product pages...");
+  let timer: ReturnType<typeof setInterval> | undefined;
+  const poll = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/api/compare/progress/${progressId}`, {
+        signal: options?.signal,
+      });
+      if (!response.ok) return;
+      const body = (await response.json()) as CompareProgress;
+      if (body?.message && body.stage && body.stage !== "idle") options?.onProgress?.(body.message);
+    } catch {
+      /* polling is best-effort */
+    }
+  };
+  timer = setInterval(() => {
+    void poll();
+  }, 1200);
+  try {
+    const response = await fetch(`${apiUrl}/api/compare`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Compare-Id": progressId,
+      },
+      body: JSON.stringify({ urls }),
+      signal: options?.signal,
+    });
+    if (!response.ok) {
+      throw new Error(await readError(response));
+    }
+    return await response.json();
+  } finally {
+    if (timer) clearInterval(timer);
+  }
+}

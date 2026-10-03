@@ -153,11 +153,13 @@ function OwlMascot({
 export function LoadingOverlay({
   visible,
   phase = "loading",
+  message,
   onCancel,
   onCelebrateEnd,
 }: {
   visible: boolean;
   phase?: "loading" | "success";
+  message?: string;
   onCancel?: () => void;
   onCelebrateEnd?: () => void;
 }) {
@@ -195,6 +197,7 @@ export function LoadingOverlay({
       return;
     }
     if (phase === "success") return;
+    if (message && message.trim()) return;
     const interval = setInterval(() => {
       Animated.timing(msgOpacity, {
         toValue: 0,
@@ -210,7 +213,7 @@ export function LoadingOverlay({
       });
     }, 2500);
     return () => clearInterval(interval);
-  }, [visible, phase, msgOpacity]);
+  }, [visible, phase, msgOpacity, message]);
 
   useEffect(() => {
     if (!visible || phase !== "success") return;
@@ -232,7 +235,7 @@ export function LoadingOverlay({
     };
   }, [visible, phase, reduceMotion]);
 
-  const message = phase === "success" ? "Ready to compare" : MESSAGES[msgIndex];
+  const shown = phase === "success" ? "Ready to compare" : message?.trim() || MESSAGES[msgIndex];
 
   return (
     <Modal
@@ -259,7 +262,7 @@ export function LoadingOverlay({
           <Animated.Text
             style={[styles.message, { opacity: phase === "success" ? 1 : msgOpacity, color: isDark ? "#F4F4F0" : "#1A1A1A" }]}
           >
-            {message}
+            {shown}
           </Animated.Text>
           <Text style={[styles.sub, { color: isDark ? "#A8A8A4" : "#6A6A66" }]}>
             {phase === "success" ? "Opening comparison" : "Analyzing products"}

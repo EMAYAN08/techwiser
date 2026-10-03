@@ -1,0 +1,21 @@
+# Render blueprint for the Node API. Does not change the billing plan.
+# Free/starter services still sleep when idle; keep an external ping on
+# GET /api/health every ~10 minutes. A paid always-on instance is a dashboard toggle.
+services:
+  - type: web
+    name: techwiser
+    runtime: docker
+    dockerfilePath: server/Dockerfile
+    dockerContext: server
+    healthCheckPath: /api/health
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        sync: false
+      - key: PYTHON_SCRAPER_URL
+        sync: false

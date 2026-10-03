@@ -9,7 +9,7 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:unit": "vitest run src/__tests__/price.test.ts src/__tests__/bestbuy.test.ts src/__tests__/barcode-matching.test.ts src/__tests__/scrape-partition.test.ts src/__tests__/constants.test.ts src/__tests__/stripHtml.test.ts src/__tests__/specEnrichment.test.ts src/__tests__/thinScrape.test.ts src/__tests__/categoryTemplates.test.ts src/__tests__/titleEnrich.test.ts src/__tests__/qaCompareFixtures.test.ts src/__tests__/qaKnownGaps.test.ts",
+    "test:unit": "vitest run src/__tests__/price.test.ts src/__tests__/bestbuy.test.ts src/__tests__/barcode-matching.test.ts src/__tests__/scrape-partition.test.ts src/__tests__/constants.test.ts src/__tests__/stripHtml.test.ts src/__tests__/specEnrichment.test.ts src/__tests__/thinScrape.test.ts src/__tests__/categoryTemplates.test.ts src/__tests__/titleEnrich.test.ts src/__tests__/qaCompareFixtures.test.ts src/__tests__/qaKnownGaps.test.ts src/__tests__/latency.test.ts",
     "test:integration": "vitest run src/__tests__/api.integration.test.ts src/__tests__/compareRoute.integration.test.ts",
     "test:live": "vitest run src/__tests__/bestbuy.live.test.ts"
   },

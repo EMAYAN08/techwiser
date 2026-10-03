@@ -13,6 +13,7 @@ import { registerLoadingOverlayHandlers } from "../../store/loadingOverlayBridge
 import { useThemeColors } from "../../constants/Colors";
 import { space, tabBarScrollPadding } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { compareProducts } from "../../services/api";
 import { getApiBase } from "../../utils/apiBase";
 import { isSupportedProductUrl, MIN_COMPARE_URLS, uniqueSupportedProductUrls } from "../../utils/validators";
 
@@ -43,6 +44,8 @@ export default function Home() {
       duration: 400,
       useNativeDriver: true,
     }).start();
+    const apiUrl = getApiBase();
+    fetch(`${apiUrl}/api/health`).catch(() => {});
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -113,21 +116,12 @@ export default function Home() {
     const startedAt = Date.now();
 
     try {
-      const apiUrl = getApiBase();
-      const response = await fetch(`${apiUrl}/api/compare`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ urls: compareUrls }),
+      const { data, error } = await compareProducts(compareUrls, {
         signal: abortControllerRef.current.signal,
+        onProgress: (message) => {
+          if (!cancelledRef.current) setLoading(true, message);
+        },
       });
-
-      if (!response.ok) {
-        throw new Error(
-          `We couldn't reach the server or parsing failed (Error ${response.status}). Ensure your backend is running and the API key is valid.`
-        );
-      }
-
-      const { data, error } = await response.json();
       if (error) throw new Error(error);
       if (cancelledRef.current) return;
 

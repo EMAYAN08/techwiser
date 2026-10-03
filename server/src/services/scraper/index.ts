@@ -2,6 +2,7 @@ import type { ScrapedProduct, ScrapeResult } from "../../types/scrape";
 import { extractRankedPriceFromHtml, extractShopifyPriceFromHtml, formatDisplayPrice, pricesFromOffers } from "../../lib/price";
 import { scrapeBestBuyApi } from "./bestbuy";
 import { scrapeDirectHtml } from "./direct";
+import { isRichScrape, isUsableScrape, scrapeRetailerFastPath } from "./retailers";
 
 async function extractWithJina(url: string): Promise<Pick<ScrapeResult, "rawText" | "imageUrl" | "title">> {
   const jinaResponse = await fetch("https://r.jina.ai/" + url, {
@@ -96,19 +97,27 @@ async function extractHtmlExtras(
   return { priceText, imageUrl };
 }
 
+export function pythonScraperConfigured(): boolean {
+  return Boolean(process.env.PYTHON_SCRAPER_URL && process.env.PYTHON_SCRAPER_URL.trim());
+}
+
 async function extractWithPythonScraper(url: string): Promise<{ rawText?: string; imageUrl?: string | null }> {
-  const rawPyUrl = process.env.PYTHON_SCRAPER_URL || "http://127.0.0.1:8000";
+  if (!pythonScraperConfigured()) {
+    console.log("[Python] skipped — PYTHON_SCRAPER_URL is unset (no localhost retry)");
+    return {};
+  }
+  const rawPyUrl = process.env.PYTHON_SCRAPER_URL || "";
   const pyScraperUrl = rawPyUrl.replace(/\/+$/, "");
   const fetchUrl = `${pyScraperUrl}/scrape`;
 
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= 1; attempt++) {
     console.log(`Fetching Python Microservice at: ${fetchUrl} (attempt ${attempt})`);
     try {
       const pyRes = await fetch(fetchUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
-        signal: AbortSignal.timeout(25_000),
+        signal: AbortSignal.timeout(12_000),
       });
       if (pyRes.status === 429 || pyRes.status === 503) {
         console.log(`Python Scraper failed HTTP status: ${pyRes.status}`);
@@ -150,128 +159,161 @@ function titleFromUrlSlug(url: string): string {
   return "";
 }
 
+function finishScrape(
+  rawText: string,
+  imageUrl: string | null,
+  title: string,
+  priceText: string | null,
+  priceSource?: ScrapeResult["priceSource"]
+): ScrapeResult {
+  let text = rawText;
+  if (priceText && !text.includes(priceText)) {
+    text = "META PRICE FOUND: " + priceText + "\n\n" + text;
+  }
+  return { rawText: text, imageUrl, title, priceText, priceSource: priceText ? priceSource : undefined };
+}
+
 export async function scrapeUrl(url: string): Promise<ScrapeResult> {
   let rawText = "";
   let imageUrl: string | null = null;
   let priceText: string | null = null;
   let title = "";
+  let priceSource: ScrapeResult["priceSource"] = undefined;
+
+  const adopt = (next: ScrapeResult | null | undefined) => {
+    if (!next?.rawText) return;
+    rawText = next.rawText;
+    if (next.title) title = next.title;
+    if (next.imageUrl) imageUrl = next.imageUrl;
+    if (next.priceText) priceText = next.priceText;
+    if (next.priceSource) priceSource = next.priceSource;
+  };
 
   try {
     try {
       const bb = await scrapeBestBuyApi(url);
-      if (bb) {
-        rawText = bb.rawText;
-        title = bb.title;
-        imageUrl = bb.imageUrl;
-        priceText = bb.priceText;
-        if (priceText && !rawText.includes(priceText)) {
-          rawText = "META PRICE FOUND: " + priceText + "\n\n" + rawText;
-        }
-        return {
-          rawText,
-          imageUrl,
-          title,
-          priceText,
-          priceSource: priceText ? "bestbuy-api" : undefined,
-        };
+      if (bb && isRichScrape({ rawText: bb.rawText, title: bb.title, priceText: bb.priceText })) {
+        return finishScrape(bb.rawText, bb.imageUrl, bb.title, bb.priceText, "bestbuy-api");
       }
-    } catch (bbError: any) {
-      console.log(`Best Buy API warning for ${url}:`, bbError.message);
+    } catch (bbError: unknown) {
+      const message = bbError instanceof Error ? bbError.message : String(bbError);
+      console.log(`Best Buy API warning for ${url}:`, message);
     }
 
     try {
-      const jina = await extractWithJina(url);
-      rawText = jina.rawText;
-      title = jina.title;
-      if (jina.imageUrl) {
-        imageUrl = jina.imageUrl;
+      const fast = await scrapeRetailerFastPath(url);
+      const pageFastPath = /canadacomputers\.com|costco\.ca|amazon\./i.test(url);
+      if (fast && (isRichScrape(fast) || (pageFastPath && isUsableScrape(fast)))) {
+        console.log(`[Scrape] early-stop fast path for ${url}`);
+        return finishScrape(fast.rawText, fast.imageUrl, fast.title, fast.priceText || null, fast.priceSource || "retailer-html");
       }
-    } catch (jinaError: any) {
-      console.log(`Jina extraction warning for ${url}:`, jinaError.message);
-      rawText = "Failed to extract text.";
+      adopt(fast);
+    } catch (fastError: unknown) {
+      const message = fastError instanceof Error ? fastError.message : String(fastError);
+      console.log(`[Retailer] warning for ${url}:`, message);
     }
 
-    try {
-      const html = await extractHtmlExtras(url, rawText, imageUrl);
-      priceText = html.priceText;
-      imageUrl = html.imageUrl;
-    } catch (imgError: any) {
-      console.log(`HTML fallback warning for ${url}:`, imgError.message);
-    }
-
-    let finalTitle = title;
-    const lowerTitle = finalTitle.toLowerCase();
-    const scrapeIsThin =
-      !finalTitle ||
-      lowerTitle.includes("access denied") ||
-      lowerTitle.includes("just a moment") ||
-      lowerTitle.includes("page not found") ||
-      lowerTitle.includes("attention required") ||
-      lowerTitle.includes("pardon our interruption") ||
-      lowerTitle.includes("are you a human") ||
-      lowerTitle.includes("security measure") ||
-      rawText.length < 500 ||
-      rawText.startsWith("Failed to extract");
-
-    if (scrapeIsThin) {
-      console.log(`Jina/HTML thin for ${url}. Trying direct HTML scrape...`);
+    if (!isUsableScrape({ rawText, title, priceText })) {
       try {
         const direct = await scrapeDirectHtml(url);
-        if (direct?.rawText) {
-          rawText = direct.rawText;
-          if (direct.title) finalTitle = direct.title;
-          if (direct.imageUrl) imageUrl = direct.imageUrl;
-          if (direct.priceText) priceText = direct.priceText;
-        }
-      } catch (directError: any) {
-        console.log(`Direct HTML scrape failed for ${url}:`, directError.message);
+        if (direct?.rawText) adopt({ ...direct, priceSource: direct.priceText ? "scrape" : undefined });
+      } catch (directError: unknown) {
+        const message = directError instanceof Error ? directError.message : String(directError);
+        console.log(`Direct HTML scrape failed for ${url}:`, message);
       }
     }
 
-    if (rawText.length < 500 || rawText.startsWith("Failed to extract")) {
-      console.log("Direct HTML insufficient. Triggering Python Scrapling Microservice...");
+    if (!isUsableScrape({ rawText, title, priceText })) {
+      try {
+        const jina = await extractWithJina(url);
+        if (jina.rawText && !jina.rawText.startsWith("Failed")) {
+          rawText = jina.rawText;
+          if (jina.title) title = jina.title;
+          if (jina.imageUrl) imageUrl = jina.imageUrl;
+        }
+      } catch (jinaError: unknown) {
+        const message = jinaError instanceof Error ? jinaError.message : String(jinaError);
+        console.log(`Jina extraction warning for ${url}:`, message);
+        if (!rawText) rawText = "Failed to extract text.";
+      }
+    }
+
+    if (!priceText) {
+      try {
+        const html = await extractHtmlExtras(url, rawText, imageUrl);
+        priceText = html.priceText;
+        imageUrl = html.imageUrl;
+        if (priceText && !priceSource) priceSource = "scrape";
+      } catch (imgError: unknown) {
+        const message = imgError instanceof Error ? imgError.message : String(imgError);
+        console.log(`HTML fallback warning for ${url}:`, message);
+      }
+    }
+
+    if (!isRichScrape({ rawText, title, priceText }) && (rawText.length < 500 || rawText.startsWith("Failed to extract"))) {
       try {
         const pyData = await extractWithPythonScraper(url);
-        if (pyData.rawText) {
-          rawText = pyData.rawText;
-        }
-        if (pyData.imageUrl && !imageUrl) {
-          imageUrl = pyData.imageUrl;
-        }
-      } catch (err: any) {
-        console.error("Python Scraper unavailable:", err.message);
+        if (pyData.rawText) rawText = pyData.rawText;
+        if (pyData.imageUrl && !imageUrl) imageUrl = pyData.imageUrl;
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error("Python Scraper unavailable:", message);
       }
-      if (!finalTitle) {
+      if (!title) {
         try {
           const slugTitle = titleFromUrlSlug(url);
-          if (slugTitle) finalTitle = slugTitle;
+          if (slugTitle) title = slugTitle;
         } catch (e) {
           console.log("Failed to parse URL for title fallback", e);
         }
       }
     }
 
-    if (priceText && !rawText.includes(priceText)) {
-      rawText = "META PRICE FOUND: " + priceText + "\n\n" + rawText;
-    }
-    return { rawText, imageUrl, title: finalTitle, priceText };
-  } catch (error: any) {
-    console.error(`Scrape failed for ${url}:`, error.message);
+    return finishScrape(rawText, imageUrl, title, priceText, priceSource || (priceText ? "scrape" : undefined));
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Scrape failed for ${url}:`, message);
     return { rawText: "Failed to scrape.", imageUrl: null, title: "" };
   }
 }
 
-export async function scrapeUrlsSequentially(urls: string[]) {
-  const scrapeResults: PromiseSettledResult<ScrapeResult>[] = [];
-  for (const url of urls) {
-    scrapeResults.push(await Promise.allSettled([scrapeUrl(url)]).then((res) => res[0]));
-    // Add a 1.5 second delay between requests to avoid rate limits
-    if (urls.indexOf(url) < urls.length - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+export const SCRAPE_CONCURRENCY = 3;
+
+/** Run async work with a small pool, preserving input order. */
+export async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+  const pool = Math.max(1, Math.min(limit, items.length || 1));
+  async function run() {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+      results[index] = await worker(items[index], index);
     }
   }
-  return scrapeResults;
+  await Promise.all(Array.from({ length: pool }, () => run()));
+  return results;
 }
+
+/**
+ * Historical name. URLs are scraped together (concurrency capped) with no artificial gap.
+ * The returned array stays in input order.
+ */
+export async function scrapeUrlsSequentially(urls: string[]) {
+  return mapWithConcurrency(urls, SCRAPE_CONCURRENCY, async (url) => {
+    try {
+      const value = await scrapeUrl(url);
+      return { status: "fulfilled" as const, value };
+    } catch (reason) {
+      return { status: "rejected" as const, reason };
+    }
+  });
+}
+
 
 export function partitionScrapeResults(
   urls: string[],

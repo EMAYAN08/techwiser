@@ -1,20 +1,15 @@
-FROM ghcr.io/puppeteer/puppeteer:22.0.0
+FROM node:22-bookworm-slim
 
-USER root
-
-# Setup working directory
 WORKDIR /app
 
-# Install dependencies
+# Puppeteer is not used by the Node API. Python scrapling is a separate service
+# (set PYTHON_SCRAPER_URL). This image stays on stock Node.
 COPY package*.json ./
 RUN npm install
 
-# Copy application files
 COPY . .
+RUN npm run build && npm prune --omit=dev
 
-# Build TypeScript to JS
-RUN npm run build
-
-# Expose port and start
+ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]
