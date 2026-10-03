@@ -230,6 +230,9 @@ export function classifyProductTitle(title: string): { deviceType: string; subty
   if (!t.trim()) return { deviceType: "other", subtype: "other" };
 
   if (/sound\s*bar|\bsoundbar\b/.test(t)) return { deviceType: "soundbar", subtype: "soundbar" };
+  if (/\bhw-?q\d{3,4}[a-z]?\b/.test(t) || /\bsonos\s+arc\b/.test(t)) {
+    return { deviceType: "soundbar", subtype: "soundbar" };
+  }
 
   if (/\bdrone\b|\buav\b|quadcopter/.test(t)) return { deviceType: "drone", subtype: "drone" };
   if (/\bdji\b/.test(t) && (/\b(mini|mavic|avata|neo|flip)\b/.test(t) || /\bair\s*\d/.test(t))) {
@@ -247,17 +250,21 @@ export function classifyProductTitle(title: string): { deviceType: string; subty
   if (/\b(cooktop|dehumidifier|air conditioner|air fryer)\b/.test(t) || /\bac unit\b/.test(t)) {
     return { deviceType: "appliance", subtype: "appliance" };
   }
-  if (/\b(oven|range)\b/.test(t) && !/\b(microwave|camera|lens)\b/.test(t)) {
+  // "zoom range" / focal lengths are lenses, not kitchen ranges.
+  if (/\b(oven|range)\b/.test(t) && !/\b(microwave|camera|lens|zoom)\b/.test(t) && !/\b\d{2}-\d{2}\s*mm\b/.test(t)) {
     return { deviceType: "appliance", subtype: "appliance" };
   }
 
   if (/headphone|earbuds|airpods|\bheadset\b/.test(t)) return { deviceType: "headphones", subtype: "headphones" };
+  if (/\bwh-?1000xm\d?\b/.test(t)) return { deviceType: "headphones", subtype: "headphones" };
   if (/\b(over|on|in)[\s-]?ear\b/.test(t)) return { deviceType: "headphones", subtype: "headphones" };
   if (/\b(noise[\s-]?cancell?ing|anc)\b/.test(t) && /\b(bluetooth|wireless|audio)\b/.test(t)) {
     return { deviceType: "headphones", subtype: "headphones" };
   }
 
-  if (/laptop|macbook|notebook|chromebook|zenbook|ultrabook/.test(t)) return { deviceType: "laptop", subtype: "laptop" };
+  if (/laptop|macbook|notebook|chromebook|zenbook|ultrabook|thinkpad|galaxy\s*book/.test(t) || /\bgram\b/.test(t) || /\bxps\s*\d{2}\b/.test(t)) {
+    return { deviceType: "laptop", subtype: "laptop" };
+  }
   if (/\b(iphone|smartphone)\b/.test(t) || /galaxy s|\bpixel\b/.test(t) || /\bphone\b/.test(t)) {
     return { deviceType: "smartphone", subtype: "smartphone" };
   }
@@ -266,11 +273,25 @@ export function classifyProductTitle(title: string): { deviceType: string; subty
     return { deviceType: "smartwatch", subtype: "smartwatch" };
   }
 
-  if (/\bcamera\b|\bdslr\b|mirrorless|\bgopro\b|action cam/.test(t)) return { deviceType: "camera", subtype: "camera" };
+  if (
+    /\bcamera\b|\bdslr\b|mirrorless|\bgopro\b|action cam|\blens\b|zoom range/.test(t) ||
+    /\b\d{2}-\d{2}\s*mm\b/.test(t) ||
+    /\beos\s*r\d/.test(t) ||
+    /\bosmo\s*pocket\b/.test(t)
+  ) {
+    return { deviceType: "camera", subtype: "camera" };
+  }
   if (/\bmonitor\b/.test(t)) return { deviceType: "monitor", subtype: "monitor" };
+  // Consoles and streaming sticks/set-tops before bare OLED/TV (Book OLED, Switch OLED, Fire TV Stick).
+  if (/\bnintendo\s+switch\b|\bplaystation\b|\bxbox\b|\bps5\b/.test(t)) {
+    return { deviceType: "console", subtype: "console" };
+  }
+  if (/fire\s*tv\s*stick|\bchromecast\b|\bapple\s*tv\b|\broku\s*(?:stick|express|ultra)\b|\bstreaming\s*stick\b/.test(t)) {
+    return { deviceType: "streaming", subtype: "streaming" };
+  }
   if (/\btv\b|television|\bqled\b|\boled\b|mini.?led/.test(t)) return { deviceType: "television", subtype: "television" };
   if (/\brouter\b|\bmesh\b/.test(t)) return { deviceType: "router", subtype: "router" };
-  if (/\bstick\b|streaming|fire tv|chromecast|apple tv/.test(t)) return { deviceType: "streaming", subtype: "streaming" };
+  if (/\bstick\b|streaming|fire tv/.test(t)) return { deviceType: "streaming", subtype: "streaming" };
 
   return { deviceType: "other", subtype: "other" };
 }

@@ -30,7 +30,11 @@ export function classifyProduct(product: Product): ProductKind {
   ) {
     return "smartphone";
   }
-  if (/\b(macbook|laptop|notebook|chromebook|zenbook|thinkpad|gram)\b/.test(t) || /\bxps \d{2}\b/.test(t)) {
+  if (
+    /\b(macbook|laptop|notebook|chromebook|zenbook|thinkpad|gram)\b/.test(t) ||
+    /galaxy\s*book/.test(t) ||
+    /\bxps \d{2}\b/.test(t)
+  ) {
     return "laptop";
   }
   if (
@@ -39,9 +43,13 @@ export function classifyProduct(product: Product): ProductKind {
   ) {
     return "pc";
   }
-  if (/\b(tv|oled|qled|television|bravia|fire tv)\b/.test(t) && !/\b(laptop|monitor)\b/.test(t)) return "tv";
+  // Sticks, set-tops, and Switch/Book OLED are not televisions.
+  if (/fire tv stick|\bchromecast\b|\bapple tv\b|\bnintendo switch\b/.test(t)) return "other";
+  if (/\b(tv|oled|qled|television|bravia|fire tv)\b/.test(t) && !/\b(laptop|monitor|stick)\b/.test(t)) return "tv";
   if (
-    /\b(fridge|refrigerator|washer|washing machine|dryer|dishwasher|range|stove|freezer)\b/.test(t) ||
+    (/\b(fridge|refrigerator|washer|washing machine|dryer|dishwasher|range|stove|freezer)\b/.test(t) &&
+      !/\bzoom\b/.test(t) &&
+      !/\b\d{2}-\d{2}mm\b/.test(t)) ||
     (/\boven\b/.test(t) && !/\btoaster\b/.test(t))
   ) {
     return "major";

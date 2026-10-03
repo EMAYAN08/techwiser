@@ -26,8 +26,8 @@ function fillBlank(specs: SpecPair[], label: string, value: string, match: RegEx
 export function formFactorFromTitle(title: string): string | null {
   if (/\bover[\s-]?ear\b/i.test(title)) return "Over-ear";
   if (/\bon[\s-]?ear\b/i.test(title)) return "On-ear";
-  if (/\bin[\s-]?ear\b/i.test(title) || /\bearbuds?\b/i.test(title)) return "In-ear";
-  if (/\btrue wireless\b/i.test(title) && /\b(earbud|headphone|airpod|in[\s-]?ear)\b/i.test(title)) return "In-ear";
+  if (/\bin[\s-]?ear\b/i.test(title) || /\bearbuds?\b/i.test(title) || /\bairpods?\b/i.test(title)) return "In-ear";
+  if (/\btrue wireless\b/i.test(title) && /\b(earbuds?|headphones?|airpods?|in[\s-]?ear)\b/i.test(title)) return "In-ear";
   return null;
 }
 

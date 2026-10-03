@@ -65,7 +65,7 @@ describe("classifyProduct / getRetailerKey", () => {
     expect(classifyProduct(product({ name: "Dell XPS 14" }))).toBe("laptop");
   });
 
-  it.fails("does not file OLED laptops and streaming sticks under TVs", () => {
+  it("does not file OLED laptops and streaming sticks under TVs", () => {
     expect(classifyProduct(product({ name: "Samsung Galaxy Book4 OLED" }))).not.toBe("tv");
     expect(classifyProduct(product({ name: "Amazon Fire TV Stick 4K" }))).not.toBe("tv");
     expect(classifyProduct(product({ name: "Nintendo Switch OLED" }))).not.toBe("tv");

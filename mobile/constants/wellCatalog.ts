@@ -49,6 +49,7 @@ export const RETAIL_WELLS: Record<string, WellDef> = {
   costco: { id: "costco", label: "Costco", icon: require("../assets/logos/costco.png"), tint: TINT.peach },
   walmart: { id: "walmart", label: "Walmart", icon: require("../assets/logos/walmart.jpg"), tint: TINT.blue },
   staples: { id: "staples", label: "Staples", icon: require("../assets/logos/staples.png"), tint: TINT.rose },
+  leons: { id: "leons", label: "Leon's", icon: require("../assets/logos/leons.png"), tint: TINT.gold },
   other: { id: "other", label: "Other", icon: require("../assets/icons/retail-other.png"), tint: TINT.slate },
 };
 
@@ -59,6 +60,7 @@ export const RETAIL_ORDER = [
   "costco",
   "walmart",
   "staples",
+  "leons",
   "memoryexpress",
   "newegg",
   "thesource",

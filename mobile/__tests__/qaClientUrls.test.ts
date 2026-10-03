@@ -37,7 +37,7 @@ describe("retailer product URLs used by the category suite", () => {
 describe("library retailer wells", () => {
   const catalog = readFileSync(new URL("../constants/wellCatalog.ts", import.meta.url), "utf8");
 
-  it.fails("offers a Leon's well for the supported leons retailer key", () => {
+  it("offers a Leon's well for the supported leons retailer key", () => {
     expect(catalog).toMatch(/id:\s*"leons"/);
   });
 });
