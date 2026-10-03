@@ -115,8 +115,9 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
     <View style={styles.row} accessibilityRole="tablist">
       {TABS.map((tab, index) => {
         const isActive = activeMode === tab.id;
-        const wellBg = isActive ? colors.modePillActiveBg : colors.modePillIdleBg;
-        const glyph = colors.spotify;
+        const wellBg = isActive ? colors.tabPill : colors.tabPillQuiet;
+        const glyph = isActive ? colors.tabSelectedIcon : colors.tabUnselected;
+        const labelColor = isActive ? colors.tabSelectedLabel : colors.tabUnselected;
 
         return (
           <Pressable
@@ -129,8 +130,8 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
               styles.pill,
               {
                 backgroundColor: wellBg,
-                borderWidth: isActive ? 2 : 1,
-                borderColor: colors.spotify,
+                borderWidth: 1,
+                borderColor: colors.line,
               },
             ]}
           >
@@ -153,7 +154,7 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
               style={[
                 styles.label,
                 {
-                  color: isActive ? colors.ink : colors.spotify,
+                  color: labelColor,
                   fontFamily: isActive ? fonts.uiBold : fonts.uiMedium,
                 },
               ]}
