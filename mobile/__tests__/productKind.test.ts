@@ -57,9 +57,26 @@ describe("classifyProduct / getRetailerKey", () => {
     expect(classifyProduct(product({ name: "Apple iPad Pro 12.9" }))).toBe("tablet");
   });
 
-  it("normalizes retailer names", () => {
+  it("does not treat headphones as phones and keeps drones out of the TV bucket", () => {
+    expect(classifyProduct(product({ name: "Bose QuietComfort Headphones" }))).not.toBe("smartphone");
+    expect(classifyProduct(product({ name: "DJI Mini 4 Pro drone" }))).not.toBe("tv");
+    expect(classifyProduct(product({ name: "Samsung HW-Q990D soundbar" }))).not.toBe("tv");
+    expect(classifyProduct(product({ name: "LG gram 17" }))).toBe("laptop");
+    expect(classifyProduct(product({ name: "Dell XPS 14" }))).toBe("laptop");
+  });
+
+  it.fails("does not file OLED laptops and streaming sticks under TVs", () => {
+    expect(classifyProduct(product({ name: "Samsung Galaxy Book4 OLED" }))).not.toBe("tv");
+    expect(classifyProduct(product({ name: "Amazon Fire TV Stick 4K" }))).not.toBe("tv");
+    expect(classifyProduct(product({ name: "Nintendo Switch OLED" }))).not.toBe("tv");
+  });
+
+  it("normalizes retailer names including Leon's, Costco, and Canada Computers", () => {
     expect(getRetailerKey("Best Buy")).toBe("bestbuy");
     expect(getRetailerKey("Amazon.ca")).toBe("amazon");
+    expect(getRetailerKey("Leon's")).toBe("leons");
+    expect(getRetailerKey("Costco Wholesale")).toBe("costco");
+    expect(getRetailerKey("Canada Computers")).toBe("canadacomputers");
     expect(getRetailerKey("Mystery Mart")).toBe("other");
   });
 });
