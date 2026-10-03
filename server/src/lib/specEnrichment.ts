@@ -361,6 +361,53 @@ function applyResolutionWording(specs: SpecPair[], canonical: string): SpecPair[
   });
 }
 
+
+function panelGridFromText(text: string): string | null {
+  if (!text) return null;
+  const labeled = text.match(
+    /(?:native resolution(?: \(pixels\))?|display resolution|screen resolution|resolution)\s*:\s*(\d{3,5})\s*[x×]\s*(\d{3,5})/i
+  );
+  if (labeled) return `${labeled[1]} x ${labeled[2]}`;
+  const any = text.match(/(\d{3,4})\s*[x×]\s*(2160|1440|1080|1600|1200|1179|2424)/i);
+  return any ? `${any[1]} x ${any[2]}` : null;
+}
+
+function fillGroundedDisplaySpecs(specs: SpecPair[], pageText: string): SpecPair[] {
+  if (!pageText.trim()) return specs;
+  let next = specs;
+  const hz = statedRefreshHz(pageText);
+  const refresh = findSpec(next, (l) => l.includes("refresh"));
+  const panelHz = hz.filter((n) => n >= 90);
+  const pagePick = (panelHz.length ? panelHz : hz).reduce((max, n) => Math.max(max, n), 0);
+  const currentHz = (refresh?.value || "").match(/\d{2,3}(?=\s*hz)/gi)?.map((n) => Number(n)) || [];
+  const currentMax = currentHz.reduce((max, n) => Math.max(max, n), 0);
+  const refreshBad = !refresh || isBlankSpec(refresh.value) || !/\d+\s*hz/i.test(refresh.value);
+  // 48 Hz film rates must not beat a stated 120/165 Hz panel rate.
+  const refreshLow = currentMax > 0 && currentMax < 90 && pagePick >= 90;
+  if (pagePick && (refreshBad || refreshLow)) {
+    next = upsertSpec(next, refresh?.label || "Refresh Rate", `${pagePick} Hz`);
+  }
+  const grid = panelGridFromText(pageText);
+  if (grid) {
+    const canonical = canonicalizeResolutionValue(grid, pageText);
+    const res = findSpec(next, (l) => isResolutionSpecLabel(l));
+    const coarse = !!res && /^(4k|8k|uhd|fhd|qhd|4k uhd|4k ultra hd)$/i.test(res.value.trim());
+    const bad = !res || isBlankSpec(res.value) || /\d+\s*mp\b/i.test(res.value) || coarse;
+    if (bad) next = upsertSpec(next, res?.label || "Resolution", canonical);
+  }
+  const hdrMatch = pageText.match(/(?:hdr|high dynamic range)[^:\n]{0,48}:\s*([^\n]+)/i);
+  const hdrValue = hdrMatch?.[1]?.trim() || "";
+  const hdrSpec = findSpec(next, (l) => /\bhdr\b|high dynamic range/.test(l));
+  if (hdrValue && /dolby|hdr10|\bhlg\b/i.test(hdrValue)) {
+    const current = hdrSpec?.value || "";
+    const richer = hdrValue.length > current.length + 8 && /hdr\s*10\+|\bhlg\b|dolby vision iq/i.test(hdrValue) && !/hdr\s*10\+|\bhlg\b/i.test(current);
+    if (!hdrSpec || isBlankSpec(current) || richer) {
+      next = upsertSpec(next, hdrSpec?.label || "HDR", hdrValue.slice(0, 180));
+    }
+  }
+  return next;
+}
+
 export function enrichProductSpecs(
   rawSpecs: SpecPair[],
   ctx: { title?: string; model?: string; retailerText?: string; deviceHint?: string }
@@ -414,6 +461,7 @@ export function enrichProductSpecs(
   });
 
   specs = applyTitleEnrichment(specs, ctx.title || "");
+  specs = fillGroundedDisplaySpecs(specs, pageText);
 
   return specs;
 }
@@ -520,10 +568,26 @@ export function normalizeWeightComparisons(result: {
 }
 
 
+function isCameraResolutionLabel(label: string): boolean {
+  return /camera|front[-\s]?facing|rear\b|selfie|video capture|megapixel/i.test(label);
+}
+
+function isPanelResolutionLabel(label: string): boolean {
+  return /^(resolution|display resolution|native resolution|screen resolution)$/i.test(label.trim()) || /resolution \(pixels\)|native resolution|display resolution|screen resolution/i.test(label);
+}
+
 function specMatches(rowLabel: string, specLabel: string): boolean {
   if (normLabel(rowLabel) === normLabel(specLabel)) return true;
-  if (/resolution/i.test(rowLabel) && /resolution/i.test(specLabel)) return true;
+  if (/resolution/i.test(rowLabel) && /resolution/i.test(specLabel)) {
+    const rowCam = isCameraResolutionLabel(rowLabel);
+    const specCam = isCameraResolutionLabel(specLabel);
+    const rowPanel = isPanelResolutionLabel(rowLabel);
+    const specPanel = isPanelResolutionLabel(specLabel);
+    if ((rowCam && specPanel && !specCam) || (specCam && rowPanel && !rowCam)) return false;
+    return true;
+  }
   if (/refresh/i.test(rowLabel) && /refresh/i.test(specLabel)) return true;
+  if (/\bhdr\b|high dynamic range/i.test(rowLabel) && /\bhdr\b|high dynamic range/i.test(specLabel)) return true;
   if (/chipset|processor|soc/i.test(rowLabel) && /chipset|processor|soc/i.test(specLabel)) return true;
   if (/fingerprint/i.test(rowLabel) && /fingerprint/i.test(specLabel)) return true;
   if (/face\s*id/i.test(rowLabel) && /face\s*id/i.test(specLabel)) return true;
@@ -532,6 +596,94 @@ function specMatches(rowLabel: string, specLabel: string): boolean {
   if (/bluetooth/i.test(rowLabel) && /bluetooth/i.test(specLabel)) return true;
   if (/form factor|wearing style|ear style/i.test(rowLabel) && /form factor|wearing style|ear style/i.test(specLabel)) return true;
   return false;
+}
+
+
+function pickRawMatch(raw: SpecPair[] | undefined, rowLabel: string): SpecPair | undefined {
+  if (!raw?.length) return undefined;
+  const exact = raw.find((s) => normLabel(s.label) === normLabel(rowLabel) && !isBlankSpec(s.value));
+  if (exact) return exact;
+  const hits = raw.filter((s) => specMatches(rowLabel, s.label) && !isBlankSpec(s.value));
+  if (isPanelResolutionLabel(rowLabel)) {
+    const grid = hits.find((s) => /\d{3,5}\s*[x×]\s*\d{3,5}/.test(s.value) && !isCameraResolutionLabel(s.label));
+    if (grid) return grid;
+    const panel = hits.find((s) => isPanelResolutionLabel(s.label) && !isCameraResolutionLabel(s.label));
+    if (panel) return panel;
+  }
+  if (/\bhdr\b|high dynamic range/i.test(rowLabel)) {
+    const rich = hits.find((s) => /dolby|hdr10|\bhlg\b/i.test(s.value));
+    if (rich) return rich;
+  }
+  return hits.find((s) => !(isPanelResolutionLabel(rowLabel) && isCameraResolutionLabel(s.label)));
+}
+
+function squashDigitGaps(value: string): string {
+  return value.toLowerCase().replace(/(\d)[,\s](?=\d)/g, "$1");
+}
+
+/** A nits claim is kept only when that product's own retailer text states the number. */
+export function brightnessClaimGrounded(value: string, pageText: string): boolean {
+  const match = String(value || "").match(/(\d[\d,\s]{2,})\s*-?\s*nits?\b/i);
+  if (!match) return true;
+  const num = match[1].replace(/[,\s]/g, "");
+  if (!num || Number(num) < 80) return true;
+  const page = squashDigitGaps(pageText || "");
+  if (!page.includes(num)) return false;
+  return /nit|brightness|cd\/m/.test(page);
+}
+
+function scrubUngroundedBrightness(
+  result: any,
+  productDataList?: Array<{ retailerText?: string; title?: string }>
+): void {
+  const pages = (productDataList || []).map((item) => `${item?.title || ""}\n${item?.retailerText || ""}`);
+  const scrub = (value: string, index: number) => (brightnessClaimGrounded(value, pages[index] || "") ? value : "—");
+  for (let i = 0; i < (result.products || []).length; i++) {
+    const specs = result.products[i]?.rawSpecs;
+    if (!Array.isArray(specs)) continue;
+    result.products[i].rawSpecs = specs.map((spec: SpecPair) => ({
+      ...spec,
+      value: scrub(String(spec.value || ""), i),
+    }));
+  }
+  if (result.groupedSpecs && typeof result.groupedSpecs === "object") {
+    for (const specs of Object.values(result.groupedSpecs) as Array<Array<{ values: string[] }>>) {
+      for (const spec of specs || []) {
+        if (!Array.isArray(spec.values)) continue;
+        spec.values = spec.values.map((value, i) => scrub(String(value || ""), i));
+      }
+    }
+  }
+  if (Array.isArray(result.keyDifferences)) {
+    for (const diff of result.keyDifferences) {
+      if (!Array.isArray(diff?.values)) continue;
+      diff.values = diff.values.map((value: string, i: number) => scrub(String(value || ""), i));
+    }
+  }
+}
+
+
+function ensureGroupedRows(result: any, patterns: RegExp[], groupName: string): void {
+  const products = result.products || [];
+  if (!products.length) return;
+  result.groupedSpecs = result.groupedSpecs && typeof result.groupedSpecs === "object" ? result.groupedSpecs : {};
+  const existing: Array<{ label: string; values: string[] }> = Object.values(result.groupedSpecs).flatMap((rows: any) =>
+    Array.isArray(rows) ? rows : []
+  );
+  for (const pattern of patterns) {
+    const sample = products
+      .map((p: any) => (p.rawSpecs || []).find((s: SpecPair) => pattern.test(s.label) && !isBlankSpec(s.value)))
+      .find(Boolean) as SpecPair | undefined;
+    if (!sample) continue;
+    if (existing.some((row) => specMatches(sample.label, row.label) || pattern.test(row.label))) continue;
+    const values = products.map((p: any) => {
+      const hit = (p.rawSpecs || []).find((s: SpecPair) => pattern.test(s.label) && !isBlankSpec(s.value));
+      return hit ? hit.value : "—";
+    });
+    if (values.every((v: string) => isBlankSpec(v))) continue;
+    result.groupedSpecs[groupName] = [...(result.groupedSpecs[groupName] || []), { label: sample.label, values, winnerIndex: -1 }];
+    existing.push({ label: sample.label, values });
+  }
 }
 
 export function enrichComparisonSpecs(result: any, productDataList?: Array<{ retailerText?: string; title?: string }>): void {
@@ -553,14 +705,14 @@ export function enrichComparisonSpecs(result: any, productDataList?: Array<{ ret
   });
 
   // Push enriched resolution/weight/chipset/biometrics into groupedSpecs / keyDifferences by label match.
-  const syncLabels = [/native resolution/i, /^resolution$/i, /display resolution/i, /resolution \(pixels\)/i, /^display$/i, /screen size/i, /^weight$/i, /weight \(without stand\)/i, /chipset/i, /^processor$/i, /fingerprint/i, /face id/i, /refresh/i, /noise cancell/i, /\banc\b/i, /bluetooth/i, /form factor/i, /wearing style/i];
+  const syncLabels = [/native resolution/i, /^resolution$/i, /display resolution/i, /resolution \(pixels\)/i, /^display$/i, /screen size/i, /^weight$/i, /weight \(without stand\)/i, /chipset/i, /^processor$/i, /fingerprint/i, /face id/i, /refresh/i, /\bhdr\b|high dynamic range/i, /brightness|\bnits?\b/i, /noise cancell/i, /\banc\b/i, /bluetooth/i, /form factor/i, /wearing style/i];
   if (result.groupedSpecs) {
     for (const specs of Object.values(result.groupedSpecs) as Array<Array<{ label: string; values: string[] }>>) {
       for (const spec of specs) {
         if (!syncLabels.some((re) => re.test(spec.label))) continue;
         spec.values = spec.values.map((v, i) => {
           const raw = result.products[i]?.rawSpecs as SpecPair[] | undefined;
-          const hit = raw?.find((s) => specMatches(spec.label, s.label));
+          const hit = pickRawMatch(raw, spec.label);
           return hit && !isBlankSpec(hit.value) ? hit.value : v;
         });
       }
@@ -571,11 +723,13 @@ export function enrichComparisonSpecs(result: any, productDataList?: Array<{ ret
       if (!syncLabels.some((re) => re.test(diff.label))) continue;
       diff.values = diff.values.map((v: string, i: number) => {
         const raw = result.products[i]?.rawSpecs as SpecPair[] | undefined;
-        const hit = raw?.find((s) => specMatches(diff.label, s.label));
+        const hit = pickRawMatch(raw, diff.label);
         return hit && !isBlankSpec(hit.value) ? hit.value : v;
       });
     }
   }
 
   normalizeWeightComparisons(result);
+  scrubUngroundedBrightness(result, productDataList);
+  ensureGroupedRows(result, [/\bhdr\b|high dynamic range/i, /peak brightness|\bnits?\b/i, /refresh rate/i], "Display");
 }

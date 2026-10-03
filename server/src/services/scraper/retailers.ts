@@ -1,5 +1,5 @@
 import { BROWSER_UA } from "../../config/constants";
-import { formatDisplayPrice, pricesFromOffers } from "../../lib/price";
+import { formatDisplayPrice, normalizeMoneyAmount, pricesFromOffers } from "../../lib/price";
 import type { ScrapeResult } from "../../types/scrape";
 
 const SKIP_SPEC_LABELS = /^(name|brand|title|price|url|description|overview|page text|sku|image)$/i;
@@ -103,6 +103,157 @@ export function extractAmazonAsin(url: string): string | null {
 
 type Tagged = { label: string; value: string };
 
+type ShopifyVariant = {
+  id?: unknown;
+  title?: unknown;
+  price?: unknown;
+  compare_at_price?: unknown;
+};
+
+/** Leon's JSON lists one variant per store. The shelf price is the most common on-sale amount, not variants[0]. */
+export function pickShopifyShelfPrice(variants: ShopifyVariant[], pageUrl?: string): string | null {
+  let requested: string | null = null;
+  if (pageUrl) {
+    try {
+      const id = new URL(pageUrl).searchParams.get("variant");
+      if (id) {
+        const hit = variants.find((v) => String(v.id || "") === id);
+        const amount = hit ? normalizeMoneyAmount(hit.price) : null;
+        if (amount != null && amount > 0 && amount < 20_000) requested = formatDisplayPrice(hit?.price);
+      }
+    } catch {
+      /* ignore bad variant urls */
+    }
+  }
+  if (requested) return requested;
+
+  const sane = variants.filter((v) => {
+    const amount = normalizeMoneyAmount(v.price);
+    if (amount == null || amount <= 1 || amount >= 20_000) return false;
+    if (/registry|arvr/i.test(String(v.title || ""))) return false;
+    return true;
+  });
+  const onSale = sane.filter((v) => {
+    const price = normalizeMoneyAmount(v.price);
+    const compare = normalizeMoneyAmount(v.compare_at_price);
+    return price != null && compare != null && compare > price + 0.009;
+  });
+  const pool = onSale.length ? onSale : sane;
+  const counts = new Map<string, number>();
+  for (const variant of pool) {
+    const display = formatDisplayPrice(variant.price);
+    if (!display) continue;
+    counts.set(display, (counts.get(display) || 0) + 1);
+  }
+  let best: string | null = null;
+  let bestCount = -1;
+  for (const [display, count] of counts) {
+    const amount = normalizeMoneyAmount(display) || 0;
+    const bestAmount = best ? normalizeMoneyAmount(best) || 0 : Number.POSITIVE_INFINITY;
+    if (count > bestCount || (count === bestCount && amount < bestAmount)) {
+      best = display;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+function decodeKeepLines(value: string): string {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&\w+;/g, " ");
+}
+
+function htmlToSpecText(html: string): string {
+  return decodeKeepLines(
+    String(html || "")
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/(p|div|li|tr|h\d|td|th|section|ul|ol)>/gi, "\n")
+      .replace(/<[^>]+>/g, " ")
+  )
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n{2,}/g, "\n");
+}
+
+function proseDisplayFacts(text: string): Tagged[] {
+  const out: Tagged[] = [];
+  const hz = text.match(/\b(\d{2,3})\s*Hz\b/i);
+  if (hz && Number(hz[1]) >= 48 && Number(hz[1]) <= 540) out.push({ label: "Refresh Rate", value: `${hz[1]} Hz` });
+  const nits = text.match(/(\d[\d,]*)\s*-?\s*nits?\b/i);
+  if (nits) out.push({ label: "Peak Brightness", value: `${nits[1].replace(/,/g, "")} nits` });
+  const zones = text.match(/\b(\d{3,5})\s+(?:dimming\s+)?zones\b/i);
+  if (zones) out.push({ label: "Local Dimming Zones", value: zones[1] });
+  return out;
+}
+
+/** Pull Label: value rows out of a retailer spec block (Leon’s PDP is not a real table). */
+export function parseLabeledSpecHtml(html: string, startMarker: RegExp, stopMarker?: RegExp): string[] {
+  const start = html.search(startMarker);
+  if (start < 0) return [];
+  let chunk = html.slice(start, start + 40_000);
+  if (stopMarker) {
+    const stop = chunk.search(stopMarker);
+    if (stop > 400) chunk = chunk.slice(0, stop);
+  }
+  const pairs: Tagged[] = [];
+  for (const line of htmlToSpecText(chunk).split("\n")) {
+    const match = line.trim().match(/^([^:]{2,80}):\s+(\S.*)$/);
+    if (!match) continue;
+    pairs.push({ label: match[1], value: match[2].slice(0, 240) });
+  }
+  return linesFromPairs(pairs);
+}
+
+/**
+ * Canada Computers sometimes shifts picture rows by one cell.
+ * Promote values that are obviously a resolution, refresh, or HDR list.
+ */
+export function promoteMislabeledDisplaySpecs(pairs: Tagged[]): Tagged[] {
+  const extra: Tagged[] = [];
+  const has = (label: RegExp) =>
+    pairs.concat(extra).some((pair) => label.test(stripTags(pair.label)) && stripTags(pair.value).length > 0);
+  for (const pair of pairs) {
+    const value = stripTags(pair.value);
+    if (!value) continue;
+    const grid = value.match(/(\d{1,2}[,.]?\d{3})\s*[x×]\s*(\d{1,2}[,.]?\d{3})/i);
+    if (grid && !has(/^(resolution|native resolution|display resolution|screen resolution)$/i)) {
+      const px = (part: string) => part.replace(/[^\d]/g, "");
+      extra.push({ label: "Resolution", value: `${px(grid[1])} x ${px(grid[2])}` });
+    }
+    const hz = value.match(/\b(\d{2,3})\s*Hz\b/i);
+    if (hz && value.length <= 32 && Number(hz[1]) >= 48 && !has(/^refresh rate$/i)) {
+      extra.push({ label: "Refresh Rate", value: `${hz[1]} Hz` });
+    }
+    if (/dolby vision|hdr10|\bhlg\b/i.test(value) && value.length <= 90 && !/gaming/i.test(value) && !has(/\bhdr\b/i)) {
+      extra.push({ label: "HDR", value: value });
+    }
+  }
+  return pairs.concat(extra);
+}
+
+function appendSpecLines(result: ScrapeResult, lines: string[]): ScrapeResult {
+  if (!lines.length) return result;
+  const have = new Set(
+    result.rawText.split("\n").map((line) => line.split(":")[0].trim().toLowerCase())
+  );
+  const add = lines.filter((line) => !have.has(line.split(":")[0].trim().toLowerCase()));
+  if (!add.length) return result;
+  const rawText = result.rawText.includes("SPECS:")
+    ? `${result.rawText}\n${add.join("\n")}`
+    : `${result.rawText}\nSPECS:\n${add.join("\n")}`;
+  return { ...result, rawText };
+}
+
+
 function linesFromPairs(pairs: Tagged[]): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
@@ -118,14 +269,14 @@ function linesFromPairs(pairs: Tagged[]): string[] {
   return out;
 }
 
-export function parseShopifyProductJson(data: unknown): ScrapeResult | null {
+export function parseShopifyProductJson(data: unknown, pageUrl?: string): ScrapeResult | null {
   const product = (data as { product?: Record<string, unknown> })?.product;
   if (!product || typeof product !== "object") return null;
   const title = String(product.title || "").trim();
   if (!title) return null;
-  const variants = Array.isArray(product.variants) ? product.variants : [];
-  const variant = (variants[0] || {}) as { price?: unknown; sku?: unknown; barcode?: unknown };
-  const priceText = formatDisplayPrice(variant.price);
+  const variants = Array.isArray(product.variants) ? (product.variants as ShopifyVariant[]) : [];
+  const variant = (variants[0] || {}) as ShopifyVariant & { sku?: unknown; barcode?: unknown };
+  const priceText = pickShopifyShelfPrice(variants, pageUrl);
   const images = Array.isArray(product.images) ? product.images : [];
   const imageUrl =
     (typeof product.image === "object" && product.image && "src" in product.image
@@ -148,6 +299,7 @@ export function parseShopifyProductJson(data: unknown): ScrapeResult | null {
     tagPairs.push({ label, value });
   }
   const description = stripTags(String(product.body_html || "")).slice(0, 1800);
+  const prosePairs = proseDisplayFacts(description);
   const parts = [
     "RETAILER DATA (SHOPIFY JSON)",
     `Name: ${title}`,
@@ -156,8 +308,8 @@ export function parseShopifyProductJson(data: unknown): ScrapeResult | null {
     variant.barcode ? `Barcode: ${variant.barcode}` : "",
     priceText ? `Price: ${priceText}` : "",
     description ? `Description: ${description}` : "",
-    tagPairs.length ? "SPECS:" : "",
-    ...linesFromPairs(tagPairs),
+    tagPairs.length || prosePairs.length ? "SPECS:" : "",
+    ...linesFromPairs([...tagPairs, ...prosePairs]),
   ].filter(Boolean);
   return {
     rawText: parts.join("\n"),
@@ -222,7 +374,9 @@ export function parseCanadaComputersHtml(html: string): ScrapeResult | null {
   const priceText =
     formatDisplayPrice(metaContent(html, "product:price:amount")) ||
     formatDisplayPrice(metaContent(html, "og:price:amount"));
-  const specLines = linesFromPairs(tablePairs(html, /class=["'][^"']*pi-specs-table[^"']*["'][\s\S]*?<\/table>/i));
+  const specLines = linesFromPairs(
+    promoteMislabeledDisplaySpecs(tablePairs(html, /class=["'][^"']*pi-specs-table[^"']*["'][\s\S]*?<\/table>/i))
+  );
   const imageUrl = metaContent(html, "og:image");
   const brand = metaContent(html, "product:brand") || "";
   return packResult(
@@ -339,11 +493,28 @@ export async function scrapeRetailerFastPath(url: string): Promise<ScrapeResult 
   try {
     if (host.includes("leons.ca")) {
       const jsonUrl = shopifyProductJsonUrl(url);
-      if (!jsonUrl) return null;
-      const body = await fetchText(jsonUrl, 8_000, "application/json");
-      if (!body) return null;
-      const parsed = parseShopifyProductJson(JSON.parse(body));
-      if (parsed) console.log(`[Retailer] Leon's JSON ${parsed.title.slice(0, 60)} price=${parsed.priceText || "none"}`);
+      const [body, html] = await Promise.all([
+        jsonUrl ? fetchText(jsonUrl, 8_000, "application/json") : Promise.resolve(null),
+        fetchText(url, 12_000, "text/html,application/xhtml+xml"),
+      ]);
+      let parsed: ScrapeResult | null = null;
+      if (body) {
+        try {
+          parsed = parseShopifyProductJson(JSON.parse(body), url);
+        } catch {
+          parsed = null;
+        }
+      }
+      const htmlLines = html
+        ? parseLabeledSpecHtml(html, /product-specs-pdp/i, />\s*Reviews\b/i)
+        : [];
+      if (!parsed && htmlLines.length && html) {
+        const title = metaContent(html, "og:title") || "";
+        parsed = packResult("LEONS HTML", title, [], htmlLines, metaContent(html, "og:image"), null, "retailer-html");
+      } else if (parsed) {
+        parsed = appendSpecLines(parsed, htmlLines);
+      }
+      if (parsed) console.log(`[Retailer] Leon's ${parsed.title.slice(0, 60)} price=${parsed.priceText || "none"} specs=${countSpecRows(parsed.rawText)}`);
       return parsed;
     }
     if (host.includes("canadacomputers.com") || host.includes("costco.ca") || host.includes("amazon.")) {

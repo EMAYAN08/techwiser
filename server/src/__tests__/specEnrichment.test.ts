@@ -13,6 +13,7 @@ import {
   sanitizeRefreshRate,
   shouldOverrideResolution,
   statedRefreshHz,
+  brightnessClaimGrounded,
 } from "../lib/specEnrichment";
 
 describe("inferResolutionFromModel", () => {
@@ -330,5 +331,68 @@ Peak brightness: 5000 nits
     expect(result.keyDifferences[1].values[0]).toBe("VRR");
     expect(result.keyDifferences[1].values[1]).toBe("165 Hz");
     expect(result.groupedSpecs.Display[0].values[0]).toBe("VRR");
+  });
+});
+
+  it("does not keep a 48 Hz film rate when the page states 165 Hz", () => {
+    const page = "Refresh Rate: 48 Hz - 165 Hz native panel";
+    const specs = enrichProductSpecs([{ label: "Refresh Rate", value: "48 Hz" }], { retailerText: page, title: "Hisense 65 TV" });
+    expect(specs.find((s) => /refresh/i.test(s.label))?.value).toBe("165 Hz");
+  });
+
+describe("display resolution vs camera megapixels", () => {
+  it("keeps the pixel grid on Display Resolution instead of the first camera MP row", () => {
+    const result: any = {
+      products: [
+        {
+          name: "Apple iPhone 16",
+          rawSpecs: [
+            { label: "Front-Facing Camera Resolution", value: "12MP" },
+            { label: "Display Resolution", value: "12MP" },
+          ],
+        },
+        {
+          name: "Google Pixel 9a",
+          rawSpecs: [
+            { label: "Front-Facing Camera Resolution", value: "13MP" },
+            { label: "Display Resolution", value: "13MP" },
+          ],
+        },
+      ],
+      groupedSpecs: {
+        Display: [{ label: "Display Resolution", values: ["12MP", "13MP"], winnerIndex: 0 }],
+      },
+      keyDifferences: [],
+    };
+    enrichComparisonSpecs(result, [
+      { title: "iPhone 16", retailerText: "Display Resolution: 2556 x 1179\nFront Camera: 12MP" },
+      { title: "Pixel 9a", retailerText: "Display Resolution: 1080 x 2424\nFront Camera: 13MP" },
+    ]);
+    expect(result.groupedSpecs.Display[0].values[0]).toMatch(/2556/);
+    expect(result.groupedSpecs.Display[0].values[1]).toMatch(/1080/);
+    expect(result.groupedSpecs.Display[0].values.join(" ")).not.toMatch(/\d+MP/);
+  });
+
+  it("drops nits that are not in that product's retailer text", () => {
+    expect(brightnessClaimGrounded("5000 nits", "Peak brightness: 5,000 nits")).toBe(true);
+    expect(brightnessClaimGrounded("5000 nits", "Resolution: 3840 x 2160 Refresh Rate: 165 Hz")).toBe(false);
+    const result: any = {
+      products: [
+        { name: "Best Buy U88", rawSpecs: [{ label: "Peak Brightness", value: "5000 nits" }] },
+        { name: "Leon's U88", rawSpecs: [{ label: "Peak Brightness", value: "5000 nits" }] },
+      ],
+      groupedSpecs: {
+        Display: [{ label: "Peak Brightness", values: ["5000 nits", "5000 nits"], winnerIndex: -1 }],
+      },
+      keyDifferences: [{ label: "Peak Brightness", values: ["5000 nits", "5000 nits"] }],
+    };
+    enrichComparisonSpecs(result, [
+      { title: "Best Buy", retailerText: "Resolution: 3840 x 2160\nRefresh Rate: 165 Hz" },
+      { title: "Leon's", retailerText: "Brightness: Up to 5,000 nits\nRefresh Rate: 165 Hz" },
+    ]);
+    expect(result.products[0].rawSpecs.find((s: any) => /bright/i.test(s.label)).value).toBe("—");
+    expect(result.products[1].rawSpecs.find((s: any) => /bright/i.test(s.label)).value).toMatch(/5000/);
+    expect(result.groupedSpecs.Display[0].values[0]).toBe("—");
+    expect(result.groupedSpecs.Display[0].values[1]).toMatch(/5000/);
   });
 });

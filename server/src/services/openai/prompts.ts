@@ -69,6 +69,8 @@ HOW TO GATHER SPECS
 2. Fill gaps with your knowledge of the exact model (manufacturer spec sheets you know, typical published specs). Never invent a value — use "Unknown" if you cannot verify it.
 3. Align labels across products where they describe the same attribute (e.g. both "RAM", not "Memory" vs "RAM").
 4. Prefer specific values ("16 GB LPDDR5X") over marketing copy.
+5. Display / native / screen resolution must be a pixel grid (e.g. 2556 x 1179 or 3840 x 2160), never a camera megapixel figure. Put 12MP/48MP only on camera rows.
+6. Never copy a brightness or nits number from one product onto another. If that product's source text does not contain the number, use "Unknown".
 
 ZERO DATA LOSS: If a spec appears in the scrape or is a commonly published spec for this exact model, it MUST appear in specs[]. Aim for a thorough sheet (typically 20–60 rows for phones/laptops/TVs; fewer only for simple accessories).
 
@@ -102,7 +104,8 @@ You are given a COMPLETE flat spec harvest for 2–3 products (already researche
 3. Pick deviceType from the keys in the guideline (smartphone, laptop, television, ...). Use "other" if unsure.
 4. iconKey must be one of: cpu, battery, display, camera, wifi, speaker, ports, design, software, health, storage, memory, graphics, keyboard, smart, audio, other.
 5. products[] MUST stay in the same order as the PRODUCT URLS list (Product 1, Product 2, …). Never sort, swap, or put a "winner" first.
-6. values[i] MUST be the spec for products[i] / Product {i+1} in that URL order. Swapping values between products is a critical error. Use "—" only when that product truly has no value.
+6. values[i] MUST be the spec for products[i] / Product {i+1} in that URL order. Swapping values between products is a critical error. Use "—" only when that product truly has no value. Do not copy nits, HDR lists, or refresh rates across columns.
+6b. A row labeled Display Resolution, Native Resolution, or Screen Resolution must use the pixel grid (2556 x 1179), never a camera megapixel value such as 12MP.
 7. winnerIndex: 0 or 1 (or 2) for the better spec in that same product order, -1 for a draw or when better/worse does not apply.
 8. products[].rawSpecs MUST be the full harvested list for that product (label + value).
 9. Write a punchy 2–3 sentence overall aiSummary and 3–5 keyDifferences that actually differ. Lead appliances with capacity, energy, and noise (not hoses, SKUs, or model numbers); drones with flight time, range, and weight; soundbars with channels, wattage, and Atmos/HDMI; cameras with sensor, video, and lens; headphones with noise cancelling, battery, and Bluetooth. Do not put RAM or chipset on those categories, and do not file appliance specs under Camera.
@@ -149,7 +152,8 @@ You are an elite consumer electronics reviewer doing ONE pass: extract specs and
 TASK
 1. Read each retailer source. Extract every technical spec that is actually present (hardware, display, ports, battery, dimensions, box contents, warranty).
 2. Fill obvious gaps only from knowledge of that exact model. Never invent refresh rates, resolutions, capacities, or model numbers. Use "Unknown" when you cannot verify a value.
-3. Align labels across products. values[i] is Product i in URL order. Swapping products is a critical error.
+3. Align labels across products. values[i] is Product i in URL order. Swapping products is a critical error. Do not copy a nits/brightness, HDR list, or refresh rate from one product's text onto another product.
+3b. Display Resolution, Native Resolution, and Screen Resolution must be pixel dimensions from that product (e.g. 2556 x 1179 or 3840 x 2160). Never put camera megapixels (12MP, 13MP, 48MP) in a display-resolution row.
 4. Put EVERY kept spec into groupedSpecsList and into that product's rawSpecs. Do not drop rows to save space.
 5. deviceType is a guideline key (smartphone, laptop, television, ...) or "other".
 6. iconKey must be one of: cpu, battery, display, camera, wifi, speaker, ports, design, software, health, storage, memory, graphics, keyboard, smart, audio, other.

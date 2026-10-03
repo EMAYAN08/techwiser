@@ -9,7 +9,10 @@ import {
   parseAmazonHtml,
   parseCanadaComputersHtml,
   parseCostcoHtml,
+  parseLabeledSpecHtml,
   parseShopifyProductJson,
+  pickShopifyShelfPrice,
+  promoteMislabeledDisplaySpecs,
   shopifyProductJsonUrl,
 } from "../services/scraper/retailers";
 
@@ -74,6 +77,56 @@ describe("retailer fast paths", () => {
     expect(parsed?.rawText.toLowerCase()).toContain("qled");
     expect(parsed?.rawText).not.toMatch(/\b165 Hz\b/);
     expect(countSpecRows(parsed!.rawText)).toBeGreaterThanOrEqual(2);
+  });
+
+  it("uses the common Leon's sale price instead of the first store variant", () => {
+    const price = pickShopifyShelfPrice([
+      { id: 1, title: "164", price: "1416.25", compare_at_price: "2117.24" },
+      { id: 2, title: "165", price: "1399.00", compare_at_price: "2099.99" },
+      { id: 3, title: "166", price: "1399.00", compare_at_price: "2099.99" },
+      { id: 4, title: "ARVR", price: "777777.00", compare_at_price: "0.00" },
+      { id: 5, title: "ZZD", price: "2099.99", compare_at_price: "0.00" },
+    ]);
+    expect(price).toBe("$1399");
+    const parsed = parseShopifyProductJson({
+      product: {
+        title: "Hisense 65 TV",
+        vendor: "Hisense",
+        tags: "resolution:4k",
+        body_html: "<p>165Hz refresh and 5,000-nit peak brightness with Dolby Vision.</p>",
+        variants: [
+          { price: "1416.25", compare_at_price: "2117.24", sku: "65U88QG" },
+          { price: "1399.00", compare_at_price: "2099.99", sku: "65U88QG" },
+          { price: "1399.00", compare_at_price: "2099.99", sku: "65U88QG" },
+        ],
+      },
+    });
+    expect(parsed?.priceText).toBe("$1399");
+    expect(parsed?.rawText).toMatch(/165 Hz/);
+    expect(parsed?.rawText).toMatch(/5000 nits/);
+  });
+
+  it("reads Leon's spec sheet rows that are not a table", () => {
+    const html = `<div class="product-specs-pdp"><div>Video:</div><div>Native Resolution (Pixels): 3820 x 2160</div><div>High Dynamic Range (HDR): Yes - Dolby Vision, HDR10, HLG</div><div>Brightness: Up to 5,000 nits</div><div>Refresh Rate: 165 Hz</div></div><div>Reviews</div>`;
+    const lines = parseLabeledSpecHtml(html, /product-specs-pdp/i, />\s*Reviews\b/i);
+    const blob = lines.join("\n");
+    expect(blob).toContain("3820 x 2160");
+    expect(blob).toContain("Dolby Vision");
+    expect(blob).toContain("5,000 nits");
+    expect(blob).toContain("165 Hz");
+  });
+
+  it("promotes Canada Computers picture values that landed on the wrong row", () => {
+    const pairs = promoteMislabeledDisplaySpecs([
+      { label: "PICTURE (DISPLAY) Backlight Type", value: "120Hz Native" },
+      { label: "PICTURE (DISPLAY) Refresh Rate", value: "OLED Color" },
+      { label: "PICTURE (PROCESSING) AI Brightness Control", value: "4K Ultra HD (3,840 x 2,160)" },
+      { label: "PICTURE (PROCESSING) HDR (High Dynamic Range)", value: "Dolby Vision / HDR10 / HLG" },
+    ]);
+    const blob = pairs.map((p) => `${p.label}: ${p.value}`).join("\n");
+    expect(blob).toContain("Refresh Rate: 120 Hz");
+    expect(blob).toContain("Resolution: 3840 x 2160");
+    expect(blob).toContain("Dolby Vision / HDR10 / HLG");
   });
 
   it("parses Canada Computers spec rows and meta price", () => {
