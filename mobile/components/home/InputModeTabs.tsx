@@ -130,8 +130,8 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
               styles.pill,
               {
                 backgroundColor: wellBg,
-                borderWidth: 1,
-                borderColor: colors.line,
+                borderWidth: isActive ? 3 : 1.5,
+                borderColor: colors.spotify,
               },
             ]}
           >
