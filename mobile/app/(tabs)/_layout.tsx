@@ -12,7 +12,6 @@ import {
 import { usePathname, Tabs } from "expo-router";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BlurView } from "expo-blur";
 import { Zap, BookOpen, Settings as SettingsIcon, LucideIcon } from "lucide-react-native";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
@@ -136,7 +135,7 @@ function TabItem({
 
 function CustomTabBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { colors, isDark } = useThemeColors();
+  const { colors } = useThemeColors();
   const path = useActivePath();
   const hidden = !isTabPath(path);
 
@@ -160,41 +159,15 @@ function CustomTabBar({ state, navigation }: any) {
   if (hidden) return null;
 
   const safeBottom = Math.max(insets.bottom, 0);
-  const dockShadow =
-    Platform.OS === "web"
-      ? ({
-          boxShadow: isDark
-            ? "0 -0.5px 0 rgba(255,255,255,0.10), 0 -4px 16px rgba(0,0,0,0.22)"
-            : "0 -0.5px 0 rgba(20,16,10,0.06), 0 -4px 14px rgba(20,16,10,0.05)",
-        } as const)
-      : {
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -1 },
-          shadowOpacity: isDark ? 0.28 : 0.06,
-          shadowRadius: isDark ? 8 : 6,
-          elevation: 6,
-        };
-
-  const glassChrome =
-    Platform.OS === "web"
-      ? ({
-          backdropFilter: isDark ? "blur(36px) saturate(190%)" : "blur(32px) saturate(180%)",
-          WebkitBackdropFilter: isDark ? "blur(36px) saturate(190%)" : "blur(32px) saturate(180%)",
-          boxShadow: isDark
-            ? "inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -1px 0 rgba(0,0,0,0.28)"
-            : "inset 0 1px 0 rgba(255,255,255,0.92), inset 0 -0.5px 0 rgba(10,10,10,0.06)",
-        } as object)
-      : null;
 
   return (
     <Animated.View
       style={[
         styles.wrap,
-        dockShadow,
         {
           bottom: 0,
-          paddingBottom: safeBottom,
-          backgroundColor: colors.bg,
+          // Whole dock, including the home-indicator strip, is the nav color.
+          backgroundColor: colors.tabBar,
           opacity: Animated.multiply(mountAnim, tabBarAnim),
           transform: [
             {
@@ -217,26 +190,8 @@ function CustomTabBar({ state, navigation }: any) {
         style={[
           styles.glass,
           { borderColor: colors.tabBarBorder, backgroundColor: colors.tabBar },
-          glassChrome,
         ]}
       >
-        {Platform.OS !== "web" ? (
-          <BlurView
-            intensity={isDark ? 48 : 64}
-            tint={isDark ? "dark" : "light"}
-            blurMethod="dimezisBlurView"
-            style={StyleSheet.absoluteFill}
-          />
-        ) : null}
-        <View
-          pointerEvents="none"
-          style={[
-            styles.shine,
-            {
-              backgroundColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.42)",
-            },
-          ]}
-        />
         {state?.routes?.map((route: any, index: number) => {
           const def = TABS.find((t) => t.name === route.name);
           if (!def) return null;
@@ -260,15 +215,6 @@ function CustomTabBar({ state, navigation }: any) {
               focused={focused}
               onPress={onPress}
               pillBg={colors.tabPill}
-              pillShadow={
-                Platform.OS === "web"
-                  ? ({
-                      boxShadow: isDark
-                        ? "inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 4px rgba(0,0,0,0.25)"
-                        : "inset 0 1px 0 rgba(255,255,255,0.95), 0 1px 5px rgba(10,10,10,0.08)",
-                    } as const)
-                  : undefined
-              }
               activeColor={colors.tabSelectedIcon}
               activeLabel={colors.tabSelectedLabel}
               inactiveColor={colors.tabUnselected}
@@ -276,6 +222,11 @@ function CustomTabBar({ state, navigation }: any) {
           );
         })}
       </View>
+      {/* Safe-area / home-indicator fill — same color as the bar, not the screen. */}
+      <View
+        pointerEvents="none"
+        style={{ height: safeBottom, backgroundColor: colors.tabBar }}
+      />
     </Animated.View>
   );
 }
@@ -328,14 +279,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     gap: 4,
-  },
-  shine: {
-    position: "absolute",
-    top: 0,
-    left: 18,
-    right: 18,
-    height: 1.5,
-    borderRadius: 1,
   },
   tab: {
     flex: 1,
