@@ -3,7 +3,7 @@ import { TextInput, StyleSheet, TextInputProps, View, Pressable, Animated } from
 import { Clipboard as ClipboardIcon, X, CheckCircle2, XCircle } from "lucide-react-native";
 import * as ExpoClipboard from "expo-clipboard";
 import * as Haptics from "../../utils/haptics";
-import { textFromPasteEvent } from "../../utils/pasteText";
+import { readClipboardText } from "../../utils/pasteText";
 import { useThemeColors } from "../../constants/Colors";
 import { fonts } from "../../constants/Typography";
 import { radii, size } from "../../constants/Layout";
@@ -47,20 +47,10 @@ export function Input({ onPaste, onClear, style, validationState = "idle", ...pr
     outputRange: [colors.fieldBorder, colors.ink, colors.spotify, colors.error],
   });
 
-  const handleFallbackPaste = async () => {
-    try {
-      const text = await ExpoClipboard.getStringAsync();
-      const trimmed = text?.trim() ?? "";
-      if (trimmed) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      onPaste?.(trimmed);
-    } catch {
-      onPaste?.("");
-    }
-  };
-
-  const deliverPaste = (text: string) => {
+  const handlePastePress = async () => {
+    // One Lucide clipboard Pressable on every platform. Taps hit this control
+    // directly (no UIPasteControl under an overlay), then we read the board.
+    const text = await readClipboardText(ExpoClipboard);
     if (text) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       onPaste?.(text);
@@ -72,34 +62,14 @@ export function Input({ onPaste, onClear, style, validationState = "idle", ...pr
   const renderPasteControl = () => {
     if (!onPaste) return null;
 
-    // iOS 16+ must use UIPasteControl itself as the hit target. Covering it
-    // (even with pointerEvents="none") or fading it below alpha 0.01 makes
-    // the tap do nothing. Apple also ignores most custom chrome, so the
-    // system icon stays visible instead of a fake glyph laid on top.
-    if (ExpoClipboard.isPasteButtonAvailable) {
-      return (
-        <ExpoClipboard.ClipboardPasteButton
-          displayMode="iconOnly"
-          acceptedContentTypes={["plain-text", "url"]}
-          backgroundColor={colors.surface}
-          foregroundColor={colors.ink}
-          cornerStyle="small"
-          style={styles.pasteBtn}
-          accessibilityLabel="Paste"
-          onPress={(data) => {
-            deliverPaste(textFromPasteEvent(data));
-          }}
-        />
-      );
-    }
-
     return (
       <Pressable
-        onPress={handleFallbackPaste}
+        onPress={handlePastePress}
         hitSlop={10}
         accessibilityRole="button"
-        accessibilityLabel="Paste"
-        style={styles.pasteFallback}
+        accessibilityLabel="Paste from clipboard"
+        testID="paste-clipboard-button"
+        style={styles.pasteBtn}
       >
         <ClipboardIcon size={16} color={colors.placeholder} strokeWidth={2.25} />
       </Pressable>
@@ -189,10 +159,6 @@ const styles = StyleSheet.create({
   icons: { flexDirection: "row", alignItems: "center", gap: 8 },
   iconBtn: { padding: 4 },
   pasteBtn: {
-    width: 36,
-    height: 36,
-  },
-  pasteFallback: {
     width: 36,
     height: 36,
     alignItems: "center",
