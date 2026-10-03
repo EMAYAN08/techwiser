@@ -61,6 +61,8 @@ export const palette = {
     tabPill: "rgba(29,185,84,0.14)",
     /** Quieter sibling of tabPill for idle Home mode pills. */
     tabPillQuiet: "rgba(29,185,84,0.07)",
+    /** Muted Spotify edge for idle Home mode pills. */
+    tabPillBorder: "rgba(29,185,84,0.55)",
     tabSelectedIcon: paletteTokens.ink,
     tabSelectedLabel: paletteTokens.ink,
     tabUnselected: "rgba(10,10,10,0.50)",
@@ -114,6 +116,8 @@ export const palette = {
     tabPill: "rgba(29,185,84,0.18)",
     /** Quieter sibling of tabPill for idle Home mode pills. */
     tabPillQuiet: "rgba(29,185,84,0.09)",
+    /** Muted Spotify edge for idle Home mode pills. */
+    tabPillBorder: "rgba(29,185,84,0.45)",
     tabSelectedIcon: "#FFFFFF",
     tabSelectedLabel: "#FFFFFF",
     tabUnselected: "rgba(255,255,255,0.55)",
