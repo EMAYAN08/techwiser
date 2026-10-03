@@ -271,7 +271,7 @@ export function URLInputGroup({
 }
 
 const styles = StyleSheet.create({
-  container: { marginBottom: 8, marginTop: 4 },
+  container: { marginBottom: 8 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -337,7 +337,7 @@ export function URLInputHeader() {
   const hasAnyContent = urls.some((u) => u.trim().length > 0);
 
   return (
-    <View style={[{ backgroundColor: colors.bg, paddingBottom: 12, paddingTop: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+    <View style={[{ backgroundColor: colors.bg, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
       <Text style={[{ color: colors.body, ...type.eyebrow }]}>PRODUCT URLS</Text>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         {urls.length > 2 ? (

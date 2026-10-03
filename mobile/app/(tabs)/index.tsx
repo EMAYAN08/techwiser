@@ -171,7 +171,8 @@ export default function Home() {
     })
   ).current;
   const TITLE_HEIGHT = 104;
-  const TABS_HEIGHT = 104;
+  // Pill minHeight is 52 (InputModeTabs). Extra slot is the gap down to the section heading.
+  const TABS_HEIGHT = 52 + 12;
 
   useFocusEffect(
     useCallback(() => {
@@ -207,7 +208,7 @@ export default function Home() {
           <Text style={[styles.subheader, { color: colors.stone }]}>Any 2–3 tech products.</Text>
         </View>
 
-        <View style={{ height: TABS_HEIGHT, paddingHorizontal: space.gutter, paddingBottom: 8, backgroundColor: colors.bg }}>
+        <View style={{ height: TABS_HEIGHT, paddingHorizontal: space.gutter, backgroundColor: colors.bg }}>
           <InputModeTabs activeMode={inputMode} onModeChange={handleModeChange} />
         </View>
       </Animated.View>
@@ -233,7 +234,7 @@ export default function Home() {
             {inputMode === "url" && <URLInputHeader />}
             {/* Other modes */}
             {inputMode !== "url" && (
-              <View style={{ backgroundColor: colors.bg, paddingBottom: 12, paddingTop: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ backgroundColor: colors.bg, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Text style={[{ color: colors.stone, ...Typography.eyebrow, textTransform: 'uppercase' }]}>
                   QR SCANNER
                 </Text>
