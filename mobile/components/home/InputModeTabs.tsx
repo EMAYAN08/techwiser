@@ -7,18 +7,6 @@ import { fonts } from "../../constants/Typography";
 
 export type InputMode = "url" | "qr";
 
-type ModeTint = {
-  icon: string;
-  accent: string;
-  wash: string;
-  wellDark: string;
-};
-
-const TINTS: Record<InputMode, ModeTint> = {
-  url: { icon: "#3B6EA5", accent: "#7FA3C9", wash: "#DCE6F0", wellDark: "#2A3340" },
-  qr: { icon: "#7A5C99", accent: "#A38FC4", wash: "#EBE6F2", wellDark: "#302B3D" },
-};
-
 interface Tab {
   id: InputMode;
   label: string;
@@ -97,7 +85,7 @@ interface InputModeTabsProps {
 }
 
 export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) {
-  const { colors, isDark } = useThemeColors();
+  const { colors } = useThemeColors();
   const scales = useRef(TABS.map(() => new Animated.Value(1))).current;
   const wobbles = useRef(TABS.map(() => new Animated.Value(0))).current;
 
@@ -127,8 +115,8 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
     <View style={styles.row} accessibilityRole="tablist">
       {TABS.map((tab, index) => {
         const isActive = activeMode === tab.id;
-        const tint = TINTS[tab.id];
-        const wellBg = isActive ? (isDark ? tint.wellDark : tint.wash) : colors.modeWell;
+        const wellBg = isActive ? colors.modePillActiveBg : colors.modePillIdleBg;
+        const glyph = colors.spotify;
 
         return (
           <Pressable
@@ -142,7 +130,7 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
               {
                 backgroundColor: wellBg,
                 borderWidth: isActive ? 2 : 1,
-                borderColor: isActive ? colors.primary : colors.fieldBorder,
+                borderColor: colors.spotify,
               },
             ]}
           >
@@ -159,13 +147,13 @@ export function InputModeTabs({ activeMode, onModeChange }: InputModeTabsProps) 
                 ],
               }}
             >
-              <ModeGlyph id={tab.id} color={tint.icon} accent={tint.accent} hole={wellBg} />
+              <ModeGlyph id={tab.id} color={glyph} accent={glyph} hole={wellBg} />
             </Animated.View>
             <Text
               style={[
                 styles.label,
                 {
-                  color: isActive ? colors.ink : colors.stone,
+                  color: isActive ? colors.ink : colors.spotify,
                   fontFamily: isActive ? fonts.uiBold : fonts.uiMedium,
                 },
               ]}

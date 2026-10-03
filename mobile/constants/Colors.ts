@@ -69,6 +69,9 @@ export const palette = {
     overlay: "rgba(10,10,10,0.10)",
     scannerAmber: paletteTokens.scannerAmber,
     modeWell: paletteTokens.modeWellLight,
+    /** Home URL / QR mode pills — idle is the pale Spotify wash; active is a stronger green */
+    modePillIdleBg: paletteTokens.spotifyWashLight,
+    modePillActiveBg: "rgba(29,185,84,0.22)",
     /** Idle input / control chrome — stronger than `line` so fields read on paper bg */
     fieldBorder: "#B4B4AC",
     /** Placeholder text — readable but clearly softer than filled `ink` */
@@ -120,6 +123,9 @@ export const palette = {
     overlay: "rgba(255,255,255,0.06)",
     scannerAmber: paletteTokens.scannerAmber,
     modeWell: paletteTokens.modeWellDark,
+    /** Home URL / QR mode pills — idle matches spotifyWash; active is a stronger wash */
+    modePillIdleBg: "rgba(29,185,84,0.12)",
+    modePillActiveBg: "rgba(29,185,84,0.28)",
     fieldBorder: "rgba(255,255,255,0.16)",
     placeholder: paletteTokens.stone,
   },
