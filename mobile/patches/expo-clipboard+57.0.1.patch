@@ -1,0 +1,161 @@
+diff --git a/node_modules/expo-clipboard/ios/ClipboardPasteButton.swift b/node_modules/expo-clipboard/ios/ClipboardPasteButton.swift
+index a1d9742..2dfe8f3 100644
+--- a/node_modules/expo-clipboard/ios/ClipboardPasteButton.swift
++++ b/node_modules/expo-clipboard/ios/ClipboardPasteButton.swift
+@@ -53,6 +53,8 @@ class ClipboardPasteButton: ExpoView {
+       provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) ||
+       provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) ||
+       provider.hasItemConformingToTypeIdentifier(UTType.html.identifier) && acceptedContentTypes.contains(.html) ||
++      provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) ||
++      provider.hasItemConformingToTypeIdentifier(UTType.text.identifier) ||
+       provider.hasItemConformingToTypeIdentifier(UTType.utf8PlainText.identifier) && !acceptedContentTypes.contains(.html)
+     }
+ 
+@@ -61,66 +63,113 @@ class ClipboardPasteButton: ExpoView {
+   }
+ 
+   override func paste(itemProviders: [NSItemProvider]) {
++    // Same-device copies often call paste() with an empty provider list.
++    // UIPasteboard is readable here without a permission prompt because the
++    // user already tapped UIPasteControl.
++    if itemProviders.isEmpty {
++      emitPasteboardString()
++      return
++    }
++
++    let wantsHtml = acceptedContentTypes.contains(.html)
++    let wantsImage = acceptedContentTypes.isEmpty || acceptedContentTypes.contains(.image)
++
+     for provider in itemProviders {
+-      if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+-        _ = provider.loadObject(ofClass: UIImage.self) { data, error in
+-          guard error == nil else {
+-            log.error("Error loading pasted image")
+-            return
+-          }
+-          self.processImage(item: data)
+-        }
+-      } else if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
++      // Prefer the link or text. Rich product copies often also conform to
++      // image, and the previous image-first branch dropped the URL.
++      if !wantsHtml && provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
+         _ = provider.loadObject(ofClass: URL.self) { data, error in
+-          guard error == nil else {
+-            log.error("Error loading pasted content")
+-            return
++          if error == nil, let url = data as? URL {
++            self.onPastePressed([
++              "type": "text",
++              "text": url.absoluteString
++            ])
++          } else {
++            self.emitPasteboardString()
+           }
+-
+-          self.onPastePressed([
+-            "type": "text",
+-            "text": data?.absoluteString as Any
+-          ])
+         }
+-      } else if provider.hasItemConformingToTypeIdentifier(UTType.html.identifier) && acceptedContentTypes.contains(.html) {
++        return
++      }
++
++      if !wantsHtml && self.providerHasText(provider) {
+         _ = provider.loadObject(ofClass: String.self) { data, error in
+-          guard error == nil else {
+-            log.error("Error loading pasted content")
+-            return
++          if error == nil, let data, !data.isEmpty {
++            self.onPastePressed([
++              "type": "text",
++              "text": data
++            ])
++          } else {
++            self.emitPasteboardString()
+           }
+-          self.processHtml(data: data)
+         }
+-      } else if provider.hasItemConformingToTypeIdentifier(UTType.utf8PlainText.identifier) && !acceptedContentTypes.contains(.html) {
++        return
++      }
++
++      if wantsHtml && provider.hasItemConformingToTypeIdentifier(UTType.html.identifier) {
+         _ = provider.loadObject(ofClass: String.self) { data, error in
+           guard error == nil else {
+             log.error("Error loading pasted content")
++            self.emitPasteboardString()
+             return
+           }
++          self.processHtml(data: data)
++        }
++        return
++      }
+ 
+-          guard let data else {
+-            log.error("Failed to read text data")
++      if wantsImage && provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
++        _ = provider.loadObject(ofClass: UIImage.self) { data, error in
++          guard error == nil else {
++            log.error("Error loading pasted image")
+             return
+           }
+-
+-          self.onPastePressed([
+-            "type": "text",
+-            "text": data
+-          ])
++          self.processImage(item: data)
+         }
++        return
+       }
+     }
++
++    emitPasteboardString()
++  }
++
++  private func providerHasText(_ provider: NSItemProvider) -> Bool {
++    provider.hasItemConformingToTypeIdentifier(UTType.utf8PlainText.identifier) ||
++      provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) ||
++      provider.hasItemConformingToTypeIdentifier(UTType.text.identifier)
++  }
++
++  /// Fallback for empty provider lists and load failures. Safe to call only from `paste(itemProviders:)`.
++  private func emitPasteboardString() {
++    let deliver = {
++      let board = UIPasteboard.general
++      let text = board.string ?? board.url?.absoluteString ?? ""
++      self.onPastePressed([
++        "type": "text",
++        "text": text
++      ])
++    }
++    if Thread.isMainThread {
++      deliver()
++    } else {
++      DispatchQueue.main.async(execute: deliver)
++    }
+   }
+ 
+   private func setContentTypes() {
+     if acceptedContentTypes.isEmpty {
+       pasteConfiguration = UIPasteConfiguration(acceptableTypeIdentifiers: [
+-        UTType.utf8PlainText.identifier,
++        UTType.text.identifier,
+         UTType.image.identifier
+       ])
+     } else {
+-      pasteConfiguration = UIPasteConfiguration(acceptableTypeIdentifiers: acceptedContentTypes.map {
+-        $0.typeIdentifier()
+-      })
++      var identifiers = acceptedContentTypes.map { $0.typeIdentifier() }
++      // "plain-text" used to be only public.utf8-plain-text, so a copied
++      // link stored as public.plain-text / public.text never activated the button.
++      if acceptedContentTypes.contains(.plainText) || acceptedContentTypes.contains(.url) {
++        identifiers.append(UTType.plainText.identifier)
++        identifiers.append(UTType.text.identifier)
++      }
++      pasteConfiguration = UIPasteConfiguration(acceptableTypeIdentifiers: Array(Set(identifiers)))
+     }
+   }
+ 

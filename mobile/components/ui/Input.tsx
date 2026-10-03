@@ -3,6 +3,7 @@ import { TextInput, StyleSheet, TextInputProps, View, Pressable, Animated } from
 import { Clipboard as ClipboardIcon, X, CheckCircle2, XCircle } from "lucide-react-native";
 import * as ExpoClipboard from "expo-clipboard";
 import * as Haptics from "../../utils/haptics";
+import { textFromPasteEvent } from "../../utils/pasteText";
 import { useThemeColors } from "../../constants/Colors";
 import { fonts } from "../../constants/Typography";
 import { radii, size } from "../../constants/Layout";
@@ -59,45 +60,49 @@ export function Input({ onPaste, onClear, style, validationState = "idle", ...pr
     }
   };
 
+  const deliverPaste = (text: string) => {
+    if (text) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onPaste?.(text);
+    } else {
+      onPaste?.("");
+    }
+  };
+
   const renderPasteControl = () => {
     if (!onPaste) return null;
 
-    // UIPasteControl ignores custom colors and paints a system-blue block.
-    // Keep it as the hit target (iOS 16+ pastes without a permission prompt)
-    // and cover it with the same clipboard glyph the web fallback uses.
+    // iOS 16+ must use UIPasteControl itself as the hit target. Covering it
+    // (even with pointerEvents="none") or fading it below alpha 0.01 makes
+    // the tap do nothing. Apple also ignores most custom chrome, so the
+    // system icon stays visible instead of a fake glyph laid on top.
+    if (ExpoClipboard.isPasteButtonAvailable) {
+      return (
+        <ExpoClipboard.ClipboardPasteButton
+          displayMode="iconOnly"
+          acceptedContentTypes={["plain-text", "url"]}
+          backgroundColor={colors.surface}
+          foregroundColor={colors.ink}
+          cornerStyle="small"
+          style={styles.pasteBtn}
+          accessibilityLabel="Paste"
+          onPress={(data) => {
+            deliverPaste(textFromPasteEvent(data));
+          }}
+        />
+      );
+    }
+
     return (
-      <View style={styles.pasteSlot}>
-        {ExpoClipboard.isPasteButtonAvailable ? (
-          <ExpoClipboard.ClipboardPasteButton
-            displayMode="iconOnly"
-            acceptedContentTypes={["plain-text", "url"]}
-            backgroundColor={colors.surface}
-            foregroundColor={colors.placeholder}
-            cornerStyle="small"
-            style={styles.pasteNative}
-            accessibilityLabel="Paste"
-            onPress={(data) => {
-              if (data.type === "text" && data.text?.trim()) {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                onPaste(data.text.trim());
-              } else {
-                onPaste("");
-              }
-            }}
-          />
-        ) : (
-          <Pressable
-            onPress={handleFallbackPaste}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="Paste"
-            style={styles.pasteNative}
-          />
-        )}
-        <View pointerEvents="none" style={[styles.pasteMask, { backgroundColor: colors.surface }]}>
-          <ClipboardIcon size={16} color={colors.placeholder} strokeWidth={2.25} />
-        </View>
-      </View>
+      <Pressable
+        onPress={handleFallbackPaste}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel="Paste"
+        style={styles.pasteFallback}
+      >
+        <ClipboardIcon size={16} color={colors.placeholder} strokeWidth={2.25} />
+      </Pressable>
     );
   };
 
@@ -183,24 +188,13 @@ const styles = StyleSheet.create({
   },
   icons: { flexDirection: "row", alignItems: "center", gap: 8 },
   iconBtn: { padding: 4 },
-  pasteSlot: {
-    width: 28,
-    height: 28,
+  pasteBtn: {
+    width: 36,
+    height: 36,
   },
-  pasteNative: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: 28,
-    height: 28,
-  },
-  // Opaque field fill so the native blue paste block never shows through.
-  pasteMask: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: 28,
-    height: 28,
+  pasteFallback: {
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
   },
