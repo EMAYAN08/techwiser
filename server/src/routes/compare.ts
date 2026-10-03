@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { RETAILER_COLORS } from "../config/constants";
 import { extractPriceFromText, formatDisplayPrice, resolveProductPrice } from "../lib/price";
+import { retailerTextForCompare } from "../lib/thinScrape";
 import { generateAiComparison } from "../services/ai";
 import { partitionScrapeResults, scrapeUrlsSequentially } from "../services/scraper";
 
@@ -99,7 +100,7 @@ router.post("/compare", async (req: Request, res: Response) => {
       comparisonResult = await generateAiComparison(
         scrapedData.map((d) => ({
           url: d.url,
-          retailerText: d.retailerText,
+          retailerText: retailerTextForCompare(d),
           title: d.title,
         }))
       );

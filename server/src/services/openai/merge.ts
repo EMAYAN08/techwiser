@@ -1,4 +1,5 @@
 import { enrichComparisonSpecs } from "../../lib/specEnrichment";
+import { guardThinScrapes } from "../../lib/thinScrape";
 
 function normLabel(label: string): string {
   return String(label || "")
@@ -82,7 +83,7 @@ export function alignListToInputs<T>(
   items: T[],
   inputs: { url: string; title: string }[],
   getters: { url?: (item: T) => string; name?: (item: T) => string }
-): { aligned: T[]; sourceIndex: number[] } {
+): { aligned: Array<T | undefined>; sourceIndex: number[] } {
   const n = inputs.length;
   const aligned: Array<T | undefined> = Array.from({ length: n });
   const sourceIndex = Array.from({ length: n }, () => -1);
@@ -132,16 +133,13 @@ export function alignListToInputs<T>(
       aligned[i] = items[cursor];
       sourceIndex[i] = cursor;
       cursor += 1;
-    } else if (items.length) {
-      aligned[i] = items[Math.min(i, items.length - 1)];
-      sourceIndex[i] = Math.min(i, items.length - 1);
+    } else {
+      // Unmatched slot stays empty. Never clone a sibling product into this URL.
+      sourceIndex[i] = -1;
     }
   }
 
-  return {
-    aligned: aligned.map((item, i) => item ?? items[Math.min(i, Math.max(items.length - 1, 0))]),
-    sourceIndex,
-  };
+  return { aligned, sourceIndex };
 }
 
 function permuteValues(values: string[], sourceIndex: number[]): string[] {
@@ -166,7 +164,14 @@ export function alignHarvestToInputs(
   const { aligned } = alignListToInputs(products, productDataList, {
     name: (p) => `${p.name || ""} ${p.brand || ""}`,
   });
-  harvest.products = aligned;
+  harvest.products = aligned.map(
+    (p, i) =>
+      p ?? {
+        name: productDataList[i]?.title || "",
+        brand: "",
+        specs: [],
+      }
+  );
   return harvest;
 }
 
@@ -198,10 +203,21 @@ export function realignGroupedToInputs(
       name: (p: any) => `${p?.name || ""} ${p?.brand || ""}`,
     });
     sourceIndex = aligned.sourceIndex;
-    result.products = aligned.aligned.map((p: any, i: number) => ({
-      ...p,
-      url: p?.url || productDataList[i]?.url || "",
-    }));
+    result.products = aligned.aligned.map((p: any, i: number) => {
+      if (!p) {
+        return {
+          name: productDataList[i]?.title || "",
+          brand: "",
+          url: productDataList[i]?.url || "",
+          price: "N/A",
+          rawSpecs: [],
+        };
+      }
+      return {
+        ...p,
+        url: p?.url || productDataList[i]?.url || "",
+      };
+    });
   }
 
   const permuteSpec = (spec: any) => {
@@ -564,6 +580,7 @@ export function normalizeComparisonResult(
   applyTieWinners(next.groupedSpecs);
 
   enrichComparisonSpecs(next, productDataList);
+  guardThinScrapes(next, productDataList);
 
   return next;
 }
