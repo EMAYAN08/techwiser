@@ -1,10 +1,20 @@
-# Push a release/* branch to build iOS (preview) and upload to TestFlight.
-# Does NOT run on every main commit — cut a release branch when you want TF.
+# Push a release/* branch to build iOS (preview profile) and submit the IPA.
+# Does NOT run on every main commit — cut a release branch when you want a ship.
+#
+# Free Expo plan: this job is `type: submit` (EAS Submit / `eas submit`), which
+# uploads the iOS build to App Store Connect using the ASC API key stored on the
+# Expo project. After Apple processes it (often 10–30 min) it shows up in TestFlight.
+#
+# Do NOT switch this back to `type: testflight` with `build_id`. That pre-packaged
+# job is an Expo paid-plan feature (the error "TestFlight jobs that submit an EAS
+# build require a paid plan" is an Expo plan limit, not your Apple Developer account).
+# The submit job has no `platform` param — iOS is implied by build_ios.
+# Optional later: `groups: ['Internal']` to add an existing TestFlight internal group.
 #
 # Prerequisites (one-time, see docs/TESTFLIGHT.md):
 #   1. Link GitHub repo EMAYAN08/techwiser to Expo project emayan/techvisor
 #   2. Set Base directory to "mobile" on the Expo GitHub settings page
-#   3. Store Apple / App Store Connect credentials on the Expo project (non-interactive)
+#   3. Store Apple / App Store Connect API credentials on the Expo project
 
 name: Release to TestFlight
 
@@ -22,11 +32,10 @@ jobs:
       profile: preview
       message: 'TestFlight from ${{ github.ref_name || "release" }}'
 
-  testflight:
-    name: Submit to TestFlight
-    type: testflight
+  submit_ios:
+    name: Submit to App Store Connect (TestFlight)
+    type: submit
     needs: [build_ios]
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
       profile: preview
-      changelog: ${{ github.commit_message || 'TechVisor TestFlight build' }}

@@ -2,8 +2,10 @@
 
 Two paths:
 
-1. **Automated (recommended):** push a `release/*` branch → EAS Workflow builds iOS and submits to TestFlight.
+1. **Automated (recommended):** push a `release/*` branch → EAS Workflow builds iOS, then **EAS Submit** (`type: submit`) uploads it to App Store Connect. It appears in TestFlight after Apple processing.
 2. **Manual:** run `eas build` / `eas submit` from your Mac (Apple 2FA in the terminal).
+
+The workflow uses the free-plan submit job, not Expo’s paid `type: testflight` job. A message that you “need a paid plan” for TestFlight-with-`build_id` is an **Expo** plan limit, not your Apple Developer membership. Your stored App Store Connect API key is what CI uses to submit.
 
 Expo project: [emayan/techvisor](https://expo.dev/accounts/emayan/projects/techvisor)  
 Bundle ID: `ca.techvisor.app`  
@@ -82,9 +84,9 @@ What happens next:
 1. Expo GitHub App sees the push to `release/*`.
 2. EAS runs `mobile/.eas/workflows/testflight.yml`.
 3. Job **Build iOS (preview)** uses profile `preview` (`distribution: store`, autoIncrement).
-4. Job **Submit to TestFlight** uploads that build and sends it to TestFlight.
+4. Job **Submit to App Store Connect (TestFlight)** runs `type: submit` with profile `preview` (same as `eas submit -p ios --profile preview`). It uploads the IPA with the ASC API key already on the Expo project. This is not the paid `type: testflight` job.
 5. Watch progress: [Expo → techvisor → Workflows](https://expo.dev/accounts/emayan/projects/techvisor/workflows) and the commit’s GitHub Checks.
-6. After Apple processing (often 10–30+ minutes), install via the **TestFlight** app on your iPhone.
+6. After Apple processing (often 10–30+ minutes), the build shows in App Store Connect → TestFlight. Install via the **TestFlight** app on your iPhone. (Submit does not auto-assign external groups; add yourself as an internal tester in App Store Connect if needed.)
 
 Optional: bump marketing version in `mobile/app.json` before cutting the branch if you want the version string to change (build number still auto-increments via EAS).
 
@@ -196,6 +198,7 @@ npx eas submit --platform ios --profile production --latest
 ## Troubleshooting
 
 - **Workflow never starts:** GitHub not linked, Expo GitHub App not installed, or **Base directory** not set to `mobile`. Recheck [GitHub settings](https://expo.dev/accounts/emayan/projects/techvisor/github).
+- **“TestFlight jobs … require a paid plan”:** that is Expo’s paid `type: testflight` + `build_id` job, not your Apple account. The workflow uses `type: submit`, which the free Expo plan includes. Do not switch the YAML back to `type: testflight` unless you upgrade Expo.
 - **Submit fails in CI / non-interactive:** App Store Connect API key missing on the Expo project. Configure credentials (section B above). Never rely on interactive 2FA in workflow runs.
 - **Repeated Allow / new codes (manual):** you started multiple `eas build` logins. Stop extras, wait, run **one** build again.
 - **Wrong API host in the app:** confirm `EXPO_PUBLIC_API_URL` in `eas.json` for that profile, then rebuild (env is baked in at build time).
@@ -208,5 +211,5 @@ npx eas submit --platform ios --profile production --latest
 - App renamed to **TechVisor**, bundle ID `ca.techvisor.app`
 - `mobile/eas.json` with preview/production pointing at Render; build images set for GitHub/EAS CI
 - Expo project linked in app config: `aa04c275-a2ea-45aa-8fbf-250f88865b3f`
-- EAS Workflow: `mobile/.eas/workflows/testflight.yml` on `push` → `release/*`
+- EAS Workflow: `mobile/.eas/workflows/testflight.yml` on `push` → `release/*` (`build` then free-plan `submit` to App Store Connect / TestFlight)
 - **Still on you:** link GitHub + set base directory `mobile`, finish Apple/ASC credentials for CI, then cut `release/x.y.z` when you want TestFlight
