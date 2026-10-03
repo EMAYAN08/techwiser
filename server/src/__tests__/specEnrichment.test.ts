@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   alignMarketingResolution,
+  canonicalizeResolutionValue,
   enrichComparisonSpecs,
   enrichProductSpecs,
   extractWeightKgFromText,
@@ -9,7 +10,9 @@ import {
   inferResolutionFromModel,
   isFaceIdOnlyDevice,
   normalizeWeightComparisons,
+  sanitizeRefreshRate,
   shouldOverrideResolution,
+  statedRefreshHz,
 } from "../lib/specEnrichment";
 
 describe("inferResolutionFromModel", () => {
@@ -212,5 +215,120 @@ describe("shared resolution wording", () => {
       { title: "ASUS Zenbook 14 OLED", retailerText: "Shipping weight 2.454 kg" }
     );
     expect(specs.find((s) => s.label === "Weight")?.value).toBe("1.28 kg");
+  });
+});
+
+describe("do not invent refresh rates or pixel grids", () => {
+  const ccPage = `
+LG 86\" LG QNED AI QNED70 4k Smart TV
+Screen Size: 86 in
+Resolution: 3840 x 2160
+TV Display Technology: QNED
+VRR = Yes
+Power Supply: AC 120v 50-60Hz
+Output Power: 20W
+`.trim();
+
+  const hisensePage = `
+Hisense 65\" 4K Smart Mini-LED Pro QLED 165Hz TV - 65U88QG
+Screen Size: 65 in
+Resolution: 4K
+Display Type: Mini-LED
+Refresh Rate: 165 Hz
+Peak brightness: 5000 nits
+`.trim();
+
+  it("does not turn VRR=Yes into 120 Hz or 165 Hz", () => {
+    expect(statedRefreshHz(ccPage)).toEqual([]);
+    expect(sanitizeRefreshRate("120 Hz (VRR 165Hz)", ccPage)).toBe("VRR");
+    const specs = enrichProductSpecs(
+      [
+        { label: "Resolution", value: "3840 x 2160" },
+        { label: "Refresh Rate", value: "120 Hz (VRR 165Hz)" },
+      ],
+      { title: 'LG 86" LG QNED AI QNED70 4k Smart TV', retailerText: ccPage }
+    );
+    const refresh = specs.find((s) => /refresh/i.test(s.label))?.value || "";
+    expect(refresh).toBe("VRR");
+    expect(refresh).not.toMatch(/120|165/);
+    expect(specs.find((s) => s.label === "Resolution")?.value).toBe("3840 x 2160");
+  });
+
+  it("snaps 3820×2160 to 3840×2160 when the page only says 4K and keeps stated 165 Hz", () => {
+    expect(canonicalizeResolutionValue("3820 × 2160", hisensePage)).toBe("3840 x 2160");
+    expect(canonicalizeResolutionValue("4K", hisensePage)).toBe("4K");
+    expect(sanitizeRefreshRate("165 Hz", hisensePage)).toBe("165 Hz");
+    const specs = enrichProductSpecs(
+      [
+        { label: "Native Resolution (Pixels)", value: "3820 x 2160" },
+        { label: "Refresh Rate", value: "165 Hz" },
+      ],
+      {
+        title: 'Hisense 65" 4K Smart Mini-LED Pro QLED 165Hz TV - 65U88QG',
+        retailerText: hisensePage,
+      }
+    );
+    const res = specs.find((s) => /resolution/i.test(s.label))?.value || "";
+    expect(res).toBe("3840 x 2160");
+    expect(res).not.toMatch(/3820/);
+    expect(specs.find((s) => /refresh/i.test(s.label))?.value).toBe("165 Hz");
+  });
+
+  it("keeps 120 Hz and VRR 165 Hz when both numbers are on the page", () => {
+    const page = "Native refresh rate 120 Hz. VRR up to 165 Hz. Resolution 4K.";
+    expect(statedRefreshHz(page).sort((a, b) => a - b)).toEqual([120, 165]);
+    expect(sanitizeRefreshRate("120 Hz (VRR 165Hz)", page)).toBe("120 Hz (VRR 165Hz)");
+  });
+
+  it("prefers a page refresh over a conflicting guess and ignores mains 60 Hz", () => {
+    const page = "Refresh Rate: 144 Hz\nPower Supply AC 120v 50-60Hz";
+    expect(statedRefreshHz(page)).toEqual([144]);
+    expect(sanitizeRefreshRate("120 Hz", page)).toBe("144 Hz");
+  });
+
+  it("does not rewrite 1920x1200 or a bare 4K, and still snaps a bare 3820 typo", () => {
+    expect(canonicalizeResolutionValue("1920 x 1200", "4K display")).toBe("1920 x 1200");
+    expect(canonicalizeResolutionValue("3820×2160")).toBe("3840 x 2160");
+    expect(sanitizeRefreshRate("120 Hz (VRR 165Hz)", "")).toBe("120 Hz (VRR 165Hz)");
+  });
+
+  it("pushes the corrected refresh and resolution into key differences", () => {
+    const result: any = {
+      products: [
+        {
+          name: 'LG 86" QNED70 4K',
+          rawSpecs: [
+            { label: "Resolution", value: "3840 x 2160" },
+            { label: "Refresh Rate", value: "120 Hz (VRR 165Hz)" },
+          ],
+        },
+        {
+          name: 'Hisense 65" 4K Smart Mini-LED Pro QLED 165Hz TV - 65U88QG',
+          rawSpecs: [
+            { label: "Native Resolution (Pixels)", value: "3820 × 2160" },
+            { label: "Refresh Rate", value: "165 Hz" },
+          ],
+        },
+      ],
+      keyDifferences: [
+        { label: "Resolution", values: ["3840 x 2160", "3820 × 2160"] },
+        { label: "Refresh Rate", values: ["120 Hz (VRR 165Hz)", "165 Hz"] },
+      ],
+      groupedSpecs: {
+        Display: [
+          { label: "Refresh Rate", values: ["120 Hz (VRR 165Hz)", "165 Hz"], winnerIndex: 1 },
+        ],
+      },
+    };
+    enrichComparisonSpecs(result, [
+      { title: 'LG 86" QNED70 4K', retailerText: ccPage },
+      { title: 'Hisense 65" 4K 165Hz', retailerText: hisensePage },
+    ]);
+    expect(result.products[0].rawSpecs.find((s: any) => /refresh/i.test(s.label)).value).toBe("VRR");
+    expect(result.products[1].rawSpecs.find((s: any) => /resolution/i.test(s.label)).value).toBe("3840 x 2160");
+    expect(result.keyDifferences[0].values[1]).toBe("3840 x 2160");
+    expect(result.keyDifferences[1].values[0]).toBe("VRR");
+    expect(result.keyDifferences[1].values[1]).toBe("165 Hz");
+    expect(result.groupedSpecs.Display[0].values[0]).toBe("VRR");
   });
 });

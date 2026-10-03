@@ -135,6 +135,155 @@ export function alignMarketingResolution(text: string, canonical: string): strin
     .replace(/1920\s*[x×]\s*1080/gi, grid);
 }
 
+/** Canonical panel grids. Near-miss widths (3820×2160) are not a real mode. */
+const CANONICAL_GRIDS: Array<[number, number]> = [
+  [7680, 4320],
+  [3840, 2160],
+  [2560, 1440],
+  [1920, 1080],
+];
+
+function formatGrid(w: number, h: number): string {
+  return `${w} x ${h}`;
+}
+
+function extractPixelGrids(text: string): Array<{ w: number; h: number }> {
+  const out: Array<{ w: number; h: number }> = [];
+  const re = /(\d{3,5})\s*[x×]\s*(\d{3,5})/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    out.push({ w: Number(m[1]), h: Number(m[2]) });
+  }
+  return out;
+}
+
+/** Snap an off-by-a-few LLM grid onto a real panel size. Does not touch 1920×1200. */
+function snapCanonicalGrid(w: number, h: number): { w: number; h: number } | null {
+  for (const [cw, ch] of CANONICAL_GRIDS) {
+    if (w === cw && h === ch) return null;
+    const dw = Math.abs(w - cw);
+    const dh = Math.abs(h - ch);
+    if (dw <= 40 && dh <= 16 && dw + dh > 0) return { w: cw, h: ch };
+  }
+  return null;
+}
+
+/**
+ * Near-miss pixel grids are not real modes (3820×2160 is not UHD).
+ * Snap those to the canonical grid. A bare "4K" with no grid is left as 4K.
+ * An exact grid the page printed (including 1920×1200) is kept.
+ */
+export function canonicalizeResolutionValue(value: string, pageText = ""): string {
+  if (!value) return value;
+  const page = pageText || "";
+  const pageGrids = extractPixelGrids(page);
+  return value.replace(/(\d{3,5})\s*[x×]\s*(\d{3,5})/gi, (full, aw, ah) => {
+    const w = Number(aw);
+    const h = Number(ah);
+    const snapped = snapCanonicalGrid(w, h);
+    if (!snapped) return full;
+    // Page explicitly printed this exact (odd) grid — still reject the known UHD typo.
+    const uhdTypo = snapped.w === 3840 && snapped.h === 2160 && w >= 3800 && w <= 3880 && Math.abs(h - 2160) <= 16;
+    if (uhdTypo) return formatGrid(3840, 2160);
+    const pagePrintedOdd = pageGrids.some((g) => g.w === w && g.h === h);
+    if (pagePrintedOdd) return full;
+    return formatGrid(snapped.w, snapped.h);
+  });
+}
+
+function isMainsPowerHz(page: string, index: number, hz: number): boolean {
+  // Judge only the matched token. A later "50-60Hz" mains line must not void a real 144 Hz.
+  const tight = page.slice(Math.max(0, index - 18), index + 8);
+  if (/50\s*[-–/]\s*60\s*hz/i.test(tight)) return true;
+  if (hz <= 60 && /\b(\d{2,3}\s*v|volts?|voltage|power\s*supply|mains|ac\s*120|100\s*[-–]\s*240)\b/i.test(tight)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Display refresh figures actually printed on the retailer page / title.
+ * Ignores AC mains (50–60 Hz, 120 V) and kHz/GHz.
+ */
+export function statedRefreshHz(pageText: string): number[] {
+  if (!pageText) return [];
+  const found: number[] = [];
+  const re = /(?<![A-Za-z\d.])(\d{2,3})\s*hz\b/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(pageText))) {
+    const n = Number(m[1]);
+    if (n < 48 || n > 540) continue;
+    const start = Math.max(0, m.index - 56);
+    const end = Math.min(pageText.length, m.index + m[0].length + 36);
+    const ctx = pageText.slice(start, end);
+    if (isMainsPowerHz(pageText, m.index, n)) continue;
+    const displayNear =
+      /\b(refresh|vrr|variable\s+refresh|g-?\s*sync|freesync|gaming|native|panel|motion|hdmi|display|screen|resolution|qled|oled|qned|mini-?\s*led|\b4k\b|\b8k\b|\bqhd\b)\b/i.test(
+        ctx
+      );
+    const titleStyle = /\d{2,3}\s*hz\b[^.\n]{0,16}\b(tv|monitor|display)\b/i.test(ctx);
+    // 50/60 Hz is mains unless the words "refresh" / "native" / "panel" are right there.
+    if (n <= 60 && !/\b(refresh|native|panel|gaming)\b/i.test(ctx)) continue;
+    if (displayNear || titleStyle || n >= 90) {
+      if (!found.includes(n)) found.push(n);
+    }
+  }
+  return found;
+}
+
+function pageAffirmsVrr(pageText: string): boolean {
+  if (!pageText) return false;
+  return /\b(vrr|variable\s+refresh(?:\s+rate)?)\b[^.\n]{0,32}\b(yes|supported|available|enabled|true)\b/i.test(pageText)
+    || /\b(yes|supported|available|enabled)\b[^.\n]{0,20}\b(vrr|variable\s+refresh(?:\s+rate)?)\b/i.test(pageText)
+    || /\bvrr\b/i.test(pageText);
+}
+
+function hzTokens(value: string): number[] {
+  const out: number[] = [];
+  const re = /(?<![A-Za-z\d.])(\d{2,3})\s*hz\b/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(value))) {
+    const n = Number(m[1]);
+    if (n >= 24 && n <= 540 && !out.includes(n)) out.push(n);
+  }
+  return out;
+}
+
+/**
+ * Drop refresh-rate numbers the retailer page never stated.
+ * VRR=Yes alone must not become "120 Hz (VRR 165Hz)".
+ * When the page does state Hz, those figures win over a conflicting guess.
+ * No page text → leave the value (nothing to check against).
+ */
+export function sanitizeRefreshRate(value: string, pageText = ""): string {
+  if (!value || !pageText.trim()) return value;
+  const claimed = hzTokens(value);
+  if (!claimed.length) return value;
+  const pageHz = statedRefreshHz(pageText);
+  const invented = claimed.filter((n) => !pageHz.includes(n));
+  if (!invented.length) return value;
+  const kept = claimed.filter((n) => pageHz.includes(n));
+  if (!kept.length) {
+    if (pageHz.length) return pageHz.map((n) => `${n} Hz`).join(" / ");
+    if (pageAffirmsVrr(pageText)) return "VRR";
+    return "Unknown";
+  }
+  // A parenthetical like "(VRR 165Hz)" was only valid when that number is on the page.
+  return kept.map((n) => `${n} Hz`).join(" / ");
+}
+
+function isResolutionSpecLabel(label: string): boolean {
+  const l = normLabel(label);
+  if (!l.includes("resolution")) return false;
+  if (/\b(camera|photo|video|front|rear|print)\b/.test(l)) return false;
+  return true;
+}
+
+function isRefreshSpecLabel(label: string): boolean {
+  const l = normLabel(label);
+  return l.includes("refresh");
+}
+
 /** Shared phone SoC map. Longer / more specific patterns first. */
 const CHIPSET_SERIES: Array<{ id: RegExp; chip: string }> = [
   { id: /\biPhone\s*16\s*Pro\b/i, chip: "Apple A18 Pro" },
@@ -251,6 +400,17 @@ export function enrichProductSpecs(
     }
   }
 
+  const pageText = blobOf([ctx.title, ctx.retailerText]);
+  specs = specs.map((s) => {
+    if (isResolutionSpecLabel(s.label)) {
+      return { ...s, value: canonicalizeResolutionValue(s.value, pageText) };
+    }
+    if (isRefreshSpecLabel(s.label)) {
+      return { ...s, value: sanitizeRefreshRate(s.value, pageText) };
+    }
+    return s;
+  });
+
   return specs;
 }
 
@@ -359,6 +519,7 @@ export function normalizeWeightComparisons(result: {
 function specMatches(rowLabel: string, specLabel: string): boolean {
   if (normLabel(rowLabel) === normLabel(specLabel)) return true;
   if (/resolution/i.test(rowLabel) && /resolution/i.test(specLabel)) return true;
+  if (/refresh/i.test(rowLabel) && /refresh/i.test(specLabel)) return true;
   if (/chipset|processor|soc/i.test(rowLabel) && /chipset|processor|soc/i.test(specLabel)) return true;
   if (/fingerprint/i.test(rowLabel) && /fingerprint/i.test(specLabel)) return true;
   if (/face\s*id/i.test(rowLabel) && /face\s*id/i.test(specLabel)) return true;
@@ -385,7 +546,7 @@ export function enrichComparisonSpecs(result: any, productDataList?: Array<{ ret
   });
 
   // Push enriched resolution/weight/chipset/biometrics into groupedSpecs / keyDifferences by label match.
-  const syncLabels = [/native resolution/i, /^resolution$/i, /display resolution/i, /^display$/i, /screen size/i, /^weight$/i, /weight \(without stand\)/i, /chipset/i, /^processor$/i, /fingerprint/i, /face id/i];
+  const syncLabels = [/native resolution/i, /^resolution$/i, /display resolution/i, /resolution \(pixels\)/i, /^display$/i, /screen size/i, /^weight$/i, /weight \(without stand\)/i, /chipset/i, /^processor$/i, /fingerprint/i, /face id/i, /refresh/i];
   if (result.groupedSpecs) {
     for (const specs of Object.values(result.groupedSpecs) as Array<Array<{ label: string; values: string[] }>>) {
       for (const spec of specs) {
