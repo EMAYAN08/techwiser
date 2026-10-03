@@ -26,8 +26,8 @@ interface TabDef {
   Icon: LucideIcon;
 }
 
-/** How far the frosted wash reaches above the pill. */
-const FADE_LEAD = 112;
+/** How far the frosted wash reaches above the pill. Kept short so lists stay readable. */
+const FADE_LEAD = 36;
 
 const TABS: TabDef[] = [
   { name: "index", label: "Home", Icon: Zap },
@@ -197,12 +197,12 @@ function CustomTabBar({ state, navigation }: any) {
   const webBlur =
     Platform.OS === "web"
       ? ({
-          backdropFilter: isDark ? "blur(18px) saturate(150%)" : "blur(16px) saturate(160%)",
-          WebkitBackdropFilter: isDark ? "blur(18px) saturate(150%)" : "blur(16px) saturate(160%)",
+          backdropFilter: isDark ? "blur(8px) saturate(140%)" : "blur(8px) saturate(150%)",
+          WebkitBackdropFilter: isDark ? "blur(8px) saturate(140%)" : "blur(8px) saturate(150%)",
           maskImage:
-            "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 28%, rgba(0,0,0,0.75) 55%, black 78%, black 100%)",
+            "linear-gradient(to bottom, transparent 0%, transparent 42%, rgba(0,0,0,0.18) 68%, rgba(0,0,0,0.4) 100%)",
           WebkitMaskImage:
-            "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 28%, rgba(0,0,0,0.75) 55%, black 78%, black 100%)",
+            "linear-gradient(to bottom, transparent 0%, transparent 42%, rgba(0,0,0,0.18) 68%, rgba(0,0,0,0.4) 100%)",
         } as object)
       : null;
 
@@ -212,7 +212,7 @@ function CustomTabBar({ state, navigation }: any) {
         <View style={[styles.scrimBlur, webBlur]} />
         {Platform.OS !== "web" ? (
           <BlurView
-            intensity={isDark ? 36 : 48}
+            intensity={isDark ? 12 : 16}
             tint={isDark ? "dark" : "light"}
             blurMethod="dimezisBlurView"
             style={styles.scrimBlur}
@@ -222,12 +222,11 @@ function CustomTabBar({ state, navigation }: any) {
           <Defs>
             <LinearGradient id="dockScrim" x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor={colors.bg} stopOpacity="0" />
-              <Stop offset="0.16" stopColor={colors.bg} stopOpacity="0.05" />
-              <Stop offset="0.34" stopColor={colors.bg} stopOpacity="0.16" />
-              <Stop offset="0.5" stopColor={colors.bg} stopOpacity="0.42" />
-              <Stop offset="0.68" stopColor={colors.bg} stopOpacity="0.78" />
-              <Stop offset="0.86" stopColor={colors.bg} stopOpacity="0.94" />
-              <Stop offset="1" stopColor={colors.bg} stopOpacity="1" />
+              <Stop offset="0.42" stopColor={colors.bg} stopOpacity="0" />
+              <Stop offset="0.62" stopColor={colors.bg} stopOpacity="0.05" />
+              <Stop offset="0.78" stopColor={colors.bg} stopOpacity="0.14" />
+              <Stop offset="0.9" stopColor={colors.bg} stopOpacity="0.28" />
+              <Stop offset="1" stopColor={colors.bg} stopOpacity="0.42" />
             </LinearGradient>
           </Defs>
           <Rect width="100%" height="100%" fill="url(#dockScrim)" />
@@ -352,7 +351,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    top: "22%",
+    top: "58%",
   },
   // Shadow lives here so overflow:hidden on the pill does not clip it.
   host: {

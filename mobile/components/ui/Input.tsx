@@ -62,31 +62,42 @@ export function Input({ onPaste, onClear, style, validationState = "idle", ...pr
   const renderPasteControl = () => {
     if (!onPaste) return null;
 
-    if (ExpoClipboard.isPasteButtonAvailable) {
-      return (
-        <ExpoClipboard.ClipboardPasteButton
-          displayMode="iconOnly"
-          acceptedContentTypes={["plain-text", "url"]}
-          backgroundColor={colors.fog}
-          foregroundColor={colors.placeholder}
-          cornerStyle="small"
-          style={styles.pasteBtn}
-          onPress={(data) => {
-            if (data.type === "text" && data.text?.trim()) {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              onPaste(data.text.trim());
-            } else {
-              onPaste("");
-            }
-          }}
-        />
-      );
-    }
-
+    // UIPasteControl ignores custom colors and paints a system-blue block.
+    // Keep it as the hit target (iOS 16+ pastes without a permission prompt)
+    // and cover it with the same clipboard glyph the web fallback uses.
     return (
-      <Pressable onPress={handleFallbackPaste} hitSlop={10} style={styles.iconBtn}>
-        <ClipboardIcon size={16} color={colors.placeholder} strokeWidth={2.25} />
-      </Pressable>
+      <View style={styles.pasteSlot}>
+        {ExpoClipboard.isPasteButtonAvailable ? (
+          <ExpoClipboard.ClipboardPasteButton
+            displayMode="iconOnly"
+            acceptedContentTypes={["plain-text", "url"]}
+            backgroundColor={colors.surface}
+            foregroundColor={colors.placeholder}
+            cornerStyle="small"
+            style={styles.pasteNative}
+            accessibilityLabel="Paste"
+            onPress={(data) => {
+              if (data.type === "text" && data.text?.trim()) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onPaste(data.text.trim());
+              } else {
+                onPaste("");
+              }
+            }}
+          />
+        ) : (
+          <Pressable
+            onPress={handleFallbackPaste}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Paste"
+            style={styles.pasteNative}
+          />
+        )}
+        <View pointerEvents="none" style={[styles.pasteMask, { backgroundColor: colors.surface }]}>
+          <ClipboardIcon size={16} color={colors.placeholder} strokeWidth={2.25} />
+        </View>
+      </View>
     );
   };
 
@@ -172,5 +183,25 @@ const styles = StyleSheet.create({
   },
   icons: { flexDirection: "row", alignItems: "center", gap: 8 },
   iconBtn: { padding: 4 },
-  pasteBtn: { width: 28, height: 28 },
+  pasteSlot: {
+    width: 28,
+    height: 28,
+  },
+  pasteNative: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: 28,
+    height: 28,
+  },
+  // Opaque field fill so the native blue paste block never shows through.
+  pasteMask: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
