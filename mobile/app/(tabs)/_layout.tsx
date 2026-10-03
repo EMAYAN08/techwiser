@@ -238,7 +238,14 @@ export default function TabLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          animation: "fade",
+          // Keep this "none". expo-router's vendored BottomTabView still
+          // derives a blurred tab's activityState from a native-driver
+          // Animated value when animation is "fade" or "shift". On iOS that
+          // detaches Library and Settings (any tab to the right of the focused
+          // one) and a fast switch can leave the native screen stuck detached:
+          // the tab bar updates, the scene does not, and it never accepts
+          // touches again. A numeric activityState avoids that race.
+          animation: "none",
           freezeOnBlur: false,
           sceneStyle: { backgroundColor: colors.bg },
         }}
