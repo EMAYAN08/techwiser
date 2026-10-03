@@ -17,12 +17,24 @@
     "preview": {
       "distribution": "store",
       "autoIncrement": true,
+      "ios": {
+        "image": "latest"
+      },
+      "android": {
+        "image": "latest"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://techwiser.onrender.com"
       }
     },
     "production": {
       "autoIncrement": true,
+      "ios": {
+        "image": "latest"
+      },
+      "android": {
+        "image": "latest"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://techwiser.onrender.com"
       }

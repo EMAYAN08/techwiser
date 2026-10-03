@@ -1,0 +1,32 @@
+# Push a release/* branch to build iOS (preview) and upload to TestFlight.
+# Does NOT run on every main commit — cut a release branch when you want TF.
+#
+# Prerequisites (one-time, see docs/TESTFLIGHT.md):
+#   1. Link GitHub repo EMAYAN08/techwiser to Expo project emayan/techvisor
+#   2. Set Base directory to "mobile" on the Expo GitHub settings page
+#   3. Store Apple / App Store Connect credentials on the Expo project (non-interactive)
+
+name: Release to TestFlight
+
+on:
+  push:
+    branches:
+      - 'release/*'
+
+jobs:
+  build_ios:
+    name: Build iOS (preview)
+    type: build
+    params:
+      platform: ios
+      profile: preview
+      message: 'TestFlight from ${{ github.ref_name || "release" }}'
+
+  testflight:
+    name: Submit to TestFlight
+    type: testflight
+    needs: [build_ios]
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: preview
+      changelog: ${{ github.commit_message || 'TechVisor TestFlight build' }}
