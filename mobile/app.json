@@ -3,7 +3,7 @@
     "name": "TechVisor",
     "slug": "techvisor",
     "scheme": "techvisor",
-    "version": "1.0.0",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
