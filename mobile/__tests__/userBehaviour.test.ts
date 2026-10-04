@@ -118,9 +118,10 @@ describe("price chip and recent title", () => {
     expect(shouldShowPrice(undefined)).toBe(false);
   });
 
-  it("builds a recent title from the first two product names", () => {
+  it("builds a recent title from up to three product names", () => {
     expect(recentComparisonTitle(["Sony WH-1000XM5", "AirPods Max"])).toBe("Sony WH-1000XM5 vs AirPods Max");
-    expect(recentComparisonTitle(["A", "B", "C"])).toBe("A vs B");
+    expect(recentComparisonTitle(["A", "B", "C"])).toBe("A vs B vs C");
+    expect(recentComparisonTitle(["A", "B", "C", "D"])).toBe("A vs B vs C");
     expect(recentComparisonTitle(["Only one"])).toBe("Only one");
     expect(recentComparisonTitle(["", "  "])).toBe("Comparison");
   });

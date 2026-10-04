@@ -56,10 +56,9 @@ export function userFacingCompareError(message: string | undefined | null): stri
 }
 
 export function recentComparisonTitle(productNames: string[]): string {
-  const names = productNames.map((n) => n.trim()).filter(Boolean);
+  const names = productNames.map((n) => n.trim()).filter(Boolean).slice(0, 3);
   if (names.length === 0) return "Comparison";
-  if (names.length === 1) return names[0];
-  return `${names[0]} vs ${names[1]}`;
+  return names.join(" vs ");
 }
 
 export function shouldShowPrice(price?: string | null): boolean {
