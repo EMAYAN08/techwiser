@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "../../utils/haptics";
+import { shouldShowPrice } from "../../utils/userFlows";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useComparisonStore } from "../../store/useComparisonStore";
 import { Button } from "../../components/ui/Button";
@@ -92,7 +93,7 @@ export default function ProductDetailScreen() {
   const titleMorph = 28;
   const imageRange = hasImage ? heroSize * 0.72 : 48;
   const shortName = normalizeTitle(product.name);
-  const showPrice = Boolean(product.price && product.price !== "N/A");
+  const showPrice = shouldShowPrice(product.price);
 
   const fullTitleOpacity = scrollY.interpolate({
     inputRange: [0, titleMorph],

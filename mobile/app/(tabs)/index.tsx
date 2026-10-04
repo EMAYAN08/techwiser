@@ -15,7 +15,8 @@ import { space, tabBarScrollPadding } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { compareProducts } from "../../services/api";
 import { getApiBase } from "../../utils/apiBase";
-import { isSupportedProductUrl, MIN_COMPARE_URLS, uniqueSupportedProductUrls } from "../../utils/validators";
+import { MIN_COMPARE_URLS, uniqueSupportedProductUrls } from "../../utils/validators";
+import { canStartUrlCompare, recentComparisonTitle, userFacingCompareError } from "../../utils/userFlows";
 
 export default function Home() {
   const router = useRouter();
@@ -60,8 +61,7 @@ export default function Home() {
     });
   };
 
-  const validUrls = uniqueSupportedProductUrls(urls);
-  const canCompare = validUrls.length >= MIN_COMPARE_URLS && inputMode === "url";
+  const canCompare = canStartUrlCompare({ urls, inputMode, isLoading: false }).ready;
 
   const goToCompare = useCallback(() => {
     if (navigatedRef.current) return;
@@ -128,7 +128,7 @@ export default function Home() {
       setActiveComparison(data);
       addRecentComparison({
         id: data.id,
-        title: `${data.products[0].name} vs ${data.products[1].name}`,
+        title: recentComparisonTitle((data.products || []).map((p: { name?: string }) => p?.name || "")),
         date: "Just now",
         urls: compareUrls,
         result: data,
@@ -143,11 +143,7 @@ export default function Home() {
       if (err.name === "AbortError" || cancelledRef.current) return;
       abortControllerRef.current = null;
       setLoadPhase("loading");
-      let msg = err.message || "Failed to extract specs.";
-      if (msg.includes("Network request timed out") || msg.includes("Failed to fetch")) {
-        msg =
-          "The connection timed out. Please ensure your backend server is running and accessible on the same network.";
-      }
+      const msg = userFacingCompareError(err.message);
       router.push({ pathname: "/error", params: { message: msg } });
       setTimeout(() => {
         if (useComparisonStore.getState().isLoading) {

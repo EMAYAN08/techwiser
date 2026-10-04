@@ -29,6 +29,7 @@ import { AlternativesDeck } from "../components/comparison/AlternativesDeck";
 import { ExplainSpecSkeleton, FadeIn } from "../components/ui/Skeleton";
 import { type DetailedSpecRow, type DetailedSpecValue } from "../components/comparison/SpecBarRow";
 import { exportComparisonToPDF } from "../utils/exportPDF";
+import { shouldShowPrice } from "../utils/userFlows";
 import { explainSpec, fetchAlternatives, peekAlternativesCache, peekExplainSpecCache, specExplanationKey, type AlternativesResponse, type SpecExplanationResponse } from "../services/api";
 
 const OVERVIEW_KEY = "Overview";
@@ -192,7 +193,7 @@ function ProductHeaderCard({ product, isRecommended, index, compact, onPress }: 
             {normalizeTitle(product.name, compact)}
           </Text>
 
-          {product.price && product.price !== "N/A" && (
+          {shouldShowPrice(product.price) && (
             <View
               style={[
                 styles.pricePill,

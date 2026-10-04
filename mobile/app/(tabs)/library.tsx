@@ -12,7 +12,7 @@ import { radii, space, tabBarScrollPadding } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "../../utils/haptics";
 import { ALL_WELL, TYPE_WELLS, RETAIL_WELLS, RETAIL_ORDER, type WellDef } from "../../constants/wellCatalog";
-import { classifyProduct, getRetailerKey } from "../../utils/productKind";
+import { filterSavedProducts, libraryCountLabel, libraryEmptyCopy, uniqueProductsById } from "../../utils/userFlows";
 
 type FilterBy = "retailer" | "type";
 
@@ -20,14 +20,6 @@ const FILTER_OPTIONS: { id: FilterBy; label: string }[] = [
   { id: "retailer", label: "Retailer" },
   { id: "type", label: "Product type" },
 ];
-
-function uniqueProducts(products: Product[]): Product[] {
-  const map = new Map<string, Product>();
-  products.forEach((p) => {
-    if (!map.has(p.id)) map.set(p.id, p);
-  });
-  return Array.from(map.values());
-}
 
 export default function LibraryScreen() {
   const recentComparisons = useComparisonStore((s) => s.recentComparisons);
@@ -44,7 +36,7 @@ export default function LibraryScreen() {
     recentComparisons.forEach((comp) => {
       if (comp.result) list.push(...comp.result.products);
     });
-    return uniqueProducts(list);
+    return uniqueProductsById(list);
   }, [recentComparisons]);
 
   const retailerWells = useMemo(() => {
@@ -65,13 +57,10 @@ export default function LibraryScreen() {
 
   const activeWells = filterBy === "retailer" ? retailerWells : typeWells;
 
-  const filtered = useMemo(() => {
-    if (!wellsOpen || selectedId === "all") return allProducts;
-    if (filterBy === "retailer") {
-      return allProducts.filter((p) => getRetailerKey(p.retailer) === selectedId);
-    }
-    return allProducts.filter((p) => classifyProduct(p) === selectedId);
-  }, [allProducts, filterBy, selectedId, wellsOpen]);
+  const filtered = useMemo(
+    () => filterSavedProducts(allProducts, { wellsOpen, filterBy, selectedId }),
+    [allProducts, filterBy, selectedId, wellsOpen]
+  );
 
   const isFiltered = wellsOpen && selectedId !== "all";
   const iconActive = menuOpen || wellsOpen;
@@ -104,20 +93,11 @@ export default function LibraryScreen() {
     setSelectedId(valid);
   };
 
-  const emptyTitle =
-    allProducts.length === 0
-      ? "No saved products"
-      : isFiltered
-        ? "Nothing in this filter"
-        : "No saved products";
-  const emptySub =
-    allProducts.length === 0
-      ? "Products you compare will show up here."
-      : "Try another well, or tap All to see everything you’ve saved.";
+  const empty = libraryEmptyCopy(allProducts.length, isFiltered);
+  const emptyTitle = empty.title;
+  const emptySub = empty.subtitle;
 
-  const countLabel = isFiltered
-    ? `${filtered.length} of ${allProducts.length}`
-    : `${allProducts.length} saved product${allProducts.length === 1 ? "" : "s"}`;
+  const countLabel = libraryCountLabel(filtered.length, allProducts.length, isFiltered);
 
   const menuShadow =
     Platform.OS === "web"
