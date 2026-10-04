@@ -8,12 +8,12 @@ This catalog is the user-facing matrix for Home (URL + QR), paste, compare, Libr
 
 ```bash
 npm test                  # server + mobile
-npm --prefix mobile test  # 56 tests, includes __tests__/userBehaviour.test.ts
+npm --prefix mobile test  # 61 tests, includes __tests__/userBehaviour.test.ts
 npm --prefix server test  # includes src/__tests__/userBehaviour.integration.test.ts
 npm run uat:edge          # live API matrix (network). Add --full-compare for a real LLM compare.
 ```
 
-Last local run after these additions: mobile **56 passed**, server **135 passed**, `tsc --noEmit` clean for both packages.
+Last local run after these additions: mobile **61 passed**, server **135 passed**, `tsc --noEmit` clean for both packages.
 
 Shared decisions live in `mobile/utils/userFlows.ts` and are what Home, Library, Compare, and the product page call.
 
@@ -35,7 +35,7 @@ Shared decisions live in `mobile/utils/userFlows.ts` and are what Home, Library,
 | P-TITLE-1 | Recent row title is “A vs B” | `recentComparisonTitle` (Home uses it) |
 | P-QR-1 | A QR that contains a Best Buy URL is accepted and tracking params are stripped | `extractQrPayload` / `canonicalizeUrl` |
 | P-BAR-1 | A valid UPC/EAN and a URL printed as a barcode are recognized | `extractBarcodePayload` |
-| P-SET-1 | Haptics default on and can be turned off in memory | settings store |
+| P-SET-1 | Haptics default on, can be turned off, and rehydrate from `tw-haptics` | settings store |
 | P-THEME-1 | Dark, light, and system rehydrate from `tw-theme` (bare string or Zustand JSON) | `useThemeStore` |
 | P-THEME-2 | Choosing dark writes it back before the next launch | `useThemeStore` |
 | P-API-1 | Health reports `status: ok` and scrape concurrency 3 | `GET /api/health` |
@@ -88,7 +88,7 @@ Shared decisions live in `mobile/utils/userFlows.ts` and are what Home, Library,
 | M-ALT-1 | Alternatives empty state “You picked well!” | Needs the alternatives call |
 | M-SPEC-1 | Empty spec category shows “No specs available in this category.” | Screen render |
 | M-THEME-UI-1 | Dark mode still applied after force-quit on iOS | Store rehydrate is tested; native AsyncStorage cold start is not run on a phone here |
-| M-HAPTICS-1 | Haptics toggle is felt, and it does **not** survive restart | Not persisted. In-memory only. |
+| M-HAPTICS-1 | Turning haptics off is felt (no buzz) on a real device | Preference persistence is unit-tested. The motor itself is not. |
 | M-LEGAL-1 | Privacy, Terms, Support, Website open the GitHub Pages links | `Linking.openURL` |
 | M-TABS-1 | Home, Library, Settings; Price tab stays hidden | Tab layout |
 | M-LIVE-1 | Real Best Buy / Canada Computers / Costco / Leon's compare finishes with shelf prices | `npm run uat:edge:full` against Render. Slow and network-dependent. |
@@ -97,6 +97,5 @@ Shared decisions live in `mobile/utils/userFlows.ts` and are what Home, Library,
 ## Known gaps (asserted, not “fixed” here)
 
 - Recent comparison titles ignore the third product name (`E-TITLE-1`).
-- Haptics preference is not written to disk (`M-HAPTICS-1`).
 - The API accepts any http(s) URL shape; product-page checks are client-side. A hand-built client can still ask the server to scrape a home page.
 - Full LLM accuracy (wrong summary, thin Leon's pages) is not a unit test. See the live compare notes, not this file.
