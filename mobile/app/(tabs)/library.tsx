@@ -10,6 +10,8 @@ import { useThemeColors } from "../../constants/Colors";
 import { Typography, fonts } from "../../constants/Typography";
 import { radii, space, tabBarScrollPadding } from "../../constants/Layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { LibraryEmptyState } from "../../components/library/LibraryEmptyState";
 import * as Haptics from "../../utils/haptics";
 import { ALL_WELL, TYPE_WELLS, RETAIL_WELLS, RETAIL_ORDER, type WellDef } from "../../constants/wellCatalog";
 import { filterSavedProducts, libraryCountLabel, libraryEmptyCopy, uniqueProductsById } from "../../utils/userFlows";
@@ -26,6 +28,7 @@ export default function LibraryScreen() {
   const removeProductFromHistory = useComparisonStore((s) => s.removeProductFromHistory);
   const { colors, isDark } = useThemeColors();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [wellsOpen, setWellsOpen] = useState(false);
   const [filterBy, setFilterBy] = useState<FilterBy>("retailer");
@@ -240,26 +243,18 @@ export default function LibraryScreen() {
         onScroll={onScroll}
         onScrollBeginDrag={() => { if (menuOpen) setMenuOpen(false); }}
         scrollEventThrottle={16}
-        contentContainerStyle={[styles.scroll, { paddingTop: HEADER_HEIGHT, paddingBottom: tabBarScrollPadding(insets.bottom) }]}
+        contentContainerStyle={[styles.scroll, filtered.length === 0 && styles.scrollEmpty, { paddingTop: HEADER_HEIGHT, paddingBottom: tabBarScrollPadding(insets.bottom) }]}
         showsVerticalScrollIndicator={false}
       >
           {filtered.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={[styles.emptyText, { color: colors.ink }]}>{emptyTitle}</Text>
-              <Text style={[styles.emptySubtext, { color: colors.stone }]}>{emptySub}</Text>
-              {isFiltered ? (
-                <Pressable
-                  onPress={() => {
-                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setSelectedId("all");
-                  }}
-                  style={[styles.clearBtn, { borderColor: colors.ink }]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Clear filter"
-                >
-                  <Text style={[styles.clearText, { color: colors.ink }]}>Clear filter</Text>
-                </Pressable>
-              ) : null}
+            <View style={styles.emptyWrap}>
+              <LibraryEmptyState
+                variant={isFiltered ? "filtered" : "empty"}
+                title={emptyTitle}
+                subtitle={emptySub}
+                onStartComparing={() => router.navigate("/")}
+                onClearFilter={() => setSelectedId("all")}
+              />
             </View>
           ) : (
             <View style={styles.grid}>
@@ -335,15 +330,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: space.gutter },
   grid: { flexDirection: "row", flexWrap: "wrap", marginHorizontal: -6 },
   cardWrapper: { width: "50%", paddingBottom: 12 },
-  emptyState: { alignItems: "flex-start", marginTop: 48 },
-  emptyText: { ...Typography.productName, fontSize: 18, marginBottom: 8 },
-  emptySubtext: { ...Typography.body },
-  clearBtn: {
-    marginTop: 20,
-    borderWidth: 1.5,
-    borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-  },
-  clearText: { ...Typography.caption, fontFamily: Typography.button.fontFamily, fontSize: 14 },
+  scrollEmpty: { flexGrow: 1 },
+  // Optically centred in the space between the header and the dock.
+  emptyWrap: { flex: 1, justifyContent: "center", paddingBottom: 48, minHeight: 420 },
 });
