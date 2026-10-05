@@ -7,6 +7,9 @@ import { Card } from "../ui/Card";
 import * as Haptics from "../../utils/haptics";
 import { useThemeColors } from "../../constants/Colors";
 import { radii } from "../../constants/Layout";
+import { EmptyState } from "../ui/EmptyState";
+import { RecentEmptyIllustration } from "./RecentEmptyIllustration";
+import { RECENT_EMPTY_COPY } from "../../utils/userFlows";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -99,7 +102,6 @@ function ComparisonCard({ comparison, index }: { comparison: Comparison; index: 
 const MemoComparisonCard = memo(ComparisonCard);
 
 export function RecentComparisons() {
-  const { colors } = useThemeColors();
   const recentComparisons = useComparisonStore((s) => s.recentComparisons);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -116,7 +118,12 @@ export function RecentComparisons() {
     <View style={styles.container}>
       {/* Header removed and exported */}
       {recentComparisons.length === 0 ? (
-        <Text style={[styles.empty, { color: colors.stone }]}>No comparisons yet</Text>
+        <EmptyState
+          testID="recent-empty"
+          illustration={<RecentEmptyIllustration />}
+          title={RECENT_EMPTY_COPY.title}
+          subtitle={RECENT_EMPTY_COPY.subtitle}
+        />
       ) : (
         recentComparisons.map((comp, index) => (
           <MemoComparisonCard key={comp.id} comparison={comp} index={index} />
@@ -129,7 +136,6 @@ export function RecentComparisons() {
 const styles = StyleSheet.create({
   container: { marginTop: 12 },
   header: { ...type.sectionHeading, marginBottom: 16 },
-  empty: { ...type.body },
   cardWrapper: { marginBottom: 12 },
   card: { padding: 16, flexDirection: "row", alignItems: "center", gap: 12 },
   thumbs: { flexDirection: "row", alignItems: "center" },

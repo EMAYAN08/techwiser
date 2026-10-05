@@ -7,6 +7,7 @@ import {
   libraryCountLabel,
   libraryEmptyCopy,
   normalizeThemePreference,
+  RECENT_EMPTY_COPY,
   recentComparisonTitle,
   shouldShowPrice,
   uniqueProductsById,
@@ -157,6 +158,11 @@ describe("Library filters and empty states", () => {
     expect(libraryCountLabel(1, 4, true)).toBe("1 of 4");
     expect(libraryCountLabel(1, 1, false)).toBe("1 saved product");
     expect(libraryCountLabel(2, 2, false)).toBe("2 saved products");
+  });
+
+  it("uses clear copy for the empty Home recent list", () => {
+    expect(RECENT_EMPTY_COPY.title).toBe("No recent comparisons yet");
+    expect(RECENT_EMPTY_COPY.subtitle).toMatch(/2–3 products/);
   });
 });
 

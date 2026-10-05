@@ -103,6 +103,12 @@ export function libraryEmptyCopy(allCount: number, isFiltered: boolean): { title
   };
 }
 
+/** Home RECENT section copy when there are no saved comparisons. */
+export const RECENT_EMPTY_COPY = {
+  title: "No recent comparisons yet",
+  subtitle: "Compare 2–3 products and they’ll show up here for quick access.",
+} as const;
+
 export function libraryCountLabel(filtered: number, all: number, isFiltered: boolean): string {
   if (isFiltered) return `${filtered} of ${all}`;
   return `${all} saved product${all === 1 ? "" : "s"}`;
