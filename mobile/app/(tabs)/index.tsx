@@ -225,7 +225,7 @@ export default function Home() {
             {/* Other modes */}
             {inputMode !== "url" && (
               <View style={{ backgroundColor: colors.bg, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={[{ color: colors.stone, ...Typography.eyebrow, textTransform: 'uppercase' }]}>
+                <Text style={[{ color: colors.stone, ...Typography.sectionHeading }]}>
                   QR SCANNER
                 </Text>
               </View>

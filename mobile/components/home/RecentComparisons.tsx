@@ -128,7 +128,7 @@ export function RecentComparisons() {
 
 const styles = StyleSheet.create({
   container: { marginTop: 12 },
-  header: { ...type.eyebrow, marginBottom: 16 },
+  header: { ...type.sectionHeading, marginBottom: 16 },
   empty: { ...type.body },
   cardWrapper: { marginBottom: 12 },
   card: { padding: 16, flexDirection: "row", alignItems: "center", gap: 12 },

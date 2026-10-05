@@ -14,6 +14,16 @@ export const fonts = {
   uiBold: "Satoshi-Bold",
 } as const;
 
+/** Shared metrics for Home section labels (PRODUCT URLS / RECENT / QR SCANNER). */
+const sectionHeadingStyle: TextStyle = {
+  fontFamily: fonts.uiMedium,
+  fontSize: 11,
+  lineHeight: 14,
+  letterSpacing: 1.6,
+  textTransform: "uppercase",
+  ...fontFix,
+};
+
 export const type = {
   screenTitle: {
     fontFamily: fonts.displaySemibold,
@@ -76,14 +86,8 @@ export const type = {
     lineHeight: 22,
     ...fontFix,
   } as TextStyle,
-  eyebrow: {
-    fontFamily: fonts.uiMedium,
-    fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: 1.6,
-    textTransform: "uppercase",
-    ...fontFix,
-  } as TextStyle,
+  sectionHeading: sectionHeadingStyle,
+  eyebrow: sectionHeadingStyle,
   button: {
     fontFamily: fonts.uiBold,
     fontSize: 16,
