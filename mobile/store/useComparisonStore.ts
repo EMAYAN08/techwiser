@@ -1,4 +1,6 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type { AlternativesResponse, SpecExplanationResponse } from "../services/api";
 import { MAX_COMPARE_URLS } from "../utils/validators";
 
@@ -53,7 +55,47 @@ export interface Comparison {
   result?: ComparisonResult;
 }
 
+export const RECENTS_STORAGE_KEY = "tw-recents";
+export const RECENTS_STORAGE_VERSION = 1;
+export const MAX_RECENT_COMPARISONS = 10;
+
+/** Drop lazy-loaded extras (alternatives, spec explanations); keep what reopening needs. */
+export function slimComparison(comparison: Comparison): Comparison {
+  if (!comparison.result) return comparison;
+  const { alternatives: _a, specExplanations: _s, ...result } = comparison.result;
+  return { ...comparison, result };
+}
+
+function isValidComparison(c: any): c is Comparison {
+  if (!c || typeof c !== "object") return false;
+  if (typeof c.id !== "string" || typeof c.title !== "string") return false;
+  if (!Array.isArray(c.urls)) return false;
+  if (c.result !== undefined) {
+    const r = c.result;
+    if (!r || typeof r !== "object" || !Array.isArray(r.products)) return false;
+    if (!r.products.every((p: any) => p && typeof p.id === "string" && Array.isArray(p.specs))) return false;
+  }
+  return true;
+}
+
+/** Validate, dedupe by id (first wins), slim and cap. Anything malformed is dropped. */
+export function sanitizeRecents(value: unknown): Comparison[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const out: Comparison[] = [];
+  for (const c of value) {
+    if (!isValidComparison(c) || seen.has(c.id)) continue;
+    seen.add(c.id);
+    out.push(slimComparison({ ...c, date: typeof c.date === "string" ? c.date : "" }));
+    if (out.length >= MAX_RECENT_COMPARISONS) break;
+  }
+  return out;
+}
+
 interface ComparisonStore {
+  /** True once persisted recents have loaded from AsyncStorage. */
+  hasHydrated: boolean;
+  setHasHydrated: (v: boolean) => void;
   urls: string[];
   isLoading: boolean;
   loadingMessage: string;
@@ -322,13 +364,8 @@ const MOCK_LIBRARY_MIX: ComparisonResult = {
 // Store
 // ---------------------------------------------------------------------------
 
-export const useComparisonStore = create<ComparisonStore>((set) => ({
-  urls: ["", ""],
-  isLoading: false,
-  loadingMessage: "Analyzing products...",
-  loadPhase: "loading",
-  activeComparison: null,
-  recentComparisons: [
+/** Sample history for dev tools and screenshots only. Never the default. */
+export const MOCK_RECENT_COMPARISONS: Comparison[] = [
     {
       id: "1",
       title: "iPhone 15 Pro vs Galaxy S24 Ultra",
@@ -392,7 +429,19 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
       urls: [],
       result: MOCK_RESULT_3_PRODUCT,
     },
-  ],
+  ];
+
+export const useComparisonStore = create<ComparisonStore>()(
+  persist(
+  (set) => ({
+  urls: ["", ""],
+  isLoading: false,
+  loadingMessage: "Analyzing products...",
+  loadPhase: "loading",
+  activeComparison: null,
+  recentComparisons: [],
+  hasHydrated: false,
+  setHasHydrated: (hasHydrated) => set({ hasHydrated }),
   updateUrl: (index, url) =>
     set((state) => {
       const newUrls = [...state.urls];
@@ -439,21 +488,16 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
     }),
   addRecentComparison: (comparison) =>
     set((state) => {
-      const slim = comparison.result
-        ? {
-            ...comparison,
-            result: {
-              ...comparison.result,
-              alternatives: undefined,
-              specExplanations: undefined,
-            },
-          }
-        : comparison;
+      const slim = slimComparison(comparison);
       return {
-        recentComparisons: [slim, ...state.recentComparisons.filter((c) => c.id !== slim.id)].slice(0, 10),
+        recentComparisons: [slim, ...state.recentComparisons.filter((c) => c.id !== slim.id)].slice(0, MAX_RECENT_COMPARISONS),
       };
     }),
-  clearRecentComparisons: () => set({ recentComparisons: [] }),
+  clearRecentComparisons: () => {
+    set({ recentComparisons: [] });
+    // Belt and braces: drop the persisted blob too so history is truly gone.
+    void AsyncStorage.removeItem(RECENTS_STORAGE_KEY).catch(() => {});
+  },
   removeProductFromHistory: (productId) =>
     set((state) => {
       const newRecent = state.recentComparisons.map(comp => {
@@ -476,7 +520,25 @@ export const useComparisonStore = create<ComparisonStore>((set) => ({
         variant === "three" ? MOCK_RESULT_3_PRODUCT : MOCK_RESULT,
     }),
   clearActiveComparison: () => set({ activeComparison: null }),
-}));
+}),
+  {
+    name: RECENTS_STORAGE_KEY,
+    version: RECENTS_STORAGE_VERSION,
+    storage: createJSONStorage(() => AsyncStorage),
+    partialize: (state) => ({ recentComparisons: state.recentComparisons }),
+    migrate: (persisted) => ({ recentComparisons: sanitizeRecents((persisted as any)?.recentComparisons) }),
+    merge: (persisted, current) => ({
+      ...current,
+      recentComparisons: sanitizeRecents((persisted as any)?.recentComparisons),
+    }),
+    onRehydrateStorage: () => (_state, error) => {
+      if (error) useComparisonStore.setState({ recentComparisons: [] });
+      useComparisonStore.setState({ hasHydrated: true });
+    },
+  }
+  )
+);
+
 
 
 

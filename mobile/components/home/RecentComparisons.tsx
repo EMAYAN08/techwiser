@@ -103,6 +103,7 @@ const MemoComparisonCard = memo(ComparisonCard);
 
 export function RecentComparisons() {
   const recentComparisons = useComparisonStore((s) => s.recentComparisons);
+  const hasHydrated = useComparisonStore((s) => s.hasHydrated);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -117,7 +118,7 @@ export function RecentComparisons() {
   return (
     <View style={styles.container}>
       {/* Header removed and exported */}
-      {recentComparisons.length === 0 ? (
+      {!hasHydrated ? null : recentComparisons.length === 0 ? (
         <EmptyState
           testID="recent-empty"
           illustration={<RecentEmptyIllustration />}

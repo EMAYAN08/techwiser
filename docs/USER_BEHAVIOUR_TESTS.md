@@ -8,12 +8,12 @@ This catalog is the user-facing matrix for Home (URL + QR), paste, compare, Libr
 
 ```bash
 npm test                  # server + mobile
-npm --prefix mobile test  # 61 tests, includes __tests__/userBehaviour.test.ts
+npm --prefix mobile test  # 77 tests, includes __tests__/userBehaviour.test.ts
 npm --prefix server test  # includes src/__tests__/userBehaviour.integration.test.ts
 npm run uat:edge          # live API matrix (network). Add --full-compare for a real LLM compare.
 ```
 
-Last local run after these additions: mobile **61 passed**, server **135 passed**, `tsc --noEmit` clean for both packages.
+Last local run after these additions: mobile **77 passed**, server **135 passed**, `tsc --noEmit` clean for both packages.
 
 Shared decisions live in `mobile/utils/userFlows.ts` and are what Home, Library, Compare, and the product page call.
 
@@ -21,6 +21,10 @@ Shared decisions live in `mobile/utils/userFlows.ts` and are what Home, Library,
 
 | ID | Behaviour | Where |
 | --- | --- | --- |
+| P-PERSIST-1 | A new compare is written to AsyncStorage `tw-recents` and is back on Home and in Library after a relaunch | `__tests__/useComparisonStore.persist.test.ts` |
+| P-PERSIST-2 | Recents keep newest-first order, dedupe by id, and all three products of a 3-product compare across relaunch | persist test |
+| P-PERSIST-3 | Settings → Clear history empties memory and storage; relaunch stays empty | persist test |
+| P-PERSIST-4 | Removing a product in Library persists; a comparison with no products left is dropped | persist test |
 | P-URL-1 | Two or three distinct Best Buy / Canada Computers / Costco / Leon's product URLs enable Compare | `canStartUrlCompare` |
 | P-URL-2 | Memory Express, Newegg, Staples, The Source, Amazon.ca, Walmart.ca product shapes count as valid | `validateProductUrl` |
 | P-URL-3 | Leading/trailing whitespace still counts | compare gate |
@@ -58,12 +62,16 @@ Shared decisions live in `mobile/utils/userFlows.ts` and are what Home, Library,
 | N-SET-1 | Alternatives for a different comparison id are ignored | store |
 | N-THEME-1 | A corrupt stored theme falls back to light | theme store |
 | N-ERR-1 | `Failed to fetch` and `Network request timed out` become the offline/timeout message | `userFacingCompareError` |
+| N-PERSIST-1 | Corrupt JSON, wrong shape, or malformed entries in `tw-recents` load as empty (or keep only valid entries) without crashing | `sanitizeRecents` |
+| N-PERSIST-2 | Old storage version 0 migrates safely | persist `migrate` |
 | N-PROG-1 | Unknown or too-short compare progress ids stay `idle` | `GET /api/compare/progress/:id` |
 
 ## Automated — edge
 
 | ID | Behaviour | Notes |
 | --- | --- | --- |
+| E-PERSIST-1 | Store caps at 10 comparisons in memory and on disk; alternatives and spec explanations are not stored | persist test |
+| E-PERSIST-2 | Fresh install starts with no recents (no sample data); Home/Library show nothing until storage loads, then the empty state | `hasHydrated` |
 | E-TITLE-1 | Three product names still title the recent row from the first two only | Current Home copy. Not a crash. |
 | E-TITLE-2 | One name, or only whitespace, does not throw | “Only one” / “Comparison” |
 | E-CAP-1 | URL, QR, and barcode batches all cap at 3 | constants |
@@ -87,6 +95,7 @@ Shared decisions live in `mobile/utils/userFlows.ts` and are what Home, Library,
 | M-COMPARE-EMPTY-1 | Opening Compare with nothing loaded shows “No comparison loaded” | Screen render |
 | M-ALT-1 | Alternatives empty state “You picked well!” | Needs the alternatives call |
 | M-SPEC-1 | Empty spec category shows “No specs available in this category.” | Screen render |
+| M-PERSIST-UI-1 | Recents and Library survive force-quit on iOS | Store rehydrate is unit-tested; native cold start not run on a phone here |
 | M-THEME-UI-1 | Dark mode still applied after force-quit on iOS | Store rehydrate is tested; native AsyncStorage cold start is not run on a phone here |
 | M-HAPTICS-1 | Turning haptics off is felt (no buzz) on a real device | Preference persistence is unit-tested. The motor itself is not. |
 | M-LEGAL-1 | Privacy, Terms, Support, Website open the GitHub Pages links | `Linking.openURL` |

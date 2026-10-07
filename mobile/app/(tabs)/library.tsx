@@ -26,6 +26,7 @@ const FILTER_OPTIONS: { id: FilterBy; label: string }[] = [
 export default function LibraryScreen() {
   const recentComparisons = useComparisonStore((s) => s.recentComparisons);
   const removeProductFromHistory = useComparisonStore((s) => s.removeProductFromHistory);
+  const hasHydrated = useComparisonStore((s) => s.hasHydrated);
   const { colors, isDark } = useThemeColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -246,7 +247,7 @@ export default function LibraryScreen() {
         contentContainerStyle={[styles.scroll, filtered.length === 0 && styles.scrollEmpty, { paddingTop: HEADER_HEIGHT, paddingBottom: tabBarScrollPadding(insets.bottom) }]}
         showsVerticalScrollIndicator={false}
       >
-          {filtered.length === 0 ? (
+          {!hasHydrated ? null : filtered.length === 0 ? (
             <View style={styles.emptyWrap}>
               <LibraryEmptyState
                 variant={isFiltered ? "filtered" : "empty"}
